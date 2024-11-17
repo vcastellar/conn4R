@@ -1,4 +1,4 @@
-# función que dada una jugada seleccionada por la
+# función que dada una jugada seleccionada por la modificvavcion
 # función mejor_jugada_minimax la realice en el tablero
 
 realizar_jugada <- function(tablero, columna, jugador) {
