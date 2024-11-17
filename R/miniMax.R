@@ -1,6 +1,7 @@
-# prompt: crea una función que mediante un algoritmo mini-max la IA decida cuál es su mejor
-#  jugada dada una cierta posición del tablero para conseguir la victoria en el
-#  desarrollo de la partida hasta su finalización. La evaluacion de la posición la debe hacer la función evaluate_position anterior
+# función que mediante un algoritmo mini-max la IA decide cuál es su mejor
+# jugada dada una cierta posición del tablero para conseguir la victoria en el
+#  desarrollo de la partida hasta su finalización. 
+# La evaluacion de la posición la debe hacer la función evaluate_position anterior
 
 mejor_jugada_minmax <- function(tablero, profundidad, maximizando_jugador, alpha = -Inf, beta = Inf) {
   if (profundidad == 0 || juego_terminado(tablero)) {

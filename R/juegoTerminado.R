@@ -1,6 +1,7 @@
-# prompt: crea una función que verifique condiciones de finalización del juego:
-#  o bien uno de los dos participantes ha hecho 4 casillas en linea o bien ya no
-#  quedan jugadas disponibles. Debe devolver False si el juego no ha alcanzado
+# función que verifique condiciones de finalización del juego:
+#  - o bien uno de los dos participantes ha hecho 4 casillas en linea 
+#  - o bien ya no quedan jugadas disponibles.
+# Debe devolver False si el juego no ha alcanzado
 # las condiciones de fin de juego o True en el caso de que sí
 
 juego_terminado <- function(tablero) {

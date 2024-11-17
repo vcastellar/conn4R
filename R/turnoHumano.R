@@ -1,4 +1,4 @@
-# prompt: crea una funcioón que solicite una jugada al humano.
+# puncioón que solicita una jugada al humano.
 # Si la jugada es legal (está dentro de las jugadas disponibles calculadas con la anterior función)
 # represente la jugada del humano en el tablero mediante un 1 en la casilla que corresponda.
 # La jugada de la IA será representada en el tablero mediante un -1.

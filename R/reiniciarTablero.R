@@ -1,4 +1,4 @@
-# prompt: crea una estructura de datos que permita representar un tablero de conecta 4 de 7 columnas y 5 filas
+# crea una estructura de datos que permita representar un tablero de conecta 4 de 7 columnas y 5 filas
 
 # Creamos una matriz de 7 columnas y 6 filas llena de 0
 reiniciar_tablero <- function() {

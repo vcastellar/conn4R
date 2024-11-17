@@ -1,6 +1,7 @@
-# prompt: crea una función que dado el turno del humano o de la IA evalue la posición en el tablero
+# función que dado el turno del humano o de la IA evalue la posición en el tablero
 # en función de las lineas horizaontales, verticales y diagonales de longitud 4.
-#  Cuantas mas fichas existan conectadas en linea del mismo jugador sin que existan fichas intermedias del otro jugador, mayor puntuacion
+# Cuantas mas fichas existan conectadas en linea del mismo jugador sin que existan 
+# fichas intermedias del otro jugador, mayor puntuacion
 evaluar_posicion <- function(tablero, turno) {
   puntuacion <- 0
 
