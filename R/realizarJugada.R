@@ -1,5 +1,6 @@
 # función que dada una jugada seleccionada por la modificvavcion
 # función mejor_jugada_minimax la realice en el tablero
+# prueba
 
 realizar_jugada <- function(tablero, columna, jugador) {
   for (fila in 6:1) {
