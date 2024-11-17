@@ -29,7 +29,7 @@ visualizar_tablero <- function(tablero) {
   )
 
 
-  ggplot() +
+  p <- ggplot() +
     geom_tile(data = df_fichas, aes(x = x, y = y, fill = factor(ficha))) +
     scale_fill_manual(values = c("white", "red", "blue"), name = "Ficha") +
     geom_segment(data = df_lineas_h, aes(x = xini, y = yini, xend = xend, yend = yend), size = 0.5, color = "black") +
@@ -43,6 +43,7 @@ visualizar_tablero <- function(tablero) {
       plot.title = element_text(hjust = 0.5),
       legend.position = "bottom"
     )
+  return(p)
 }
 
 # Ejemplo de uso:

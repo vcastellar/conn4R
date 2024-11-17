@@ -54,6 +54,8 @@ evaluar_linea <- function(linea, turno) {
     puntuacion <- 5 # Tres fichas en línea con una casilla vacía
   } else if (sum(linea == turno) == 2 && sum(linea == 0) == 2) {
     puntuacion <- 2 # Dos fichas en línea con dos casillas vacías
+  } else if (sum(linea == turno) == 1 && sum(linea == 0) == 3) {
+    puntuacion <- 1 # Una ficha en línea con tres casillas vacías
   }
 
   return(puntuacion)

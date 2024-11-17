@@ -14,13 +14,13 @@ mejor_jugada_minmax <- function(tablero, profundidad, maximizando_jugador, alpha
     mejor_jugada <- NA
 
     for (columna in jugadas_disponibles(tablero)) {
-      nuevo_tablero <<- realizar_jugada(tablero, columna, 2)
+      nuevo_tablero <- realizar_jugada(tablero, columna, 2)
       puntuacion <- mejor_jugada_minmax(nuevo_tablero, profundidad - 1, FALSE, alpha, beta)$puntuacion
       if (puntuacion > mejor_puntuacion) {
         mejor_puntuacion <- puntuacion
         mejor_jugada <- columna
       }
-      alpha <<- max(alpha, mejor_puntuacion)
+      alpha <- max(alpha, mejor_puntuacion)
       if (beta <= alpha) {
         break  # Poda alpha-beta
       }
@@ -32,13 +32,13 @@ mejor_jugada_minmax <- function(tablero, profundidad, maximizando_jugador, alpha
 
 
     for (columna in jugadas_disponibles(tablero)) {
-      nuevo_tablero <<- realizar_jugada(tablero, columna, 1)
+      nuevo_tablero <- realizar_jugada(tablero, columna, 2)
       puntuacion <- mejor_jugada_minmax(nuevo_tablero, profundidad - 1, TRUE, alpha, beta)$puntuacion
       if (puntuacion < mejor_puntuacion) {
         mejor_puntuacion <- puntuacion
         mejor_jugada <- columna
       }
-      beta <<- min(beta, mejor_puntuacion)
+      beta <- min(beta, mejor_puntuacion)
       if (beta <= alpha) {
         break  # Poda alpha-beta
       }
