@@ -51,9 +51,9 @@ evaluar_linea <- function(linea, turno) {
   if (all(linea == turno)) {
     puntuacion <- 100000 # Línea completa del jugador actual
   } else if (sum(linea == turno) == 3 && sum(linea == 0) == 1) {
-    puntuacion <- 5 # Tres fichas en línea con una casilla vacía
+    puntuacion <- 100 # Tres fichas en línea con una casilla vacía
   } else if (sum(linea == turno) == 2 && sum(linea == 0) == 2) {
-    puntuacion <- 2 # Dos fichas en línea con dos casillas vacías
+    puntuacion <- 10 # Dos fichas en línea con dos casillas vacías
   } else if (sum(linea == turno) == 1 && sum(linea == 0) == 3) {
     puntuacion <- 1 # Una ficha en línea con tres casillas vacías
   }

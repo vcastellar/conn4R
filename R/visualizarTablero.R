@@ -27,6 +27,11 @@ visualizar_tablero <- function(tablero) {
     xini = (1:8) - .5,
     xend = (1:8) - .5
   )
+  df_columnas_labels <- data.frame(
+    x = 1:7,
+    y = 7,
+    labels = paste0("col.", 1:7)
+  )
 
 
   p <- ggplot() +
@@ -34,6 +39,7 @@ visualizar_tablero <- function(tablero) {
     scale_fill_manual(values = c("white", "red", "blue"), name = "Ficha") +
     geom_segment(data = df_lineas_h, aes(x = xini, y = yini, xend = xend, yend = yend), size = 0.5, color = "black") +
     geom_segment(data = df_lineas_v, aes(x = xini, y = yini, xend = xend, yend = yend), size = 0.5, color = "black") +
+    geom_text(data = df_columnas_labels, aes(x = x, y = y, label = labels)) +
     coord_fixed() +
     scale_x_continuous(breaks = 1:7) +
     scale_y_continuous(breaks = 1:6) +
