@@ -1,5 +1,5 @@
 # función que verifique condiciones de finalización del juego:
-#  - o bien uno de los dos participantes ha hecho 4 casillas en linea 
+#  - o bien uno de los dos participantes ha hecho 4 casillas en linea
 #  - o bien ya no quedan jugadas disponibles.
 # Debe devolver False si el juego no ha alcanzado
 # las condiciones de fin de juego o True en el caso de que sí
@@ -7,7 +7,7 @@
 juego_terminado <- function(tablero) {
   # Verificar si hay 4 en línea para el jugador 1 o 2
   for (jugador in 1:2) {
-    if (evaluar_posicion(tablero, jugador) >= 100000) {
+    if (abs(evaluar_posicion(tablero, jugador)) >= 100000) {
       return(TRUE)
     }
   }

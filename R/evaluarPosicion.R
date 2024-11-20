@@ -58,5 +58,7 @@ evaluar_linea <- function(linea, turno) {
     puntuacion <- 1 # Una ficha en línea con tres casillas vacías
   }
 
+  puntuacion <- (-1)^(turno) * puntuacion
+
   return(puntuacion)
 }

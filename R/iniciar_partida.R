@@ -10,6 +10,7 @@ iniciar_partida <- function(profundidad = 6) {
     tablero <- turno_humano(tablero)
     p <- visualizar_tablero(tablero)
     print(p)
+    print(paste0("valoracion HU: ", evaluar_posicion(tablero, 1)))
 
     if (juego_terminado(tablero)) {
       resultado <- "gana humano"
@@ -23,9 +24,8 @@ iniciar_partida <- function(profundidad = 6) {
     tablero_aux <<- tablero
     p <- visualizar_tablero(tablero)
     print(p)
-    # cat("\014")
-    cat(paste0("puntuación IA:", mejor_jugada_IA$puntuacion, "\n"))
-    cat(paste0("jugada IA:", mejor_jugada_IA$jugada, "\n"))
+    print(paste0("valoracion IA: ", evaluar_posicion(tablero, 2)))
+
 
     if (juego_terminado(tablero)) {
       resultado <- "gana IA"
