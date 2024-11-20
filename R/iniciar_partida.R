@@ -1,4 +1,4 @@
-iniciar_partida <- function(profundidad = 6) {
+iniciar_partida <- function(profundidad = 5) {
   resultado <- "tablas"
   tablero <- reiniciar_tablero()
   p <- visualizar_tablero(tablero)
@@ -25,6 +25,7 @@ iniciar_partida <- function(profundidad = 6) {
     p <- visualizar_tablero(tablero)
     print(p)
     print(paste0("valoracion IA: ", evaluar_posicion(tablero, 2)))
+    print(paste0("jugada realizada: ", mejor_jugada_IA$jugada))
 
 
     if (juego_terminado(tablero)) {

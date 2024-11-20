@@ -31,10 +31,6 @@ mejor_jugada_minmax <- function(tablero, profundidad, maximizando_jugador, alpha
 
     }
 
-    # print(paste("profundidad: ", profundidad, "\n",
-    #             "mejor jugada humano: ", mejor_jugada, "\n",
-    #             "puntuacion humano: ", mejor_puntuacion)
-    # )
 
     return(list(puntuacion = mejor_puntuacion, jugada = mejor_jugada))
 
@@ -60,11 +56,6 @@ mejor_jugada_minmax <- function(tablero, profundidad, maximizando_jugador, alpha
     }
 
   }
-
-  # print(paste("profundidad: ", profundidad, "\n",
-  #             "mejor jugada humano: ", mejor_jugada, "\n",
-  #             "puntuacion humano: ", mejor_puntuacion)
-  # )
 
   return(list(puntuacion = mejor_puntuacion, jugada = mejor_jugada))
 }
