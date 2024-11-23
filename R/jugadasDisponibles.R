@@ -4,7 +4,7 @@
 #'   jugadas existentes: columnas no completadas
 #' @param tablero matriz 6 x 7 que representa la situación del tablero de juego.
 #' @examples
-#' tablero <- crear_posicion_aleatoria(20)
+#' tablero <- .crear_posicion_aleatoria(20)
 #' visualizar_tablero(tablero)
 #' jugadas_disponibles(tablero)
 
