@@ -10,8 +10,9 @@ visualizar_tablero <- function(tablero) {
   df_fichas <- data.frame(
     x = rev(rep(1:7, each = 6)),
     y = rep(1:6, times = 7),
-    ficha = rev(as.vector(tablero))
+    ficha = factor(rev(as.vector(tablero)), levels = c(0,1,2))
   )
+
 
   # Creamos un data frame con las coordenadas de las líneas del grid
   df_lineas_h <- data.frame(
@@ -35,8 +36,8 @@ visualizar_tablero <- function(tablero) {
 
 
   p <- ggplot() +
-    geom_tile(data = df_fichas, aes(x = x, y = y, fill = factor(ficha))) +
-    scale_fill_manual(values = c("white", "red", "blue"), name = "Ficha") +
+    geom_tile(data = df_fichas, aes(x = x, y = y, fill = ficha)) +
+    scale_fill_manual(values = c( "0" = "white", "1" = "red", "2" = "blue"), name = "ficha") +
     geom_segment(data = df_lineas_h, aes(x = xini, y = yini, xend = xend, yend = yend), size = 0.5, color = "black") +
     geom_segment(data = df_lineas_v, aes(x = xini, y = yini, xend = xend, yend = yend), size = 0.5, color = "black") +
     geom_text(data = df_columnas_labels, aes(x = x, y = y, label = labels)) +
