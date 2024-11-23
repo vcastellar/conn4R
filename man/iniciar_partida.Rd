@@ -12,7 +12,7 @@ iniciar_partida(profundidad = 5, turno = 1)
 \item{turno}{qué jugador comienza pa partida: 1 para humano, 2 para IA.}
 }
 \description{
-inici una partida de conecta 4. Se especifica la profundidad
+inicia una partida de conecta 4. Se especifica la profundidad
              de búsqueda y el jugador que inicia la partida
 }
 \examples{
