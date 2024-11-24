@@ -14,7 +14,7 @@ dada una situacvión en el tablero de juego, devuelve las posibles
   jugadas existentes: columnas no completadas
 }
 \examples{
-tablero <- .crear_posicion_aleatoria(20)
+tablero <- crear_posicion_aleatoria(20)
 visualizar_tablero(tablero)
 jugadas_disponibles(tablero)
 }
