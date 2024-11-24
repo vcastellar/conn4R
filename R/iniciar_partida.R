@@ -65,7 +65,6 @@ iniciar_partida <- function(profundidad = 5, turno = 1) {
 
     print(paste0("valoracion IA: ", evaluar_posicion(tablero, 2)))
     print(paste0("jugada realizada: ", mejor_jugada_IA$jugada))
-    print(mejor_jugada_IA$linea)
 
 
     if (juego_terminado(tablero)) {
