@@ -9,7 +9,7 @@ mejor_jugada_minmax <- function(tablero, profundidad, maximizando_jugador,
 
   if (profundidad == 0 || juego_terminado(tablero)) {
     return(list(puntuacion = evaluar_posicion(tablero, 2) + evaluar_posicion(tablero, 1),
-                jugada = NA, linea = linea))
+                jugada = NA))
   }
 
   if (maximizando_jugador) {
@@ -18,7 +18,6 @@ mejor_jugada_minmax <- function(tablero, profundidad, maximizando_jugador,
 
     for (columna in jugadas_disponibles(tablero)) {
       nuevo_tablero <- realizar_jugada(tablero, columna, 2)
-      linea <<- c(linea, list(hum = columna))
 
 
       puntuacion <- mejor_jugada_minmax(nuevo_tablero, profundidad - 1, FALSE,
@@ -48,7 +47,6 @@ mejor_jugada_minmax <- function(tablero, profundidad, maximizando_jugador,
 
     for (columna in jugadas_disponibles(tablero)) {
       nuevo_tablero <- realizar_jugada(tablero, columna, 1)
-      linea <- c(linea, list(ia = columna))
 
       puntuacion <- mejor_jugada_minmax(nuevo_tablero, profundidad - 1, TRUE,
                                         alpha, beta)$puntuacion
@@ -67,5 +65,5 @@ mejor_jugada_minmax <- function(tablero, profundidad, maximizando_jugador,
 
   }
 
-  return(list(puntuacion = mejor_puntuacion, jugada = mejor_jugada, linea = linea))
+  return(list(puntuacion = mejor_puntuacion, jugada = mejor_jugada))
 }
