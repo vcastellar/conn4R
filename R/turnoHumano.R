@@ -12,8 +12,8 @@ turno_humano <- function(tablero, jugada) {
   }
 
   repeat {
-    print("Tu turno. Elige una columna (1-7): ")
-    jugada_humano <- as.integer(readline())
+    cat("Tu turno. Elige una columna (1-7): ")
+    jugada_humano <- as.integer(readLines(con = stdin(), n = 1))
 
     if (jugada_humano %in% jugadas_posibles) {
       # Encuentra la primera fila vacía en la columna elegida
