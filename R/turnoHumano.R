@@ -36,6 +36,7 @@ turno_humano <- function(tablero, jugada = NULL) {
     if (is.null(jugada)) {
       cat("Tu turno. Elige una columna (1-7): ")
       jugada_humano <- as.integer(readLines(con = stdin(), n = 1))
+      # jugada_humano <- as.integer(readline())
 
     } else {
       jugada_humano <- jugada
@@ -47,14 +48,14 @@ turno_humano <- function(tablero, jugada = NULL) {
         if (tablero[fila, jugada_humano] == 0) {
           tablero[fila, jugada_humano] <- 1  # Representa la jugada del humano
           return(tablero)
+
         }
       }
 
-      break
+
 
     } else {
       cat("Jugada no válida. Intenta de nuevo.\n")
-      return(tablero)
     }
   }
 }
