@@ -1,8 +1,18 @@
-# función que verifique condiciones de finalización del juego:
-#  - o bien uno de los dos participantes ha hecho 4 casillas en linea
-#  - o bien ya no quedan jugadas disponibles.
-# Debe devolver False si el juego no ha alcanzado
-# las condiciones de fin de juego o True en el caso de que sí
+#' evaluua fin del juego y resultado
+#'
+#' @description evalua una posición mediante criterios estáticos basados en el
+#' número de casillas conectadas del jugador en turno
+#' @param tablero una matriz representado el estado del tablero de juego
+
+#' @return devuelve una lista con el siguiente contenido
+#' \item finalizado: booleano que representa el estado del juego: TRUE finalizado
+#' \item resultado: resultado del juego
+#' @details
+#' si finalizado == TRUE, resultado contendrá "GANA HUMANO", "GANA IA" o "TABLAS"·
+#' si finalizado = FALSE, resultado es NA
+#' @examples
+#' tablero <- crear_posicion_aleatoria(21)
+#' juego_terminado(tablero$tablero)
 
 juego_terminado <- function(tablero) {
   # Verificar si hay 4 en línea para el jugador 1 o 2
