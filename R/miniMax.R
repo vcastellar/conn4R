@@ -7,7 +7,7 @@
 mejor_jugada_minmax <- function(tablero, profundidad, maximizando_jugador,
                                 alpha = -Inf, beta = Inf) {
 
-  if (profundidad == 0 || juego_terminado(tablero)) {
+  if (profundidad == 0 || juego_terminado(tablero$finalizado)) {
     return(list(puntuacion = evaluar_posicion(tablero, 2) + evaluar_posicion(tablero, 1),
                 jugada = NA))
   }
