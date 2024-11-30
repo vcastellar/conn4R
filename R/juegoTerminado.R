@@ -8,15 +8,19 @@ juego_terminado <- function(tablero) {
   # Verificar si hay 4 en línea para el jugador 1 o 2
   for (jugador in 1:2) {
     if (abs(evaluar_posicion(tablero, jugador)) >= 100000) {
-      return(TRUE)
+      if (jugador == 1) {
+        return(list(finalizado = TRUE, resultado = "GANA HUMANO"))
+      } else {
+        return(list(finalizado = TRUE, resultado = "GANA IA"))
+      }
     }
   }
 
   # Verificar si hay jugadas disponibles
   if (length(jugadas_disponibles(tablero)) == 0) {
-    return(TRUE)
+    return(list(finalizado = TRUE, resultado = "TABLAS"))
   }
 
   # Si no se cumple ninguna de las condiciones anteriores, el juego no ha terminado
-  return(FALSE)
+  return(list(finalizado = FALSE, resultado = NA))
 }
