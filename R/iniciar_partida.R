@@ -52,8 +52,8 @@ iniciar_partida <- function(profundidad = 5, turno = 1) {
     print(paste0("valoracion HU: ", evaluar_posicion(tablero, 1)))
 
 
-    if (juego_terminado(tablero)) {
-      resultado <- "gana humano"
+    if (juego_terminado(tablero)$finalizado) {
+      resultado <- juego_terminado(tablero)$resultado
       break
     }
     i <- i + 1
@@ -70,13 +70,14 @@ iniciar_partida <- function(profundidad = 5, turno = 1) {
     print(paste0("jugada realizada: ", mejor_jugada_IA$jugada))
 
 
-    if (juego_terminado(tablero)) {
-      resultado <- "gana IA"
+    if (juego_terminado(tablero)$finalizado) {
+      resultado <- juego_terminado(tablero)$resultado
       break
     }
 
     i <- i + 1
   }
+  
   cat(resultado)
 
 }
