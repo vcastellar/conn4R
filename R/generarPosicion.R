@@ -33,7 +33,7 @@ crear_posicion_aleatoria <- function(profundidad = 10) {
       tablero <- realizar_jugada(tablero, jugada, turno)
 
       # validar que el juego ha terminado. Si es así, se reinicia el tablero
-      if (juego_terminado(tablero) & i < 42) {
+      if (juego_terminado(tablero)$finalizado & i < 42) {
         reiniciar <- TRUE
         break
 
