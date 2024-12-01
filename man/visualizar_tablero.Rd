@@ -17,6 +17,6 @@ representa gráficamente el estado de un "tablero"
 }
 \examples{
 tablero <- crear_posicion_aleatoria(21)
-p <- visualizar_tablero(tablero$tablero)
+p <- visualizar_tablero(tablero)
 print(p)
 }
