@@ -28,5 +28,7 @@ evaluates whether the game has ended and with what result
 }
 \examples{
 tablero <- crear_posicion_aleatoria(21)
-juego_terminado(tablero$tablero)
+p <- visualizar_tablero(tablero)
+print(p)
+juego_terminado(tablero)
 }

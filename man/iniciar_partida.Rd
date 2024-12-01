@@ -9,7 +9,7 @@ iniciar_partida(profundidad = 5, turno = 1)
 \arguments{
 \item{profundidad}{profundidad de búsqueda del algoritmo minimax.}
 
-\item{turno}{qué jugador comienza pa partida: 1 para humano, 2 para IA.}
+\item{turno}{qué jugador comienza la partida: 1 para humano, 2 para IA.}
 }
 \description{
 inicia una partida de conecta 4. Se especifica la profundidad
