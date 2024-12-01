@@ -16,9 +16,9 @@
 #' }
 #' @examples
 #' tablero <- crear_posicion_aleatoria(21)
-#' p <- visualizar_tablero(tablero$tablero)
+#' p <- visualizar_tablero(tablero)
 #' print(p)
-#' juego_terminado(tablero$tablero)
+#' juego_terminado(tablero)
 
 juego_terminado <- function(tablero) {
   # Verificar si hay 4 en línea para el jugador 1 o 2

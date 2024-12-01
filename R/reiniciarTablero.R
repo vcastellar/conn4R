@@ -3,6 +3,7 @@
 # Creamos una matriz de 7 columnas y 6 filas llena de 0
 reiniciar_tablero <- function() {
   tablero <- matrix(0, nrow = 6, ncol = 7)
+  return(tablero)
 }
 
 

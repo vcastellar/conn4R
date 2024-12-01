@@ -3,7 +3,7 @@
 #' @description inicia una partida de conecta 4. Se especifica la profundidad
 #'              de búsqueda y el jugador que inicia la partida
 #' @param profundidad profundidad de búsqueda del algoritmo minimax.
-#' @param turno qué jugador comienza pa partida: 1 para humano, 2 para IA.
+#' @param turno qué jugador comienza la partida: 1 para humano, 2 para IA.
 #' @examples
 #' lo siguiente inicia una partida en la que  el jugador humano es el primero en jugar
 #' iniciar_partida(profundidad = 7, turno = 2)
@@ -14,7 +14,7 @@
 
 
 iniciar_partida <- function(profundidad = 5, turno = 1) {
-  resultado <- "tablas"
+  resultado <- "DRAW"
   tablero <- reiniciar_tablero()
   p <- visualizar_tablero(tablero)
   print(p)

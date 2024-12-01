@@ -25,6 +25,7 @@
 
 
 turno_humano <- function(tablero, jugada = NULL) {
+
   jugadas_posibles <- jugadas_disponibles(tablero)
 
   if (length(jugadas_posibles) == 0) {
@@ -48,11 +49,8 @@ turno_humano <- function(tablero, jugada = NULL) {
         if (tablero[fila, jugada_humano] == 0) {
           tablero[fila, jugada_humano] <- 1  # Representa la jugada del humano
           return(tablero)
-
         }
       }
-
-
 
     } else {
       cat("Jugada no válida. Intenta de nuevo.\n")

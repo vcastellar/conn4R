@@ -9,10 +9,10 @@
 #' }
 #' @examples
 #' tablero <- crear_posicion_aleatoria(21)
-#' visualizar_tablero(tablero$tablero)
+#' visualizar_tablero(tablero)
 #' tablero$turnoUltimo
-#' sum(tablero$tablero == 1)
-#' sum(tablero$tablero == 2)
+#' sum(tablero == 1)
+#' sum(tablero == 2)
 crear_posicion_aleatoria <- function(profundidad = 10) {
 
   reiniciar <- TRUE
@@ -45,6 +45,6 @@ crear_posicion_aleatoria <- function(profundidad = 10) {
 
   }
 
-  return(list(tablero = tablero, turnoUltimo = turno))
+  return(tablero)
 
 }
