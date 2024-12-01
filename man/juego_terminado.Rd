@@ -2,25 +2,29 @@
 % Please edit documentation in R/juegoTerminado.R
 \name{juego_terminado}
 \alias{juego_terminado}
-\title{evaluua fin del juego y resultado}
+\title{end-of-game evaluation and result}
 \usage{
 juego_terminado(tablero)
 }
 \arguments{
-\item{tablero}{una matriz representado el estado del tablero de juego}
+\item{tablero}{a matrix representing the state of the game board}
 }
 \value{
-devuelve una lista con el siguiente contenido
-\item finalizado: booleano que representa el estado del juego: TRUE finalizado
-\item resultado: resultado del juego
+returns a list with the following contents
+\itemize{
+\item{finalizado}: boolean representing the state of the game: TRUE game finished
+\item{resultado}: outcome of the game. If the game is over, there are three options
+}
 }
 \description{
-evalua una posición mediante criterios estáticos basados en el
-número de casillas conectadas del jugador en turno
+evaluates whether the game has ended and with what result 
+("HUMAN WINS", "AI WINS", "DRAW").
 }
 \details{
-si finalizado == TRUE, resultado contendrá "GANA HUMANO", "GANA IA" o "TABLAS"·
-si finalizado = FALSE, resultado es NA
+\itemize{
+\item{If the game is over is TRUE}: result can be "WIN HUMAN", "WIN IA" or "DRAW’.
+\item{If the game is over is TRUE}: result is NA
+}
 }
 \examples{
 tablero <- crear_posicion_aleatoria(21)
