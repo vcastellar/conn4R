@@ -1,17 +1,23 @@
-#' evaluua fin del juego y resultado
+#' end-of-game evaluation and result
 #'
-#' @description evalua una posición mediante criterios estáticos basados en el
-#' número de casillas conectadas del jugador en turno
-#' @param tablero una matriz representado el estado del tablero de juego
+#' @description evaluates whether the game has ended and with what result 
+#' ("HUMAN WINS", "AI WINS", "DRAW").
+#' @param tablero a matrix representing the state of the game board
 
-#' @return devuelve una lista con el siguiente contenido
-#' \item finalizado: booleano que representa el estado del juego: TRUE finalizado
-#' \item resultado: resultado del juego
+#' @return returns a list with the following contents
+#' \itemize{
+  #' \item{finalizado}: boolean representing the state of the game: TRUE game finished
+  #' \item{resultado}: outcome of the game. If the game is over, there are three options
+#' }
 #' @details
-#' si finalizado == TRUE, resultado contendrá "GANA HUMANO", "GANA IA" o "TABLAS"·
-#' si finalizado = FALSE, resultado es NA
+#' \itemize{
+  #' \item{If the game is over is TRUE}: result can be "WIN HUMAN", "WIN IA" or "DRAW’.
+  #' \item{If the game is over is TRUE}: result is NA
+#' }
 #' @examples
 #' tablero <- crear_posicion_aleatoria(21)
+#' p <- visualizar_tablero(tablero$tablero)
+#' print(p)
 #' juego_terminado(tablero$tablero)
 
 juego_terminado <- function(tablero) {
@@ -19,16 +25,16 @@ juego_terminado <- function(tablero) {
   for (jugador in 1:2) {
     if (abs(evaluar_posicion(tablero, jugador)) >= 100000) {
       if (jugador == 1) {
-        return(list(finalizado = TRUE, resultado = "GANA HUMANO"))
+        return(list(finalizado = TRUE, resultado = "WIN HUMAN"))
       } else {
-        return(list(finalizado = TRUE, resultado = "GANA IA"))
+        return(list(finalizado = TRUE, resultado = "WIN IA"))
       }
     }
   }
 
   # Verificar si hay jugadas disponibles
   if (length(jugadas_disponibles(tablero)) == 0) {
-    return(list(finalizado = TRUE, resultado = "TABLAS"))
+    return(list(finalizado = TRUE, resultado = "DRAW"))
   }
 
   # Si no se cumple ninguna de las condiciones anteriores, el juego no ha terminado
