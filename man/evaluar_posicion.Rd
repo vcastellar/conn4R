@@ -4,22 +4,21 @@
 \alias{evaluar_posicion}
 \title{evaluación estática de una posición representada en tablero}
 \usage{
-evaluar_posicion(tablero, turno)
+evaluar_posicion(tablero)
 }
 \arguments{
-\item{turno}{qué jugador comienza pa partida: 1 para humano, 2 para IA.}
+\item{tablero}{matriz que representa el estado de un tablero}
 
-\item{profundidad}{profundidad de búsqueda del algoritmo minimax.}
+\item{turno}{qué jugador comienza pa partida: 1 para humano, 2 para IA.}
 }
 \description{
 evalua una posición mediante criterios estáticos basados en el
 número de casillas conectadas del jugador en turno
 }
 \examples{
-lo siguiente inicia una partida en la que  el jugador humano es el primero en jugar
-iniciar_partida(profundidad = 7, turno = 2)
-
-para que sea la IA quien realice la primera jugada:
-iniciar_partida(turno = 2)
-
+tablero <- crear_posicion_aleatoria(18)
+visualizar_tablero(tablero)
+evaluar_posicion(tablero)
+evaluar_turno(tablero, 1)
+evaluar_turno(tablero, 2)
 }
