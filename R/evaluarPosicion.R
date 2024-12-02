@@ -2,16 +2,22 @@
 #'
 #' @description evalua una posición mediante criterios estáticos basados en el
 #' número de casillas conectadas del jugador en turno
-#' @param profundidad profundidad de búsqueda del algoritmo minimax.
+#' @param tablero matriz que representa el estado de un tablero
 #' @param turno qué jugador comienza pa partida: 1 para humano, 2 para IA.
 #' @examples
-#' lo siguiente inicia una partida en la que  el jugador humano es el primero en jugar
-#' iniciar_partida(profundidad = 7, turno = 2)
-#'
-#' para que sea la IA quien realice la primera jugada:
-#' iniciar_partida(turno = 2)
-#'
-evaluar_posicion <- function(tablero, turno) {
+#' tablero <- crear_posicion_aleatoria(18)
+#' visualizar_tablero(tablero)
+#' evaluar_posicion(tablero)
+#' evaluar_turno(tablero, 1)
+#' evaluar_turno(tablero, 2)
+
+
+evaluar_posicion <- function(tablero) {
+  return(evaluar_turno(tablero, 1) + evaluar_turno(tablero, 2))
+}
+
+
+evaluar_turno <- function(tablero, turno) {
   puntuacion <- 0
 
   # Evaluar líneas horizontales
