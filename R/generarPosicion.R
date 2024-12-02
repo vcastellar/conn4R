@@ -10,7 +10,6 @@
 #' @examples
 #' tablero <- crear_posicion_aleatoria(21)
 #' visualizar_tablero(tablero)
-#' tablero$turnoUltimo
 #' sum(tablero == 1)
 #' sum(tablero == 2)
 crear_posicion_aleatoria <- function(profundidad = 10) {
@@ -22,7 +21,6 @@ crear_posicion_aleatoria <- function(profundidad = 10) {
 
     turno <- 1
     tablero <- reiniciar_tablero()
-
 
     for (i in 1:profundidad) {
 
