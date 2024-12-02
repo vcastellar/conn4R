@@ -23,12 +23,12 @@ iniciar_partida <- function(profundidad = 5, turno = 1) {
   j <- 0
   if (turno == 2) {
     # introducir jugada de la IA
-    mejor_jugada_IA <- mejor_jugada_minmax(tablero, profundidad, maximizando_jugador = TRUE)
+    mejor_jugada_IA <- minimax(tablero, profundidad, maximizandoIA = TRUE)
     tablero <- realizar_jugada(tablero, mejor_jugada_IA$jugada, 2)
     tablero_aux <<- tablero
     p <- visualizar_tablero(tablero)
     print(p)
-    print(paste0("valoracion IA: ", evaluar_posicion(tablero, 2)))
+    print(paste0("valoracion IA: ", evaluar_posicion(tablero)))
     print(paste0("jugada realizada: ", mejor_jugada_IA$jugada))
 
 
@@ -49,7 +49,7 @@ iniciar_partida <- function(profundidad = 5, turno = 1) {
     cat("\14")
     p <- visualizar_tablero(tablero)
     print(p)
-    print(paste0("valoracion HU: ", evaluar_posicion(tablero, 1)))
+    print(paste0("valoracion HU: ", evaluar_posicion(tablero)))
 
 
     if (juego_terminado(tablero)$finalizado) {
@@ -60,13 +60,13 @@ iniciar_partida <- function(profundidad = 5, turno = 1) {
 
     # introducir jugada de la IA
     #---------------------------------------------------------------------------
-    mejor_jugada_IA <- mejor_jugada_minmax(tablero, profundidad, maximizando_jugador = TRUE)
+    mejor_jugada_IA <- minimax(tablero, profundidad, maximizandoIA = TRUE)
     tablero <- realizar_jugada(tablero, mejor_jugada_IA$jugada, 2)
     tablero_aux <<- tablero
     p <- visualizar_tablero(tablero)
     print(p)
 
-    print(paste0("valoracion IA: ", evaluar_posicion(tablero, 2)))
+    print(paste0("valoracion IA: ", evaluar_posicion(tablero)))
     print(paste0("jugada realizada: ", mejor_jugada_IA$jugada))
 
 
