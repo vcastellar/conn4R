@@ -23,7 +23,7 @@
 juego_terminado <- function(tablero) {
   # Verificar si hay 4 en línea para el jugador 1 o 2
   for (jugador in 1:2) {
-    if (abs(evaluar_posicion(tablero, jugador)) >= 100000) {
+    if (abs(evaluar_turno(tablero, jugador)) >= 100000) {
       if (jugador == 1) {
         return(list(finalizado = TRUE, resultado = "WIN HUMAN"))
       } else {
