@@ -66,7 +66,7 @@ iniciar_partida <- function(profundidad = 5, turno = 1) {
     p <- visualizar_tablero(tablero)
     print(p)
 
-    print(paste0("valoracion IA: ", evaluar_posicion(tablero)))
+    print(paste0("valoracion IA: ", mejor_jugada_IA$puntuacion))
     print(paste0("jugada realizada: ", mejor_jugada_IA$jugada))
 
 
