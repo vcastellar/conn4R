@@ -2,23 +2,10 @@
 % Please edit documentation in R/evaluarPosicion.R
 \name{evaluar_posicion}
 \alias{evaluar_posicion}
-\title{evaluación estática de una posición representada en tablero}
+\title{bitboarts}
 \usage{
 evaluar_posicion(tablero)
 }
-\arguments{
-\item{tablero}{matriz que representa el estado de un tablero}
-
-\item{turno}{qué jugador comienza pa partida: 1 para humano, 2 para IA.}
-}
 \description{
-evalua una posición mediante criterios estáticos basados en el
-número de casillas conectadas del jugador en turno
-}
-\examples{
-tablero <- crear_posicion_aleatoria(18)
-visualizar_tablero(tablero)
-evaluar_posicion(tablero)
-evaluar_turno(tablero, 1)
-evaluar_turno(tablero, 2)
+bitboarts
 }
