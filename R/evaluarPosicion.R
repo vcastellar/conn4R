@@ -12,8 +12,30 @@
 #' .evaluar_turno(tablero, 2)
 
 
+bitboards <- matrix(0, nrow = 6, ncol = 7)
+bitboards[, c(2, 6)] <- 0.5
+bitboards[, c(3, 5)] <- 1
+bitboards[, 4]       <- 1.5
+bitboards[1, ] <- bitboards[1, ] + 0
+bitboards[2, ] <- bitboards[2, ] + 0.5
+bitboards[3, ] <- bitboards[3, ] + 1
+bitboards[4, ] <- bitboards[4, ] + 1.5
+bitboards[5, ] <- bitboards[5, ] + 2
+bitboards[6, ] <- bitboards[6, ] + 0.5
+
+#' bitboarts
+#      [,1] [,2] [,3] [,4] [,5] [,6] [,7]
+# [1,]  0.0  0.5  1.0  1.5  1.0  0.5  0.0
+# [2,]  0.5  1.0  1.5  2.0  1.5  1.0  0.5
+# [3,]  1.0  1.5  2.0  2.5  2.0  1.5  1.0
+# [4,]  1.5  2.0  2.5  3.0  2.5  2.0  1.5
+# [5,]  2.0  2.5  3.0  3.5  3.0  2.5  2.0
+# [6,]  0.5  1.0  1.5  2.0  1.5  1.0  0.5
+
+
 evaluar_posicion <- function(tablero) {
-  return(.evaluar_turno(tablero, 1) + .evaluar_turno(tablero, 2))
+  puntBit <- sum(bitboards * (1 * (tablero == 2))) - sum(bitboards * (1 * (tablero == 1)))
+  return(.evaluar_turno(tablero, 1) + .evaluar_turno(tablero, 2) + puntBit)
 }
 
 
