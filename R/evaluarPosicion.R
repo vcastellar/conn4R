@@ -8,23 +8,23 @@
 #' tablero <- crear_posicion_aleatoria(18)
 #' visualizar_tablero(tablero)
 #' evaluar_posicion(tablero)
-#' evaluar_turno(tablero, 1)
-#' evaluar_turno(tablero, 2)
+#' .evaluar_turno(tablero, 1)
+#' .evaluar_turno(tablero, 2)
 
 
 evaluar_posicion <- function(tablero) {
-  return(evaluar_turno(tablero, 1) + evaluar_turno(tablero, 2))
+  return(.evaluar_turno(tablero, 1) + .evaluar_turno(tablero, 2))
 }
 
 
-evaluar_turno <- function(tablero, turno) {
+.evaluar_turno <- function(tablero, turno) {
   puntuacion <- 0
 
   # Evaluar líneas horizontales
   for (fila in 1:6) {
     for (columna in 1:4) {
       linea <- tablero[fila, columna:(columna + 3)]
-      puntuacion <- puntuacion + evaluar_linea(linea, turno)
+      puntuacion <- puntuacion + .evaluar_linea(linea, turno)
     }
   }
 
@@ -32,7 +32,7 @@ evaluar_turno <- function(tablero, turno) {
   for (columna in 1:7) {
     for (fila in 1:3) {
       linea <- tablero[fila:(fila + 3), columna]
-      puntuacion <- puntuacion + evaluar_linea(linea, turno)
+      puntuacion <- puntuacion + .evaluar_linea(linea, turno)
     }
   }
 
@@ -41,7 +41,7 @@ evaluar_turno <- function(tablero, turno) {
     for (columna in 1:4) {
       linea <- c(tablero[fila, columna], tablero[fila + 1, columna + 1],
                  tablero[fila + 2, columna + 2], tablero[fila + 3, columna + 3])
-      puntuacion <- puntuacion + evaluar_linea(linea, turno)
+      puntuacion <- puntuacion + .evaluar_linea(linea, turno)
     }
   }
 
@@ -50,7 +50,7 @@ evaluar_turno <- function(tablero, turno) {
     for (columna in 4:7) {
       linea <- c(tablero[fila, columna], tablero[fila + 1, columna - 1],
                  tablero[fila + 2, columna - 2], tablero[fila + 3, columna - 3])
-      puntuacion <- puntuacion + evaluar_linea(linea, turno)
+      puntuacion <- puntuacion + .evaluar_linea(linea, turno)
     }
   }
 
@@ -59,7 +59,7 @@ evaluar_turno <- function(tablero, turno) {
 
 # prompt: crea la función evaluar_linea necesaria para que funcióne la función anterior
 
-evaluar_linea <- function(linea, turno) {
+.evaluar_linea <- function(linea, turno) {
   puntuacion <- 0
 
   if (all(linea == turno)) {

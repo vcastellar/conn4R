@@ -1,1 +1,3 @@
 exportPattern("^[[:alpha:]]+")
+export(.evaluar_turno)
+export(.evaluar_linea)
