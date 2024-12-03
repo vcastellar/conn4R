@@ -42,7 +42,6 @@ minimax <- function(tablero, profundidad, maximizandoIA,
 
     for (columna in jugadas_disponibles(tablero)) {
       nuevo_tablero <- realizar_jugada(tablero, columna, 2)
-      numNodos <<- numNodos + 1
 
       puntuacion <- minimax(nuevo_tablero, profundidad - 1, FALSE, alpha, beta)$puntuacion
 
@@ -66,7 +65,6 @@ minimax <- function(tablero, profundidad, maximizandoIA,
 
     for (columna in jugadas_disponibles(tablero)) {
       nuevo_tablero <- realizar_jugada(tablero, columna, 1)
-      numNodos <<- numNodos + 1
 
       puntuacion <- minimax(nuevo_tablero, profundidad - 1, TRUE, alpha, beta)$puntuacion
 
