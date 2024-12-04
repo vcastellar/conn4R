@@ -32,7 +32,7 @@ iniciar_partida <- function(profundidad = 5, turno = 1) {
     print(paste0("jugada realizada: ", mejor_jugada_IA$jugada))
 
 
-    if (juego_terminado(tablero)) {
+    if (juego_terminado(tablero)$finalizado) {
       resultado <- "gana IA"
       break
     }
