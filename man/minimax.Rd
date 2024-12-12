@@ -4,7 +4,14 @@
 \alias{minimax}
 \title{algoritmo minimax}
 \usage{
-minimax(tablero, profundidad, maximizandoIA, alpha = -Inf, beta = Inf)
+minimax(
+  tablero,
+  profundidad,
+  maximizandoIA,
+  alpha = -Inf,
+  beta = Inf,
+  env = NULL
+)
 }
 \arguments{
 \item{tablero}{a matrix representing the state of the game board}
@@ -34,13 +41,16 @@ jugada dada una cierta posición del tablero
 \item{If the game is over is TRUE}: result can be "WIN HUMAN", "WIN IA" or "DRAW’.
 \item{If the game is over is TRUE}: result is NA
 }
+la poda alpha-beta reduce drásticamente el número de nodos que se evaluan:
+a profundidad 5, con tres movimientos realizados en el tablero, el algoritmo minimax calcula:
+\itemize{
+\item con poda alpha-beta: 4.677 nodos
+\item sin poda alpha-beta: 19.607 nodos
+}
 }
 \examples{
 tablero <- crear_posicion_aleatoria(3)
-numNodos <- 0
-ts <- system.time(
-  minimax(tablero = tablero, profundidad = 7, maximizandoIA = TRUE)
-)
-numNodos
-numNodos /ts[3]
+kk <- minimax(tablero = tablero, profundidad = 3, maximizandoIA = TRUE)
+kk
+kk$env$arbol
 }
