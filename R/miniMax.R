@@ -20,67 +20,102 @@
 #' \item{If the game is over is TRUE}: result can be "WIN HUMAN", "WIN IA" or "DRAW’.
 #' \item{If the game is over is TRUE}: result is NA
 #' }
+#' la poda alpha-beta reduce drásticamente el número de nodos que se evaluan:
+#' a profundidad 5, con tres movimientos realizados en el tablero, el algoritmo minimax calcula:
+#' \itemize{
+#' \item con poda alpha-beta: 4.677 nodos
+#' \item sin poda alpha-beta: 19.607 nodos
+#' }
 #' @examples
 #' tablero <- crear_posicion_aleatoria(3)
-#' numNodos <- 0
-#' ts <- system.time(
-#'   minimax(tablero = tablero, profundidad = 7, maximizandoIA = TRUE)
-#' )
-#' numNodos
-#' numNodos /ts[3]
+#' kk <- minimax(tablero = tablero, profundidad = 3, maximizandoIA = TRUE)
+#' kk
+#' kk$env$arbol
 
-minimax <- function(tablero, profundidad, maximizandoIA,
-                                alpha = -Inf, beta = Inf) {
 
-  if (profundidad == 0 || juego_terminado(tablero)$finalizado) {
-    return(list(puntuacion = evaluar_posicion(tablero), jugada = NA))
+
+minimax <- minimax <- function(tablero, profundidad, maximizandoIA, alpha = -Inf, beta = Inf, env = NULL) {
+  
+  # Inicializar el entorno solo si no fue pasado como argumento
+  if (is.null(env)) {
+    env <- new.env()
+    env$arbol <- new("arbol")
   }
-
+  
+  # Verificar condición de parada
+  if (profundidad == 0 | juego_terminado(tablero)$finalizado) {
+    return(list(puntuacion = evaluar_posicion(tablero), 
+                jugada     = NA, 
+                env        = env)
+           )
+  }
+  
   if (maximizandoIA) {
     mejor_puntuacion <- -Inf
     mejor_jugada <- NA
-
+    
     for (columna in jugadas_disponibles(tablero)) {
       nuevo_tablero <- realizar_jugada(tablero, columna, 2)
-
-      puntuacion <- minimax(nuevo_tablero, profundidad - 1, FALSE, alpha, beta)$puntuacion
-
-      if (puntuacion > mejor_puntuacion) {
-        mejor_puntuacion <- puntuacion
-        mejor_jugada <- columna
+      
+      # actualizar arbol
+      env$arbol <- actualizar(env$arbol, 
+                              turno       = TRUE, 
+                              jugada      = as.integer(columna), 
+                              profundidad = as.integer(profundidad))
+      
+      res        <- minimax(nuevo_tablero, profundidad - 1, FALSE, alpha, beta, env)
+      
+      if (res$puntuacion > mejor_puntuacion) {
+        mejor_puntuacion <- res$puntuacion
+        mejor_jugada     <- columna
       }
-
+      
       alpha <- max(alpha, mejor_puntuacion)
       if (beta <= alpha) {
         break  # Poda alpha-beta
       }
+      
     }
-
-    return(list(puntuacion = mejor_puntuacion, jugada = mejor_jugada))
-
+    
+    return(list(puntuacion = mejor_puntuacion,
+                jugada     = mejor_jugada,
+                env        = env))
+    
   } else {
-
     mejor_puntuacion <- Inf
     mejor_jugada <- NA
-
+    
     for (columna in jugadas_disponibles(tablero)) {
       nuevo_tablero <- realizar_jugada(tablero, columna, 1)
-
-      puntuacion <- minimax(nuevo_tablero, profundidad - 1, TRUE, alpha, beta)$puntuacion
-
-      if (puntuacion < mejor_puntuacion) {
-        mejor_puntuacion <- puntuacion
-        mejor_jugada <- columna
+      
+      env$arbol  <- actualizar(env$arbol, FALSE, as.integer(columna), as.integer(profundidad))
+      
+      res        <- minimax(nuevo_tablero, profundidad - 1, TRUE, alpha, beta, env)
+      
+      if (res$puntuacion < mejor_puntuacion) {
+        mejor_puntuacion <- res$puntuacion
+        mejor_jugada     <- columna
 
       }
+      
       beta <- min(beta, mejor_puntuacion)
       if (beta <= alpha) {
         break  # Poda alpha-beta
       }
-
     }
-
+    
+    return(list(puntuacion = mejor_puntuacion,
+                jugada     = mejor_jugada,
+                env        = env))
   }
-
-  return(list(puntuacion = mejor_puntuacion, jugada = mejor_jugada))
 }
+
+.actualizarEnv <- function(env, turno, jugada, profundidad, puntuacion = NA) {
+  env$info$numNodos          <- env$info$numNodos + 1 # Incrementar el contador
+  env$info$arbol$turno       <- c(env$info$arbol$turno, turno)
+  env$info$arbol$jugada      <- c(env$info$arbol$jugada, jugada)
+  env$info$arbol$profundidad <- c(env$info$arbol$profundidad, profundidad)
+  env$info$arbol$idNodo      <- c(env$info$arbol$idNodo, env$info$numNodos)
+  env$info$arbol$puntuacion  <- c(env$info$arbol$puntuacion, puntuacion)
+}
+
