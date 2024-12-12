@@ -12,8 +12,16 @@ using namespace Rcpp;
 //
 
 // [[Rcpp::export]]
-NumericVector timesTwo(NumericVector x) {
-  return x * 2;
+
+double factorial(int n) {
+  if (n < 0) { 
+    stop("El factorial no está definido para números negativos."); 
+  } 
+  if (n == 0) { 
+    return 1; 
+  } else { 
+    return n * factorial(n - 1); 
+    } 
 }
 
 
@@ -22,6 +30,4 @@ NumericVector timesTwo(NumericVector x) {
 // run after the compilation.
 //
 
-/*** R
-timesTwo(42)
-*/
+

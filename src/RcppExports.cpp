@@ -10,20 +10,20 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
-// timesTwo
-NumericVector timesTwo(NumericVector x);
-RcppExport SEXP _conn4R_timesTwo(SEXP xSEXP) {
+// factorial
+double factorial(int n);
+RcppExport SEXP _conn4R_factorial(SEXP nSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< NumericVector >::type x(xSEXP);
-    rcpp_result_gen = Rcpp::wrap(timesTwo(x));
+    Rcpp::traits::input_parameter< int >::type n(nSEXP);
+    rcpp_result_gen = Rcpp::wrap(factorial(n));
     return rcpp_result_gen;
 END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_conn4R_timesTwo", (DL_FUNC) &_conn4R_timesTwo, 1},
+    {"_conn4R_factorial", (DL_FUNC) &_conn4R_factorial, 1},
     {NULL, NULL, 0}
 };
 

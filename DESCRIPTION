@@ -12,5 +12,6 @@ LazyData: true
 RoxygenNote: 7.3.2
 Imports:
   ggplot2,
-  Rcpp
+  Rcpp,
+  methods
 LinkingTo: Rcpp
