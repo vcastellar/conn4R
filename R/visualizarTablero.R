@@ -51,7 +51,7 @@ visualizar_tablero <- function(tablero) {
     geom_point(data = df_fichas, 
                aes(x = x_centro, y = y_centro, fill = ficha, alpha = alpha),
                shape = 21, size = 23) +
-    scale_fill_manual(values = c( "0" = "white", "1" = "red", "2" = "blue"), name = "ficha") +
+    scale_fill_manual(values = c( "0" = "white", "1" = "papayawhip", "2" = "grey15"), name = "ficha") +
     geom_segment(data = df_lineas_h, aes(x = xini, y = yini, xend = xend, yend = yend), size = 0.5, color = "black") +
     geom_segment(data = df_lineas_v, aes(x = xini, y = yini, xend = xend, yend = yend), size = 0.5, color = "black") +
     geom_text(data = df_columnas_labels, aes(x = x, y = y, label = labels)) +
