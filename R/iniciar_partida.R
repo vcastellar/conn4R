@@ -13,7 +13,7 @@
 
 
 
-iniciar_partida <- function(profundidad = 5, turno = 1) {
+iniciar_partida <- function(profundidad = 5, turno = 1, profAdaptative = TRUE) {
   resultado <- "DRAW"
   tablero <- reiniciar_tablero()
   p <- visualizar_tablero(tablero)
@@ -60,7 +60,13 @@ iniciar_partida <- function(profundidad = 5, turno = 1) {
 
     # introducir jugada de la IA
     #---------------------------------------------------------------------------
-    mejor_jugada_IA <- minimax(tablero, profundidad, maximizandoIA = TRUE)
+    numJugadas <- length(jugadas_disponibles(tablero))
+    if (profAdaptative) {
+      prof = min(ceiling(profundidad * log(profundidad) / log(numJugadas + 1)), 7 * numJugadas)
+    } else {
+      prof = prundidad
+    }
+    mejor_jugada_IA <- minimax(tablero, prof, maximizandoIA = TRUE)
     tablero <- realizar_jugada(tablero, mejor_jugada_IA$jugada, 2)
     tablero_aux <<- tablero
     p <- visualizar_tablero(tablero)
