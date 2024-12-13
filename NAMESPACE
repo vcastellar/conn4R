@@ -1,5 +1,6 @@
 exportPattern("^[[:alpha:]]+")
 export(.evaluar_turno)
 export(.evaluar_linea)
+exportClasses("arbol")
 useDynLib(conn4R)
 importFrom(Rcpp, evalCpp)
