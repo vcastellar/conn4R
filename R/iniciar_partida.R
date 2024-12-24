@@ -13,7 +13,7 @@
 
 
 
-iniciar_partida <- function(profundidad = 5, turno = 1, profAdaptative = TRUE) {
+iniciar_partida <- function(profundidad = 5, turno = 1, profAdaptative = FALSE, algCpp = TRUE) {
   resultado <- "DRAW"
   tablero <- reiniciar_tablero()
   p <- visualizar_tablero(tablero)
@@ -49,6 +49,7 @@ iniciar_partida <- function(profundidad = 5, turno = 1, profAdaptative = TRUE) {
     cat("\14")
     p <- visualizar_tablero(tablero)
     print(p)
+    
     print(paste0("valoracion HU: ", evaluar_posicion(tablero)))
 
 
@@ -57,16 +58,28 @@ iniciar_partida <- function(profundidad = 5, turno = 1, profAdaptative = TRUE) {
       break
     }
     i <- i + 1
+    
+    print(p)
 
     # introducir jugada de la IA
     #---------------------------------------------------------------------------
     numJugadas <- length(jugadas_disponibles(tablero))
     if (profAdaptative) {
-      prof = min(ceiling(profundidad * log(profundidad) / log(numJugadas + 1)), 7 * numJugadas)
+      numJugadas <- .numJugadas(tablero)
+      prof <- profundidadAdaptativa(numJugadas, profundidad)
     } else {
-      prof = prundidad
+      prof <- profundidad
     }
-    mejor_jugada_IA <- minimax(tablero, prof, maximizandoIA = TRUE)
+    
+    tik <- system.time({
+      if (algCpp) {
+        mejor_jugada_IA <- miniMaxCpp(tablero, prof, maximizandoIA = TRUE)
+      } else {
+        mejor_jugada_IA <- minimax(tablero, prof, maximizandoIA = TRUE)
+      }
+    })
+
+
     tablero <- realizar_jugada(tablero, mejor_jugada_IA$jugada, 2)
     tablero_aux <<- tablero
     p <- visualizar_tablero(tablero)
@@ -74,6 +87,9 @@ iniciar_partida <- function(profundidad = 5, turno = 1, profAdaptative = TRUE) {
 
     print(paste0("valoracion IA: ", mejor_jugada_IA$puntuacion))
     print(paste0("jugada realizada: ", mejor_jugada_IA$jugada))
+    print(paste0("profundidad: ", prof))
+    print(tik)
+
 
 
     if (juego_terminado(tablero)$finalizado) {
