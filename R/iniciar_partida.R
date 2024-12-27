@@ -13,7 +13,7 @@
 
 
 
-iniciar_partida <- function(profundidad = 5, turno = 1, profAdaptative = FALSE, algCpp = TRUE) {
+iniciar_partida <- function(profundidad = 5, turno = 1, profAdaptative = FALSE, algCpp = FALSE) {
   resultado <- "DRAW"
   tablero <- reiniciar_tablero()
   p <- visualizar_tablero(tablero)
@@ -75,7 +75,7 @@ iniciar_partida <- function(profundidad = 5, turno = 1, profAdaptative = FALSE, 
       if (algCpp) {
         mejor_jugada_IA <- miniMaxCpp(tablero, prof, maximizandoIA = TRUE)
       } else {
-        mejor_jugada_IA <- minimax(tablero, prof, maximizandoIA = TRUE)
+        mejor_jugada_IA <- minimaxOpt(tablero, prof, maximizandoIA = TRUE)
       }
     })
 

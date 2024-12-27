@@ -56,7 +56,7 @@ BEGIN_RCPP
 END_RCPP
 }
 // jugadasDisponibles
-IntegerVector jugadasDisponibles(NumericMatrix tablero);
+inline IntegerVector jugadasDisponibles(NumericMatrix tablero);
 RcppExport SEXP _conn4R_jugadasDisponibles(SEXP tableroSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
@@ -67,7 +67,7 @@ BEGIN_RCPP
 END_RCPP
 }
 // juegoTerminado
-List juegoTerminado(NumericMatrix tablero);
+inline List juegoTerminado(NumericMatrix tablero);
 RcppExport SEXP _conn4R_juegoTerminado(SEXP tableroSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
@@ -105,6 +105,21 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// minimaxOpt_cpp
+List minimaxOpt_cpp(NumericMatrix tablero, int profundidad, bool maximizandoIA, double alpha, double beta);
+RcppExport SEXP _conn4R_minimaxOpt_cpp(SEXP tableroSEXP, SEXP profundidadSEXP, SEXP maximizandoIASEXP, SEXP alphaSEXP, SEXP betaSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericMatrix >::type tablero(tableroSEXP);
+    Rcpp::traits::input_parameter< int >::type profundidad(profundidadSEXP);
+    Rcpp::traits::input_parameter< bool >::type maximizandoIA(maximizandoIASEXP);
+    Rcpp::traits::input_parameter< double >::type alpha(alphaSEXP);
+    Rcpp::traits::input_parameter< double >::type beta(betaSEXP);
+    rcpp_result_gen = Rcpp::wrap(minimaxOpt_cpp(tablero, profundidad, maximizandoIA, alpha, beta));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_conn4R_crearBitboards", (DL_FUNC) &_conn4R_crearBitboards, 0},
@@ -115,6 +130,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_conn4R_juegoTerminado", (DL_FUNC) &_conn4R_juegoTerminado, 1},
     {"_conn4R_realizarJugada", (DL_FUNC) &_conn4R_realizarJugada, 3},
     {"_conn4R_miniMaxCpp", (DL_FUNC) &_conn4R_miniMaxCpp, 5},
+    {"_conn4R_minimaxOpt_cpp", (DL_FUNC) &_conn4R_minimaxOpt_cpp, 5},
     {NULL, NULL, 0}
 };
 

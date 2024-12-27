@@ -49,8 +49,10 @@ a profundidad 5, con tres movimientos realizados en el tablero, el algoritmo min
 }
 }
 \examples{
-tablero <- crear_posicion_aleatoria(3)
+tablero <- crear_posicion_aleatoria(25)
+visualizar_tablero(tablero)
 kk <- minimax(tablero = tablero, profundidad = 3, maximizandoIA = TRUE)
 kk
-kk$env$arbol
+x <- kk$env$arbol
+x
 }

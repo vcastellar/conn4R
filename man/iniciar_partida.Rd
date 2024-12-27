@@ -4,7 +4,12 @@
 \alias{iniciar_partida}
 \title{Iniciar una partida de conecta 4}
 \usage{
-iniciar_partida(profundidad = 5, turno = 1)
+iniciar_partida(
+  profundidad = 5,
+  turno = 1,
+  profAdaptative = FALSE,
+  algCpp = TRUE
+)
 }
 \arguments{
 \item{profundidad}{profundidad de búsqueda del algoritmo minimax.}

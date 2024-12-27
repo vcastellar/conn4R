@@ -33,3 +33,7 @@ miniMaxCpp <- function(tablero, profundidad, maximizandoIA, alpha = NA_real_, be
     .Call('_conn4R_miniMaxCpp', PACKAGE = 'conn4R', tablero, profundidad, maximizandoIA, alpha, beta)
 }
 
+minimaxOpt_cpp <- function(tablero, profundidad, maximizandoIA, alpha = NA_real_, beta = NA_real_) {
+    .Call('_conn4R_minimaxOpt_cpp', PACKAGE = 'conn4R', tablero, profundidad, maximizandoIA, alpha, beta)
+}
+
