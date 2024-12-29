@@ -1,15 +1,11 @@
-tablero <- crear_posicion_aleatoria(5)
+tablero <- crear_posicion_aleatoria(12)
 visualizar_tablero(tablero)
-prof = 7
+prof = 8
 system.time({
   mejor_jugada_IA <- minimax(tablero, prof, maximizandoIA = TRUE)
   print(mejor_jugada_IA)
 })
 
-system.time({
-  mejor_jugada_IA <- minimaxOpt(tablero, prof, maximizandoIA = TRUE)
-  print(mejor_jugada_IA)
-})
 
 
 system.time({

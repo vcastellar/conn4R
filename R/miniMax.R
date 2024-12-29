@@ -27,21 +27,23 @@
 #' \item sin poda alpha-beta: 19.607 nodos
 #' }
 #' @examples
-#' tablero <- crear_posicion_aleatoria(25)
+#' tablero <- crear_posicion_aleatoria(10)
 #' visualizar_tablero(tablero)
-#' kk <- minimax(tablero = tablero, profundidad = 3, maximizandoIA = TRUE)
-#' kk
-#' x <- kk$env$arbol
-#' x
+#' system.time({
+#'   kk <- minimax(tablero = tablero, profundidad = 9, maximizandoIA = TRUE)
+#' })
+#' kk$env$contador
+#' kk$puntuacion
+#' kk$jugada
 
 
-
-minimax <- minimax <- function(tablero, profundidad, maximizandoIA, alpha = -Inf, beta = Inf, env = NULL) {
+minimax <- function(tablero, profundidad, maximizandoIA, alpha = -Inf, beta = Inf, env = NULL) {
   
   # Inicializar el entorno solo si no fue pasado como argumento
   if (is.null(env)) {
     env <- new.env()
     env$arbol <- new("arbol")
+    env$contador <- 0
   }
   
   # Verificar condición de parada
@@ -56,16 +58,19 @@ minimax <- minimax <- function(tablero, profundidad, maximizandoIA, alpha = -Inf
     mejor_puntuacion <- -Inf
     mejor_jugada <- NA
     
-    for (columna in jugadas_disponibles(tablero)) {
+    jugadas_candidatas <- jugadas_disponibles(tablero) 
+    jugadas_candidatas <- ordenar_jugadas(tablero, jugadas_candidatas, turno = 2)$jugadas
+    for (columna in jugadas_candidatas) {
+      
       nuevo_tablero <- realizar_jugada(tablero, columna, 2)
-      punt <- evaluar_posicion(nuevo_tablero)
       
       # actualizar arbol
-      env$arbol <- actualizar(env$arbol, 
-                              turno       = TRUE, 
-                              jugada      = as.integer(columna), 
+      env$contador <- env$contador + 1
+      env$arbol <- actualizar(env$arbol,
+                              turno       = TRUE,
+                              jugada      = as.integer(columna),
                               profundidad = as.integer(profundidad),
-                              puntuacion  = punt)
+                              puntuacion  = evaluar_posicion(nuevo_tablero))
       
       res <- minimax(nuevo_tablero, profundidad - 1, FALSE, alpha, beta, env)
       
@@ -89,17 +94,18 @@ minimax <- minimax <- function(tablero, profundidad, maximizandoIA, alpha = -Inf
     mejor_puntuacion <- Inf
     mejor_jugada <- NA
     
-    for (columna in jugadas_disponibles(tablero)) {
+    jugadas_candidatas <- jugadas_disponibles(tablero) 
+    jugadas_candidatas <- rev(ordenar_jugadas(tablero, jugadas_candidatas, turno = 1)$jugadas)
+    for (columna in jugadas_candidatas) {
       nuevo_tablero <- realizar_jugada(tablero, columna, 1)
       
-      punt <- evaluar_posicion(nuevo_tablero)
-      
       # actualizar arbol
-      env$arbol <- actualizar(env$arbol, 
-                              turno       = FALSE, 
-                              jugada      = as.integer(columna), 
+      env$contador <- env$contador + 1
+      env$arbol <- actualizar(env$arbol,
+                              turno       = FALSE,
+                              jugada      = as.integer(columna),
                               profundidad = as.integer(profundidad),
-                              puntuacion  = punt)
+                              puntuacion  = evaluar_posicion(nuevo_tablero))
       
       res <- minimax(nuevo_tablero, profundidad - 1, TRUE, alpha, beta, env)
       

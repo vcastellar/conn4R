@@ -120,6 +120,21 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// miniMaxCppOpt
+List miniMaxCppOpt(NumericMatrix tablero, int profundidad, bool maximizandoIA, double alpha, double beta);
+RcppExport SEXP _conn4R_miniMaxCppOpt(SEXP tableroSEXP, SEXP profundidadSEXP, SEXP maximizandoIASEXP, SEXP alphaSEXP, SEXP betaSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericMatrix >::type tablero(tableroSEXP);
+    Rcpp::traits::input_parameter< int >::type profundidad(profundidadSEXP);
+    Rcpp::traits::input_parameter< bool >::type maximizandoIA(maximizandoIASEXP);
+    Rcpp::traits::input_parameter< double >::type alpha(alphaSEXP);
+    Rcpp::traits::input_parameter< double >::type beta(betaSEXP);
+    rcpp_result_gen = Rcpp::wrap(miniMaxCppOpt(tablero, profundidad, maximizandoIA, alpha, beta));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_conn4R_crearBitboards", (DL_FUNC) &_conn4R_crearBitboards, 0},
@@ -131,6 +146,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_conn4R_realizarJugada", (DL_FUNC) &_conn4R_realizarJugada, 3},
     {"_conn4R_miniMaxCpp", (DL_FUNC) &_conn4R_miniMaxCpp, 5},
     {"_conn4R_minimaxOpt_cpp", (DL_FUNC) &_conn4R_minimaxOpt_cpp, 5},
+    {"_conn4R_miniMaxCppOpt", (DL_FUNC) &_conn4R_miniMaxCppOpt, 5},
     {NULL, NULL, 0}
 };
 
