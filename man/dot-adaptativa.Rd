@@ -13,7 +13,7 @@ profundidad adaptativa
 tablero <- crear_posicion_aleatoria(10)
 numJugadas <- seq(7, 1, by = -1/6)
 profundidad <- 7
-profs <- profundidadAdaptativa(numJugadas, profundidad, a = 0.5, p = 0.5)
+profs <- profundidadAdaptativa(numJugadas, profundidad, a = 0.2, p = 0.8)
 (numNodosAdap <- numJugadas^profs)
 (numNodosOrig <- numJugadas^profundidad)
 ylim = c(0, 1.1 * max(c(numNodosAdap, numNodosOrig)))

@@ -14,7 +14,9 @@ dada una situacvión en el tablero de juego, devuelve las posibles
   jugadas existentes: columnas no completadas
 }
 \examples{
-tablero <- crear_posicion_aleatoria(20)
+tablero <- crear_posicion_aleatoria(21)
+tablero <- readRDS("tableroPruebas")
 visualizar_tablero(tablero)
-jugadas_disponibles(tablero)
+(jugadas_candidatas <- jugadas_disponibles(tablero))
+ordenar_jugadas(tablero, jugadas_candidatas)
 }

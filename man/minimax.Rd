@@ -49,10 +49,12 @@ a profundidad 5, con tres movimientos realizados en el tablero, el algoritmo min
 }
 }
 \examples{
-tablero <- crear_posicion_aleatoria(25)
+tablero <- crear_posicion_aleatoria(10)
 visualizar_tablero(tablero)
-kk <- minimax(tablero = tablero, profundidad = 3, maximizandoIA = TRUE)
-kk
-x <- kk$env$arbol
-x
+system.time({
+  kk <- minimax(tablero = tablero, profundidad = 9, maximizandoIA = TRUE)
+})
+kk$env$contador
+kk$puntuacion
+kk$jugada
 }

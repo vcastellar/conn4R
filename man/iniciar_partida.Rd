@@ -7,8 +7,8 @@
 iniciar_partida(
   profundidad = 5,
   turno = 1,
-  profAdaptative = FALSE,
-  algCpp = TRUE
+  profAdaptative = TRUE,
+  algCpp = FALSE
 )
 }
 \arguments{
