@@ -63,9 +63,10 @@ iniciar_partida <- function(profundidad = 5, turno = 1, profAdaptative = TRUE, a
 
     # introducir jugada de la IA
     #---------------------------------------------------------------------------
-    numJugadas <- length(jugadas_disponibles(tablero))
+    numJugadas <- .numJugadas(tablero)
     if (profAdaptative) {
-      prof <- profundidadAdaptativa(numJugadas, profundidad)
+      prof <- .adaptativa(numJugadas, profundidad)
+      print("profundidad adaptativa")
     } else {
       prof <- profundidad
     }
