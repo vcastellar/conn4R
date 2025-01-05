@@ -19,8 +19,10 @@ jugadas_disponibles <- function(tablero) {
 
 
 # función ordenar jugadas de más prometedoras a menos
-ordenar_jugadas <- function(tablero, jugadas_candidatas, turno) {
+ordenar_jugadas <- function(tablero, turno) {
   puntuacion <- c()
+  
+  jugadas_candidatas <- jugadas_disponibles(tablero)
   
   for (i in jugadas_candidatas) {
     tablero_aux <- realizar_jugada(tablero, i, turno)
@@ -29,7 +31,7 @@ ordenar_jugadas <- function(tablero, jugadas_candidatas, turno) {
   
   
   df <- data.frame(jugadas = jugadas_candidatas, puntuacion = puntuacion)
-  df <- df[order(df$puntuacion, decreasing = TRUE), ]
+  df <- df[order(df$puntuacion, decreasing = ifelse(turno == 2, TRUE, FALSE)), ]
   
   # poda de jugadas
   if (any(abs(df$puntuacion) > 10000)) {

@@ -30,7 +30,7 @@
 #' tablero <- crear_posicion_aleatoria(10)
 #' visualizar_tablero(tablero)
 #' system.time({
-#'   kk <- minimax(tablero = tablero, profundidad = 9, maximizandoIA = TRUE)
+#'   kk <- minimax(tablero = tablero, profundidad = 7, maximizandoIA = TRUE)
 #' })
 #' kk$env$contador
 #' kk$puntuacion
@@ -58,8 +58,8 @@ minimax <- function(tablero, profundidad, maximizandoIA, alpha = -Inf, beta = In
     mejor_puntuacion <- -Inf
     mejor_jugada <- NA
     
-    jugadas_candidatas <- jugadas_disponibles(tablero) 
-    jugadas_candidatas <- ordenar_jugadas(tablero, jugadas_candidatas, turno = 2)$jugadas
+    jugadas_candidatas <- ordenar_jugadas(tablero, turno = 2)$jugadas
+    
     for (columna in jugadas_candidatas) {
       
       nuevo_tablero <- realizar_jugada(tablero, columna, 2)
@@ -94,8 +94,8 @@ minimax <- function(tablero, profundidad, maximizandoIA, alpha = -Inf, beta = In
     mejor_puntuacion <- Inf
     mejor_jugada <- NA
     
-    jugadas_candidatas <- jugadas_disponibles(tablero) 
-    jugadas_candidatas <- rev(ordenar_jugadas(tablero, jugadas_candidatas, turno = 1)$jugadas)
+    jugadas_candidatas <- ordenar_jugadas(tablero, turno = 1)$jugadas
+    
     for (columna in jugadas_candidatas) {
       nuevo_tablero <- realizar_jugada(tablero, columna, 1)
       
