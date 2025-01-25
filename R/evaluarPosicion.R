@@ -5,7 +5,7 @@
 #' @param tablero matriz que representa el estado de un tablero
 #' @param turno qué jugador comienza pa partida: 1 para humano, 2 para IA.
 #' @examples
-#' tablero <- crear_posicion_aleatoria(18)
+#' tablero <- crear_posicion_aleatoria(5)
 #' visualizar_tablero(tablero)
 #' evaluar_posicion(tablero)
 #' .evaluar_turno(tablero, 1)
@@ -23,75 +23,162 @@ bitboards <- matrix(c(
 ), nrow = 6, byrow = TRUE)
 
 
+# constantes
+punt1 <- 1
+punt2 <- 10
+punt3 <- 100
+punt4 <- 100000
+
 # función principal
 evaluar_posicion <- function(tablero) {
   puntBit <- sum(bitboards * (1 * (tablero == 2))) - sum(bitboards * (1 * (tablero == 1)))
-  return(.evaluar_turno(tablero, 1) + .evaluar_turno(tablero, 2) + puntBit)
+  eval_turno <- .evaluar_turno(tablero, 2) + .evaluar_turno(tablero, 1)
+  return(eval_turno + puntBit)
 }
 
 
 #función evaluar turno
 .evaluar_turno <- function(tablero, turno) {
   puntuacion <- 0
-  
+
   # Evaluar líneas horizontales
   for (fila in 1:6) {
     for (columna in 1:4) {
       linea <- tablero[fila, columna:(columna + 3)]
+      attr(linea, "ini") <- c(fila, columna)
+      attr(linea, "fin") <- c(fila, columna + 3)
+      attr(linea, "dir") <- "h"
       puntuacion <- puntuacion + .evaluar_linea(linea, turno)
     }
   }
-  
+
   # Evaluar líneas verticales
   for (columna in 1:7) {
     for (fila in 1:3) {
       linea <- tablero[fila:(fila + 3), columna]
+      attr(linea, "ini") <- c(fila, columna)
+      attr(linea, "fin") <- c(fila + 3, columna)
+      attr(linea, "dir") <- "v"
       puntuacion <- puntuacion + .evaluar_linea(linea, turno)
     }
   }
-  
+
   # Evaluar líneas diagonales (de izquierda a derecha)
   for (fila in 1:3) {
     for (columna in 1:4) {
       linea <- c(tablero[fila, columna], tablero[fila + 1, columna + 1],
                  tablero[fila + 2, columna + 2], tablero[fila + 3, columna + 3])
+      attr(linea, "ini") <- c(fila, columna)
+      attr(linea, "fin") <- c(fila + 3, columna + 3)
+      attr(linea, "dir") <- "did"
       puntuacion <- puntuacion + .evaluar_linea(linea, turno)
     }
   }
-  
+
   # Evaluar líneas diagonales (de derecha a izquierda)
   for (fila in 1:3) {
     for (columna in 4:7) {
       linea <- c(tablero[fila, columna], tablero[fila + 1, columna - 1],
                  tablero[fila + 2, columna - 2], tablero[fila + 3, columna - 3])
+      attr(linea, "ini") <- c(fila, columna)
+      attr(linea, "fin") <- c(fila + 3, columna - 3)
+      attr(linea, "dir") <- "ddi"
       puntuacion <- puntuacion + .evaluar_linea(linea, turno)
     }
   }
-  
+
   return(puntuacion)
 }
+
+
 
 # función evaluar linea
 .evaluar_linea <- function(linea, turno) {
   puntuacion <- 0
-  
+
   if (all(linea == turno)) {
-    puntuacion <- 100000 # Línea completa del jugador actual
-    
+    puntuacion <- punt4 # Línea completa del jugador actual
+
   } else if (sum(linea == turno) == 3 && sum(linea == 0) == 1) {
-    puntuacion <- 100 # Tres fichas en línea con una casilla vacía
-    
+    puntuacion <- punt3 # Tres fichas en línea con una casilla vacía
+
   } else if (sum(linea == turno) == 2 && sum(linea == 0) == 2) {
-    puntuacion <- 10 # Dos fichas en línea con dos casillas vacías
-    
+    puntuacion <- punt2 # Dos fichas en línea con dos casillas vacías
+
+
   } else if (sum(linea == turno) == 1 && sum(linea == 0) == 3) {
-    puntuacion <- 1 # Una ficha en línea con tres casillas vacías
+    puntuacion <- punt1  # Una ficha con tres casillas vacias
   }
-  
+
   puntuacion <- (-1)^(turno) * puntuacion
-  
+
   return(puntuacion)
 }
+
+
+
+# #función evaluar turno
+# .evaluar_turno <- function(tablero, turno) {
+#   puntuacion <- 0
+#   
+#   # Evaluar líneas horizontales
+#   for (fila in 1:6) {
+#     for (columna in 1:4) {
+#       linea <- tablero[fila, columna:(columna + 3)]
+#       puntuacion <- puntuacion + .evaluar_linea(linea, turno)
+#     }
+#   }
+#   
+#   # Evaluar líneas verticales
+#   for (columna in 1:7) {
+#     for (fila in 1:3) {
+#       linea <- tablero[fila:(fila + 3), columna]
+#       puntuacion <- puntuacion + .evaluar_linea(linea, turno)
+#     }
+#   }
+#   
+#   # Evaluar líneas diagonales (de izquierda a derecha)
+#   for (fila in 1:3) {
+#     for (columna in 1:4) {
+#       linea <- c(tablero[fila, columna], tablero[fila + 1, columna + 1],
+#                  tablero[fila + 2, columna + 2], tablero[fila + 3, columna + 3])
+#       puntuacion <- puntuacion + .evaluar_linea(linea, turno)
+#     }
+#   }
+#   
+#   # Evaluar líneas diagonales (de derecha a izquierda)
+#   for (fila in 1:3) {
+#     for (columna in 4:7) {
+#       linea <- c(tablero[fila, columna], tablero[fila + 1, columna - 1],
+#                  tablero[fila + 2, columna - 2], tablero[fila + 3, columna - 3])
+#       puntuacion <- puntuacion + .evaluar_linea(linea, turno)
+#     }
+#   }
+#   
+#   return(puntuacion)
+# }
+# 
+# # función evaluar linea
+# .evaluar_linea <- function(linea, turno) {
+#   puntuacion <- 0
+#   
+#   if (all(linea == turno)) {
+#     puntuacion <- punt4 # Línea completa del jugador actual
+#     
+#   } else if (sum(linea == turno) == 3 && sum(linea == 0) == 1) {
+#     puntuacion <- punt3 # Tres fichas en línea con una casilla vacía
+#     
+#   } else if (sum(linea == turno) == 2 && sum(linea == 0) == 2) {
+#     puntuacion <- punt2 # Dos fichas en línea con dos casillas vacías
+#     
+#   } else if (sum(linea == turno) == 1 && sum(linea == 0) == 3) {
+#     puntuacion <- punt1 # Una ficha en línea con tres casillas vacías
+#   }
+#   
+#   puntuacion <- (-1)^(turno) * puntuacion
+#   
+#   return(puntuacion)
+# }
 
 
 #------------------------------------------------------------------------------
