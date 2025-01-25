@@ -1,7 +1,7 @@
 #' #' algoritmo minimax
 #' #'
 #' #' @description función que mediante un algoritmo mini-max la IA decide cuál es su mejor
-#' #' jugada dada una cierta posición del tablero 
+#' #' jugada dada una cierta posición del tablero
 #' 
 #' #' @param tablero a matrix representing the state of the game board
 #' #' @param profundidad un entero que fija la profundidad del árbol de jugadas a analizar
@@ -35,42 +35,42 @@
 #' #' x
 #' 
 #' minimaxOpt <- function(tablero, profundidad, maximizandoIA, alpha = -Inf, beta = Inf, env = NULL) {
-#'   
+#' 
 #'   # Inicializar el entorno solo si no fue pasado como argumento
 #'   if (is.null(env)) {
 #'     env <- new.env()
 #'     env$arbol <- new("arbol")
 #'   }
-#'   
+#' 
 #'   # Verificar condición de parada (sin realizar evaluación adicional si ya es final)
 #'   if (profundidad == 0 || juego_terminado(tablero)$finalizado) {
 #'     return(list(puntuacion = evaluar_posicion(tablero), jugada = NA, env = env))
 #'   }
-#'   
+#' 
 #'   # Variables de control
 #'   mejor_puntuacion <- ifelse(maximizandoIA, -Inf, Inf)
 #'   mejor_jugada <- NA
-#'   
-#'   jugadas_candidatas <- jugadas_disponibles(tablero) 
+#' 
+#'   jugadas_candidatas <- jugadas_disponibles(tablero)
 #'   jugadas_candidatas <- .ordenar_jugadas(tablero, jugadas_candidatas, 2)
-#'   
-#'   
+#' 
+#' 
 #'   # Función recursiva Minimax
 #'   for (columna in jugadas_candidatas) {
 #'     # Realizar la jugada
 #'     nuevo_tablero <- realizar_jugada(tablero, columna, ifelse(maximizandoIA, 2, 1))
 #'     punt <- evaluar_posicion(nuevo_tablero)
-#'     
+#' 
 #'     # Actualizar el árbol (solo si es necesario)
-#'     env$arbol <- actualizar(env$arbol, 
-#'                             turno = maximizandoIA, 
-#'                             jugada = as.integer(columna), 
+#'     env$arbol <- actualizar(env$arbol,
+#'                             turno = maximizandoIA,
+#'                             jugada = as.integer(columna),
 #'                             profundidad = as.integer(profundidad),
 #'                             puntuacion = punt)
-#'     
+#' 
 #'     # Recursión Minimax
 #'     res <- minimaxOpt(nuevo_tablero, profundidad - 1, !maximizandoIA, alpha, beta, env)
-#'     
+#' 
 #'     # Actualización de puntuación y poda
 #'     if (maximizandoIA) {
 #'       if (res$puntuacion > mejor_puntuacion) {
@@ -85,12 +85,12 @@
 #'       }
 #'       beta <- min(beta, mejor_puntuacion)
 #'     }
-#'     
+#' 
 #'     # Poda Alpha-Beta
 #'     if (beta <= alpha) {
 #'       break
 #'     }
 #'   }
-#'   
+#' 
 #'   return(list(puntuacion = mejor_puntuacion, jugada = mejor_jugada, env = env))
 #' }
