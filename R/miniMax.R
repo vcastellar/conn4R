@@ -30,9 +30,9 @@
 #' tablero <- crear_posicion_aleatoria(10)
 #' visualizar_tablero(tablero)
 #' system.time({
-#'   kk <- minimax(tablero = tablero, profundidad = 7, maximizandoIA = TRUE)
+#'   kk <- minimax(tablero = tablero, profundidad = 3, maximizandoIA = TRUE)
 #' })
-#' kk$env$contador
+#' max(kk$env$arbol@idNodo)
 #' kk$puntuacion
 #' kk$jugada
 
@@ -43,7 +43,6 @@ minimax <- function(tablero, profundidad, maximizandoIA, alpha = -Inf, beta = In
   if (is.null(env)) {
     env <- new.env()
     env$arbol <- new("arbol")
-    env$contador <- 0
   }
   
   # Verificar condición de parada
@@ -63,9 +62,8 @@ minimax <- function(tablero, profundidad, maximizandoIA, alpha = -Inf, beta = In
     for (columna in jugadas_candidatas) {
       
       nuevo_tablero <- realizar_jugada(tablero, columna, 2)
-      
+ 
       # actualizar arbol
-      env$contador <- env$contador + 1
       env$arbol <- actualizar(env$arbol,
                               turno       = TRUE,
                               jugada      = as.integer(columna),
@@ -100,7 +98,6 @@ minimax <- function(tablero, profundidad, maximizandoIA, alpha = -Inf, beta = In
       nuevo_tablero <- realizar_jugada(tablero, columna, 1)
       
       # actualizar arbol
-      env$contador <- env$contador + 1
       env$arbol <- actualizar(env$arbol,
                               turno       = FALSE,
                               jugada      = as.integer(columna),
