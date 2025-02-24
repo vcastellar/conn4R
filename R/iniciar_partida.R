@@ -58,8 +58,7 @@ iniciar_partida <- function(profundidad = 5, turno = 1, profAdaptative = TRUE, a
       break
     }
     i <- i + 1
-    
-    print(p)
+  
 
     # introducir jugada de la IA
     #---------------------------------------------------------------------------

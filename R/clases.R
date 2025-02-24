@@ -41,10 +41,13 @@ setMethod("actualizar", "arbol",
 # # Definir el método específico para la clase arbol
 setGeneric("actUltNodo", function(obj, ...) standardGeneric("actUltNodo"))
 
-setMethod("actUltNodo", "arbol", function(obj, slotName, value) {
-  l <- length(slot(obj, slotName))
-  slot(obj, slotName)[l] <- value
-  return(obj)
+setMethod("actUltNodo", "arbol", 
+          function(obj, 
+                   slotName, 
+                   value) {
+          l <- length(slot(obj, slotName))
+          slot(obj, slotName)[l] <- value
+          return(obj)
   })
 
 
