@@ -127,3 +127,4 @@ minimax <- function(tablero, profundidad, maximizandoIA, alpha = -Inf, beta = In
   }
 }
 
+
