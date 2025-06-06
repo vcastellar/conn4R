@@ -1,4 +1,4 @@
-#' algoritmo minimax
+#' algoritmo minimax prueba2
 #'
 #' @description función que mediante un algoritmo mini-max la IA decide cuál es su mejor
 #' jugada dada una cierta posición del tablero 
