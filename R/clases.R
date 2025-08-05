@@ -1,39 +1,45 @@
 setClass("arbol",
-         slots = c(idNodo      = "integer",
-                   jugada      = "integer",
-                   turno       = "logical",
-                   profundidad = "integer",
-                   puntuacion  = "numeric"),
+         slots = c(
+           idNodo      = "integer",
+           idPadre     = "integer",   # nuevo slot para el nodo padre
+           jugada      = "integer",
+           turno       = "logical",
+           profundidad = "integer",
+           puntuacion  = "numeric"
+         ),
          prototype = list(
-           idNodo      = c(),
-           jugada      = c(),
-           turno       = c(),
-           profundidad = c(),
-           puntuacion  = c()
-           )
+           idNodo      = integer(),
+           idPadre     = integer(),   # inicializar vacío
+           jugada      = integer(),
+           turno       = logical(),
+           profundidad = integer(),
+           puntuacion  = numeric()
          )
+)
+
 
 setGeneric("actualizar", function(x, ...) standardGeneric("actualizar"))
 
-
-# setMethod("inicializar", "arbol",
-#           function(.Object))
-
 setMethod("actualizar", "arbol", 
           function(x = arbol, 
+                   idPadre    = NA_integer_,  
                    turno       = NULL,
                    jugada      = NULL,
                    profundidad = NULL,
                    puntuacion  = NULL) {
-            x@turno       <- c(x@turno, turno)
-            x@jugada      <- c(x@jugada, jugada)
-            x@profundidad <- c(x@profundidad, profundidad)
-            x@idNodo      <- c(x@idNodo, ifelse(is.null(x@idNodo[1]), 0L,  max(x@idNodo)) + 1L)
-            x@puntuacion  <- c(x@puntuacion, puntuacion)
+            
+            nuevo_id <- ifelse(length(x@idNodo) == 0, 0L, max(x@idNodo)) + 1L
+            
+            x@idNodo      <- c(x@idNodo, as.integer(nuevo_id))
+            x@idPadre     <- c(x@idPadre, as.integer(idPadre))
+            x@turno       <- c(x@turno, as.logical(turno))
+            x@jugada      <- c(x@jugada, as.integer(jugada))
+            x@profundidad <- c(x@profundidad, as.integer(profundidad))
+            x@puntuacion  <- c(x@puntuacion, as.numeric(puntuacion))
             
             return(x)
-            }
-          )
+          }
+)
 
 
 
@@ -51,47 +57,41 @@ setMethod("actUltNodo", "arbol",
   })
 
 
-
-# Suponiendo que el objeto es una lista llamada `arbol`
 encontrar_mejor_variante <- function(arbol) {
-
-  # Inicializar la mejor variante
+  
+  # Encontrar nodo raíz (idPadre == NA o NA_integer_)
+  nodo_actual <- which(is.na(arbol@idPadre))[1]
+  if (is.na(nodo_actual)) stop("No se encontró nodo raíz")
+  
   mejor_variante <- list()
-
-  # Identificar el nodo raíz
-  nodo_actual <- which(arbol@profundidad == max(arbol@profundidad))[1] # Nodo raíz más profundo
-
-  while (arbol@profundidad[nodo_actual] > 1) {
-    # Agregar jugada actual a la mejor variante
-    mejor_variante <- c(list(list(
+  
+  repeat {
+    # Añadir información del nodo actual
+    mejor_variante <- c(mejor_variante, list(list(
       nodo       = arbol@idNodo[nodo_actual],
       jugada     = arbol@jugada[nodo_actual],
       turno      = arbol@turno[nodo_actual],
       puntuacion = arbol@puntuacion[nodo_actual]
-    )), mejor_variante)
-
-    # Filtrar nodos hijos del actual
-    hijos <- which(arbol@idNodo > arbol@idNodo[nodo_actual] &
-                     arbol@profundidad == (arbol@profundidad[nodo_actual] - 1))
-
-    # Elegir el mejor hijo según el turno
+    )))
+    
+    # Encontrar hijos de nodo_actual
+    hijos <- which(arbol@idPadre == arbol@idNodo[nodo_actual])
+    
+    # Si no tiene hijos, es hoja, termina
+    if (length(hijos) == 0) break
+    
+    # Elegir mejor hijo según turno (max busca mayor, min busca menor)
     if (arbol@turno[nodo_actual]) {
-      # Turno del jugador (MAX): buscar mayor puntuación
-      nodo_actual <- hijos[which.min(arbol@puntuacion[hijos])]
+      # Turno MAX: elige hijo con mayor puntuación
+      mejor_idx <- which.max(arbol@puntuacion[hijos])
     } else {
-      # Turno del oponente (MIN): buscar menor puntuación
-      nodo_actual <- hijos[which.max(arbol@puntuacion[hijos])]
+      # Turno MIN: elige hijo con menor puntuación
+      mejor_idx <- which.min(arbol@puntuacion[hijos])
     }
+    
+    nodo_actual <- hijos[mejor_idx]
   }
-
-  # Agregar el nodo terminal
-  mejor_variante <- c(list(list(
-    nodo       = arbol@idNodo[nodo_actual],
-    jugada     = arbol@jugada[nodo_actual],
-    turno      = arbol@turno[nodo_actual],
-    puntuacion = arbol@puntuacion[nodo_actual]
-  )), mejor_variante)
-
+  
   return(mejor_variante)
 }
 
