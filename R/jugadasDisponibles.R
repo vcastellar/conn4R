@@ -18,31 +18,40 @@ jugadas_disponibles <- function(tablero) {
 }
 
 
-# función ordenar jugadas de más prometedoras a menos
+
+
 ordenar_jugadas <- function(tablero, turno) {
-  
   jugadas_candidatas <- jugadas_disponibles(tablero)
-  puntuacion <- rep(0, length(jugadas_candidatas))
-
-  # consecuencia de jugar columna i y de no jugar columna i
-
-  for (turno in c(1, 2)) {
-    for (i in 1:length(jugadas_candidatas)) {
-      columna <- jugadas_candidatas[i]
-      tablero_aux    <- realizar_jugada(tablero, columna, turno)
-
-      puntuacion[i]  <- abs(puntuacion[i]) + abs(evaluar_posicion(tablero_aux))
-    }
+  n <- length(jugadas_candidatas)
+  puntuaciones <- numeric(n)
+  
+  # Definir pesos: jugador actual y oponente
+  pesos <- if (turno == 1) c(1.0, 0.5) else c(0.5, 1.0)
+  oponente <- ifelse(turno == 1, 2, 1)
+  
+  for (i in seq_len(n)) {
+    col <- jugadas_candidatas[i]
+    
+    # Jugada del jugador actual
+    tablero_j <- realizar_jugada(tablero, col, turno)
+    eval_j <- evaluar_posicion(tablero_j)
+    
+    # Jugada simulada del oponente
+    tablero_o <- realizar_jugada(tablero, col, oponente)
+    eval_o <- evaluar_posicion(tablero_o)
+    
+    # Suma ponderada
+    puntuaciones[i] <- pesos[1] * abs(eval_j) + pesos[2] * abs(eval_o)
   }
-
-  df <- data.frame(jugadas = jugadas_candidatas, puntuacion = puntuacion)
+  
+  # Crear data.frame ordenado por puntuación descendente
+  df <- data.frame(jugadas = jugadas_candidatas, puntuacion = puntuaciones)
   df <- df[order(df$puntuacion, decreasing = TRUE), ]
   
-  # poda de jugadas
+  # Poda opcional: mantener solo jugadas con evaluación fuerte
   if (any(abs(df$puntuacion) > 10000)) {
     df <- df[which(abs(df$puntuacion) > 10000), ]
   }
-    
-  return(df)
   
+  return(df)
 }
