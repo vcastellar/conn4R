@@ -27,7 +27,7 @@
 #' \item sin poda alpha-beta: 19.607 nodos
 #' }
 #' @examples
-#' tablero <- crear_posicion_aleatoria(10)
+#' tablero <- crear_posicion_aleatoria(7)
 #' visualizar_tablero(tablero)
 #' system.time({
 #'   kk <- minimax(tablero = tablero, profundidad = 7, maximizandoIA = TRUE)
@@ -35,6 +35,9 @@
 #' max(kk$env$arbol@idNodo)
 #' kk$puntuacion
 #' kk$jugada
+#' kk$env$nodos
+#' 
+
 
 
 minimax <- function(tablero, profundidad, maximizandoIA, alpha = -Inf, beta = Inf, env = NULL) {
@@ -43,88 +46,84 @@ minimax <- function(tablero, profundidad, maximizandoIA, alpha = -Inf, beta = In
   if (is.null(env)) {
     env <- new.env()
     env$arbol <- new("arbol")
+    env$nodos <- 0
   }
+  
+  env$nodos <- env$nodos + 1
   
   # Verificar condición de parada
   if (profundidad == 0 | juego_terminado(tablero)$finalizado) {
     return(list(puntuacion = evaluar_posicion(tablero), 
                 jugada     = NA, 
                 env        = env)
-           )
+    )
   }
   
-  if (maximizandoIA) {
-    mejor_puntuacion <- -Inf
-    mejor_jugada <- NA
+  turno <- ifelse(maximizandoIA, 2, 1)
+  cte   <- ifelse(maximizandoIA, -1, 1)
+  mejor_puntuacion <- ifelse(maximizandoIA, -Inf, Inf)
+  mejor_jugada <- NA
+  
+  comparar <- if (maximizandoIA) `>` else `<`
+  
+  jugadas_candidatas <- ordenar_jugadas(tablero, turno = turno)$jugadas
+  # jugadas_candidatas <- seleccionar_jugadas_candidatas(tablero, maxIA, profundidad_corta = 1, top_k = 3)
+  
+  
+  for (columna in jugadas_candidatas) {
     
-    jugadas_candidatas <- ordenar_jugadas(tablero, turno = 2)$jugadas
+    nuevo_tablero <- realizar_jugada(tablero, columna, turno)
     
-    for (columna in jugadas_candidatas) {
+    # Llamada recursiva con el tablero actualizado y el turno invertido
+    res <- minimax(nuevo_tablero, profundidad - 1, !maximizandoIA, alpha, beta, env)
+    
+    if (comparar(res$puntuacion, mejor_puntuacion)) {
+      mejor_puntuacion <- res$puntuacion
+      mejor_jugada     <- columna
       
-      nuevo_tablero <- realizar_jugada(tablero, columna, 2)
-      
-      res <- minimax(nuevo_tablero, profundidad - 1, FALSE, alpha, beta, env)
-      
-      
-      if (res$puntuacion > mejor_puntuacion) {
-        mejor_puntuacion <- res$puntuacion
-        mejor_jugada     <- columna
-        
-        # actualizar arbol
-        env$arbol <- actualizar(env$arbol,
-                                turno       = TRUE,
-                                jugada      = as.integer(mejor_jugada),
-                                profundidad = as.integer(profundidad),
-                                puntuacion  = mejor_puntuacion)
-        
-      }
-      
+      env$arbol <- actualizar(env$arbol,
+                              turno       = maximizandoIA,
+                              jugada      = as.integer(columna),
+                              profundidad = as.integer(profundidad),
+                              puntuacion  = mejor_puntuacion)
+    }
+    
+    if (maximizandoIA) {
       alpha <- max(alpha, mejor_puntuacion)
-      if (beta <= alpha) {
-        break  # Poda alpha-beta
-      }
-      
-    }
-    
-    return(list(puntuacion = mejor_puntuacion,
-                jugada     = mejor_jugada,
-                env        = env))
-    
-  } else {
-    mejor_puntuacion <- Inf
-    mejor_jugada <- NA
-    
-    jugadas_candidatas <- ordenar_jugadas(tablero, turno = 1)$jugadas
-    
-    for (columna in jugadas_candidatas) {
-      nuevo_tablero <- realizar_jugada(tablero, columna, 1)
-      
-      
-      res <- minimax(nuevo_tablero, profundidad - 1, TRUE, alpha, beta, env)
-      
-      if (res$puntuacion < mejor_puntuacion) {
-        mejor_puntuacion <- res$puntuacion
-        mejor_jugada     <- columna
-        
-        # actualizar arbol
-        env$arbol <- actualizar(env$arbol,
-                                turno       = FALSE,
-                                jugada      = as.integer(mejor_jugada ),
-                                profundidad = as.integer(profundidad),
-                                puntuacion  = mejor_puntuacion)
-
-      }
-      
+    } else {
       beta <- min(beta, mejor_puntuacion)
-      if (beta <= alpha) {
-        break  # Poda alpha-beta
-      }
     }
     
-    return(list(puntuacion = mejor_puntuacion,
-                jugada     = mejor_jugada,
-                env        = env))
+    if (beta <= alpha) break
   }
+  
+  return(list(puntuacion = mejor_puntuacion,
+              jugada     = mejor_jugada,
+              env        = env))
+  
+}
+
+
+
+seleccionar_jugadas_candidatas <- function(tablero, maxIA, profundidad_corta = 2, top_k = 3) {
+  jugadas <- ordenar_jugadas(tablero)$jugadas
+  resultados <- data.frame(jugada = integer(), valor = numeric())
+  
+  for (col in jugadas) {
+    # Simular jugada
+    tablero_nuevo <- realizar_jugada(tablero, col, if (maxIA) 2 else 1)
+    
+    # Evaluar a poca profundidad
+    valor <- minimax(tablero_nuevo, profundidad_corta, !maxIA)
+    
+    resultados <- rbind(resultados, data.frame(jugada = col, valor = valor$puntuacion))
+  }
+  
+  # Ordenar según si estamos maximizando o minimizando
+  resultados <- resultados[order(if (maxIA) -resultados$valor else resultados$valor), ]
+  
+  # Devolver las k mejores jugadas
+  return(head(resultados$jugada, top_k))
 }
 
 
