@@ -24,7 +24,7 @@
           coordenadas <- data.frame(x = 7 - fila, y = (columna:(columna + 3)), ficha = 3)
           
           puntuacion <- .evaluar_linea(linea, turno)
-          if (puntuacion >= 10000) {
+          if (abs(puntuacion) >= 10000) {
             stop()
           }
         }
@@ -38,7 +38,7 @@
           
           coordenadas <- data.frame(x = 7 - (fila:(fila + 3)), y = columna, ficha = 3)
           
-          if (puntuacion >= 10000) {
+          if (abs(puntuacion) >= 10000) {
             stop()
           }
         }
@@ -53,7 +53,7 @@
           coordenadas <- data.frame(x = 7 - (fila:(fila + 3)), y = (columna:(columna + 3)), ficha = 3)
           
           puntuacion <- .evaluar_linea(linea, turno)
-          if (puntuacion >= 10000) {
+          if (abs(puntuacion) >= 10000) {
             stop()
           }
         }
