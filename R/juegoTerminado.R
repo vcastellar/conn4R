@@ -25,16 +25,16 @@ juego_terminado <- function(tablero) {
   for (jugador in 1:2) {
     if (abs(.evaluar_turno(tablero, jugador)) >= 50000) {
       if (jugador == 1) {
-        return(list(finalizado = TRUE, resultado = "WIN HUMAN"))
+        return(list(finalizado = TRUE, resultado = 1))
       } else {
-        return(list(finalizado = TRUE, resultado = "WIN IA"))
+        return(list(finalizado = TRUE, resultado = 2))
       }
     }
   }
 
   # Verificar si hay jugadas disponibles
   if (length(jugadas_disponibles(tablero)) == 0) {
-    return(list(finalizado = TRUE, resultado = "DRAW"))
+    return(list(finalizado = TRUE, resultado = 0))
   }
 
   # Si no se cumple ninguna de las condiciones anteriores, el juego no ha terminado
