@@ -68,12 +68,18 @@ punt3 <- 100
 punt4 <- 100000
 
 # función principal
-evaluar_posicion <- function(tablero) {
-  puntBit <- sum(bitboards * (1 * (tablero == 2))) - sum(bitboards * (1 * (tablero == 1)))
-  eval_turno <- .evaluar_turno(tablero, 1) + .evaluar_turno(tablero, 2)
-  return(eval_turno + puntBit)
+evaluar_posicion <- function(tablero, turno) {
+  turno_ia <- 2
+  turno_oponente <- ifelse(turno_ia == 1, 2, 1)
+  
+  puntBit <- sum(bitboards * (1 * (tablero == turno_ia))) - sum(bitboards * (1 * (tablero == turno_oponente)))
+  
+  eval_turno <- .evaluar_turno(tablero, turno_ia)
+  eval_oponente <- .evaluar_turno(tablero, turno_oponente)
+  eval_diff <- eval_turno - eval_oponente
+  
+  return(eval_diff + puntBit)
 }
-
 
 #función evaluar turno
 
@@ -104,7 +110,7 @@ evaluar_posicion <- function(tablero) {
     puntuacion <- 0
   }
   
-  if (turno == 1) puntuacion <- -puntuacion
+  # if (turno == 1) puntuacion <- -puntuacion
   
   return(puntuacion)
 }
