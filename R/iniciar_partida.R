@@ -85,6 +85,7 @@ iniciar_partida <- function(profundidad = 5, turno = 1, profAdaptative = TRUE, a
       print(paste0("profundidad:      ", prof))
       print(paste0("num. nodos:       ", mejor_jugada_IA$env$nodos))
       print(paste0("tiempo:           ", round(tik[[3]], 2)))
+      print(paste0("nod/s:            ", round(mejor_jugada_IA$env$nodos / tik[[3]], 3)))
       print("-----------------------------------------------------------------")
       cat("\n")
       
@@ -111,10 +112,13 @@ iniciar_partida <- function(profundidad = 5, turno = 1, profAdaptative = TRUE, a
       } else {
         prof <- profundidad
       }
-      
+
+      maxIA <- (turno == 2)
       tik <- system.time({
-        mejor_jugada_IA <- minimax(tablero, prof, maximizandoIA = TRUE)
+        mejor_jugada_IA <- minimax(tablero, prof, maximizandoIA = maxIA)
       })
+      mejor_jugada_IA <- minimax(tablero, prof, maximizandoIA = TRUE)
+
       
       tablero <- realizar_jugada(tablero, mejor_jugada_IA$jugada, turno)
       
@@ -128,6 +132,7 @@ iniciar_partida <- function(profundidad = 5, turno = 1, profAdaptative = TRUE, a
       print(paste0("profundidad:      ", prof))
       print(paste0("num. nodos:       ", mejor_jugada_IA$env$nodos))
       print(paste0("tiempo:           ", round(tik[[3]], 2)))
+      print(paste0("nod/s:            ", round(mejor_jugada_IA$env$nodos / tik[[3]], 3)))
       print("-----------------------------------------------------------------")
       cat("\n")
       
