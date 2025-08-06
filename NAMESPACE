@@ -1,4 +1,2 @@
 exportPattern("^\\.?[[:alpha:]]+")
 exportClasses("arbol")
-useDynLib(conn4R)
-importFrom(Rcpp, evalCpp)
