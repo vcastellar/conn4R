@@ -1,7 +1,7 @@
 setClass("arbol",
          slots = c(
            idNodo      = "integer",
-           idPadre     = "integer",   # nuevo slot para el nodo padre
+           idPadre     = "integer",
            jugada      = "integer",
            turno       = "logical",
            profundidad = "integer",
@@ -9,7 +9,7 @@ setClass("arbol",
          ),
          prototype = list(
            idNodo      = integer(),
-           idPadre     = integer(),   # inicializar vacío
+           idPadre     = integer(),
            jugada      = integer(),
            turno       = logical(),
            profundidad = integer(),
@@ -21,12 +21,15 @@ setClass("arbol",
 setGeneric("actualizar", function(x, ...) standardGeneric("actualizar"))
 
 setMethod("actualizar", "arbol", 
-          function(x = arbol, 
+          function(x, 
                    idPadre    = NA_integer_,  
                    turno       = NULL,
                    jugada      = NULL,
                    profundidad = NULL,
                    puntuacion  = NULL) {
+            
+            # Asegúrate de que 'x' es de clase 'arbol'
+            stopifnot(isS4(x), is(x, "arbol"))
             
             nuevo_id <- ifelse(length(x@idNodo) == 0, 0L, max(x@idNodo)) + 1L
             
@@ -37,10 +40,9 @@ setMethod("actualizar", "arbol",
             x@profundidad <- c(x@profundidad, as.integer(profundidad))
             x@puntuacion  <- c(x@puntuacion, as.numeric(puntuacion))
             
-            return(x)
+            return(x)  # ✅ Devuelve objeto S4, no lista
           }
 )
-
 
 
 
@@ -95,34 +97,19 @@ encontrar_mejor_variante <- function(arbol) {
   return(mejor_variante)
 }
 
-# # Llamar a la función y mostrar el resultado
-# mejor_variante <- encontrar_mejor_variante(arbol)
-# print(mejor_variante)
-# 
-# tablero_aux <- tablero
-# for (i in length(mejor_variante):1) {
-# 
-#   tablero_aux <- realizar_jugada(tablero_aux,
-#                                  columna = mejor_variante[[i]]$jugada,
-#                                  jugador = ifelse(mejor_variante[[i]]$turno == TRUE, 2, 1)
-#   )
-#   p <- visualizar_tablero(tablero_aux)
-#   print(p)
-#   Sys.sleep(3)
-# 
-# }
-# 
-# mostrar_variante <- function(mejor_variante) {
-#   for (i in seq_along(mejor_variante)) {
-#     nodo <- mejor_variante[[i]]
-#     cat(sprintf("Paso %d: Nodo %d, Jugada %d, Turno %s, Puntuación %.1f\n",
-#                 i, nodo$nodo, nodo$jugada, ifelse(nodo$turno, "MAX", "MIN"), nodo$puntuacion))
-#   }
-# }
-# 
-# # Mostrar la variante
-# # mostrar_variante(mejor_variante)
-# 
-
-
-
+mostrar_mejor_variante <- function(tablero_inicial, variante, pausa_ms = 1000) {
+  tablero <- tablero_inicial
+  
+  for (paso in variante) {
+    jugada <- paso$jugada
+    turno <- ifelse(paso$turno, 2, 1)  # TRUE = IA = 2, FALSE = jugador = 1
+    
+    if (!is.na(jugada)) {
+      tablero <- realizar_jugada(tablero, jugada, turno)
+    }
+    
+    print(visualizar_tablero(tablero))
+    
+    Sys.sleep(pausa_ms / 1000)  # convertir milisegundos a segundos
+  }
+}
