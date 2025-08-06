@@ -69,7 +69,7 @@ minimax <- function(tablero, profundidad, maximizandoIA, alpha = -Inf, beta = In
     # Evaluación preliminar de la jugada actual para el árbol
     puntuacion_jugada <- evaluar_posicion(nuevo_tablero, turno)
     
-    # 🔁 Actualizar el árbol con el nodo actual
+    # Actualizar el árbol con el nodo actual
     env$arbol <- actualizar(env$arbol,
                             idPadre     = idPadre,
                             turno       = maximizandoIA,  # O usa turno == 2
@@ -80,7 +80,7 @@ minimax <- function(tablero, profundidad, maximizandoIA, alpha = -Inf, beta = In
     # Obtener ID del nodo recién añadido (último)
     nuevo_id <- tail(env$arbol@idNodo, 1)
     
-    # 🧠 Llamada recursiva pasando nuevo_id como padre
+    # Llamada recursiva pasando nuevo_id como padre
     res <- minimax(nuevo_tablero,
                    profundidad - 1,
                    !maximizandoIA,
@@ -100,7 +100,7 @@ minimax <- function(tablero, profundidad, maximizandoIA, alpha = -Inf, beta = In
       beta <- min(beta, mejor_puntuacion)
     }
     
-    # ✂️ Poda
+    # Poda
     if (beta <= alpha) break
   }
   
