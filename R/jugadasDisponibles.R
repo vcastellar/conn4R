@@ -17,65 +17,45 @@ jugadas_disponibles <- function(tablero) {
   return(jugadas_candidatas)
 }
 
-ordenar_jugadas <- function(tablero, turno) {
+
+ordenar_jugadas <- function(tablero, turno, profundidad) {
   jugadas_candidatas <- jugadas_disponibles(tablero)
+  
+  if (profundidad <= 2 & sum(tablero == 0) > 25) {
+    df <- data.frame(jugadas = jugadas_candidatas, puntuacion = 0)
+    return(df)
+  }
+  
   n <- length(jugadas_candidatas)
   puntuaciones <- numeric(n)
-  
+
   # Definir pesos: jugador actual y oponente
   pesos <- if (turno == 1) c(1.0, 0.5) else c(0.5, 1.0)
   oponente <- ifelse(turno == 1, 2, 1)
-  
+
   for (i in seq_len(n)) {
     col <- jugadas_candidatas[i]
-    
+
     # Jugada del jugador actual
     tablero_j <- realizar_jugada(tablero, col, turno)
-    eval_j <- evaluar_posicion(tablero_j)  # ✅ AQUÍ SE PASA TURNO
-    
+    eval_j <- evaluar_posicion(tablero_j)  # AQUÍ SE PASA TURNO
+
     # Jugada simulada del oponente
     tablero_o <- realizar_jugada(tablero, col, oponente)
-    eval_o <- evaluar_posicion(tablero_o, turno = oponente)  # ✅ AQUÍ TAMBIÉN
-    
+    eval_o <- evaluar_posicion(tablero_o, turno = oponente)  # AQUÍ TAMBIÉN
+
     # Suma ponderada
     puntuaciones[i] <- pesos[1] * abs(eval_j) + pesos[2] * abs(eval_o)
   }
-  
+
   # Crear data.frame ordenado por puntuación descendente
   df <- data.frame(jugadas = jugadas_candidatas, puntuacion = puntuaciones)
   df <- df[order(df$puntuacion, decreasing = TRUE), ]
-  
+
   # Poda opcional: mantener solo jugadas con evaluación fuerte
   if (any(abs(df$puntuacion) > 10000)) {
     df <- df[which(abs(df$puntuacion) > 10000), ]
   }
-  
+
   return(df)
 }
-# 
-# ordenar_jugadas <- function(tablero, turno) {
-#   jugadas_candidatas <- jugadas_disponibles(tablero)
-#   n <- length(jugadas_candidatas)
-#   puntuaciones <- numeric(n)
-#   
-#   for (i in seq_len(n)) {
-#     col <- jugadas_candidatas[i]
-#     
-#     # Simular jugada del jugador que mueve
-#     tablero_j <- realizar_jugada(tablero, col, turno)
-#     # Evaluar posición desde la perspectiva de turno
-#     eval_j <- evaluar_posicion(tablero_j, turno)
-#     
-#     puntuaciones[i] <- eval_j
-#   }
-#   
-#   df <- data.frame(jugadas = jugadas_candidatas, puntuacion = puntuaciones)
-#   df <- df[order(df$puntuacion, decreasing = TRUE), ]
-#   
-#   # Poda opcional para jugadas muy fuertes
-#   if (any(abs(df$puntuacion) > 10000)) {
-#     df <- df[which(abs(df$puntuacion) > 10000), ]
-#   }
-#   
-#   return(df)
-# }
