@@ -38,11 +38,8 @@
 #' kk$env$nodos
 #' 
 
-
-
 minimax <- function(tablero, profundidad, maximizandoIA, alpha = -Inf, beta = Inf, env = NULL) {
   
-  # Inicializar el entorno solo si no fue pasado como argumento
   if (is.null(env)) {
     env <- new.env()
     env$arbol <- new("arbol")
@@ -51,38 +48,33 @@ minimax <- function(tablero, profundidad, maximizandoIA, alpha = -Inf, beta = In
   
   env$nodos <- env$nodos + 1
   
-  # Verificar condición de parada
-  if (profundidad == 0 | juego_terminado(tablero)$finalizado) {
-    return(list(puntuacion = evaluar_posicion(tablero), 
-                jugada     = NA, 
-                env        = env)
-    )
-  }
-  
   turno <- ifelse(maximizandoIA, 2, 1)
-  cte   <- ifelse(maximizandoIA, -1, 1)
-  mejor_puntuacion <- ifelse(maximizandoIA, -Inf, Inf)
+  mejor_puntuacion <- if (maximizandoIA) -Inf else Inf
   mejor_jugada <- NA
+  
+  if (profundidad == 0 || juego_terminado(tablero)$finalizado) {
+    return(list(
+      puntuacion = evaluar_posicion(tablero, turno),  # 👈 Siempre desde perspectiva del jugador 2 (IA)
+      jugada = NA,
+      env = env
+    ))
+  }
   
   comparar <- if (maximizandoIA) `>` else `<`
   
-  jugadas_candidatas <- ordenar_jugadas(tablero, turno = turno)$jugadas
-  # jugadas_candidatas <- seleccionar_jugadas_candidatas(tablero, maxIA, profundidad_corta = 1, top_k = 3)
-  
+  jugadas_candidatas <- ordenar_jugadas(tablero, turno)$jugadas
   
   for (columna in jugadas_candidatas) {
-    
     nuevo_tablero <- realizar_jugada(tablero, columna, turno)
     
-    # Llamada recursiva con el tablero actualizado y el turno invertido
     res <- minimax(nuevo_tablero, profundidad - 1, !maximizandoIA, alpha, beta, env)
     
     if (comparar(res$puntuacion, mejor_puntuacion)) {
       mejor_puntuacion <- res$puntuacion
-      mejor_jugada     <- columna
+      mejor_jugada <- columna
       
       env$arbol <- actualizar(env$arbol,
-                              turno       = maximizandoIA,
+                              turno       = turno,
                               jugada      = as.integer(columna),
                               profundidad = as.integer(profundidad),
                               puntuacion  = mejor_puntuacion)
@@ -97,33 +89,74 @@ minimax <- function(tablero, profundidad, maximizandoIA, alpha = -Inf, beta = In
     if (beta <= alpha) break
   }
   
-  return(list(puntuacion = mejor_puntuacion,
-              jugada     = mejor_jugada,
-              env        = env))
-  
+  return(list(puntuacion = mejor_puntuacion, jugada = mejor_jugada, env = env))
 }
 
-
-
-seleccionar_jugadas_candidatas <- function(tablero, maxIA, profundidad_corta = 2, top_k = 3) {
-  jugadas <- ordenar_jugadas(tablero)$jugadas
-  resultados <- data.frame(jugada = integer(), valor = numeric())
-  
-  for (col in jugadas) {
-    # Simular jugada
-    tablero_nuevo <- realizar_jugada(tablero, col, if (maxIA) 2 else 1)
-    
-    # Evaluar a poca profundidad
-    valor <- minimax(tablero_nuevo, profundidad_corta, !maxIA)
-    
-    resultados <- rbind(resultados, data.frame(jugada = col, valor = valor$puntuacion))
-  }
-  
-  # Ordenar según si estamos maximizando o minimizando
-  resultados <- resultados[order(if (maxIA) -resultados$valor else resultados$valor), ]
-  
-  # Devolver las k mejores jugadas
-  return(head(resultados$jugada, top_k))
-}
-
+# minimax <- function(tablero, profundidad, maximizandoIA, alpha = -Inf, beta = Inf, env = NULL, jugadorIA = 2) {
+#   
+#   if (is.null(env)) {
+#     env <- new.env()
+#     env$arbol <- new("arbol")
+#     env$nodos <- 0
+#   }
+#   
+#   env$nodos <- env$nodos + 1
+#   
+#   turno <- ifelse(maximizandoIA, jugadorIA, ifelse(jugadorIA == 1, 2, 1))
+#   mejor_puntuacion <- if (maximizandoIA) -Inf else Inf
+#   mejor_jugada <- NA
+#   
+#   if (profundidad == 0 | juego_terminado(tablero)$finalizado) {
+#     return(list(
+#       puntuacion = evaluar_posicion(tablero, jugadorIA),  # Evaluar siempre para IA
+#       jugada = NA,
+#       env = env
+#     ))
+#   }
+#   
+#   comparar <- if (maximizandoIA) `>` else `<`
+#   
+#   jugadas_candidatas <- ordenar_jugadas(tablero, turno)
+#   
+#   for (columna in jugadas_candidatas$jugadas) {
+#     nuevo_tablero <- realizar_jugada(tablero, columna, turno)
+#     res <- minimax(nuevo_tablero, profundidad - 1, !maximizandoIA, alpha, beta, env, jugadorIA)
+#     
+#     if (comparar(res$puntuacion, mejor_puntuacion)) {
+#       mejor_puntuacion <- res$puntuacion
+#       mejor_jugada <- columna
+#       
+#       env$arbol <- actualizar(env$arbol, turno = turno, jugada = as.integer(columna),
+#                               profundidad = as.integer(profundidad), puntuacion = mejor_puntuacion)
+#     }
+#     
+#     if (maximizandoIA) alpha <- max(alpha, mejor_puntuacion) else beta <- min(beta, mejor_puntuacion)
+#     if (beta <= alpha) break
+#   }
+#   
+#   return(list(puntuacion = mejor_puntuacion, jugada = mejor_jugada, env = env))
+# }
+# 
+# 
+# seleccionar_jugadas_candidatas <- function(tablero, maxIA, profundidad_corta = 2, top_k = 3) {
+#   jugadas <- ordenar_jugadas(tablero)$jugadas
+#   resultados <- data.frame(jugada = integer(), valor = numeric())
+#   
+#   for (col in jugadas) {
+#     # Simular jugada
+#     tablero_nuevo <- realizar_jugada(tablero, col, if (maxIA) 2 else 1)
+#     
+#     # Evaluar a poca profundidad
+#     valor <- minimax(tablero_nuevo, profundidad_corta, !maxIA)
+#     
+#     resultados <- rbind(resultados, data.frame(jugada = col, valor = valor$puntuacion))
+#   }
+#   
+#   # Ordenar según si estamos maximizando o minimizando
+#   resultados <- resultados[order(if (maxIA) -resultados$valor else resultados$valor), ]
+#   
+#   # Devolver las k mejores jugadas
+#   return(head(resultados$jugada, top_k))
+# }
+# 
 
