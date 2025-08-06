@@ -14,6 +14,7 @@
 
 
 iniciar_partida <- function(profundidad = 5, turno = 1, profAdaptative = TRUE, autoplay = FALSE) {
+  
   resultado <- "DRAW"
   tablero <- reiniciar_tablero()
   p <- visualizar_tablero(tablero)
@@ -83,9 +84,9 @@ iniciar_partida <- function(profundidad = 5, turno = 1, profAdaptative = TRUE, a
       print(paste0("valoracion IA:    ", mejor_jugada_IA$puntuacion))
       print(paste0("jugada realizada: ", mejor_jugada_IA$jugada))
       print(paste0("profundidad:      ", prof))
-      print(paste0("num. nodos:       ", mejor_jugada_IA$env$nodos))
+      print(paste0("num. nodos:       ", length(mejor_jugada_IA$env$arbol@idNodo) ))
       print(paste0("tiempo:           ", round(tik[[3]], 2)))
-      print(paste0("nod/s:            ", round(mejor_jugada_IA$env$nodos / tik[[3]], 3)))
+      print(paste0("nod/s:            ", round(length(mejor_jugada_IA$env$arbol@idNodo) / tik[[3]], 3)))
       print("-----------------------------------------------------------------")
       cat("\n")
       
@@ -130,9 +131,9 @@ iniciar_partida <- function(profundidad = 5, turno = 1, profAdaptative = TRUE, a
       print(paste0("valoracion IA:    ", mejor_jugada_IA$puntuacion))
       print(paste0("jugada realizada: ", mejor_jugada_IA$jugada))
       print(paste0("profundidad:      ", prof))
-      print(paste0("num. nodos:       ", mejor_jugada_IA$env$nodos))
+      print(paste0("num. nodos:       ", length(mejor_jugada_IA$env$arbol@idNodo) ))
       print(paste0("tiempo:           ", round(tik[[3]], 2)))
-      print(paste0("nod/s:            ", round(mejor_jugada_IA$env$nodos / tik[[3]], 3)))
+      print(paste0("nod/s:            ", round(length(mejor_jugada_IA$env$arbol@idNodo) / tik[[3]], 3)))
       print("-----------------------------------------------------------------")
       cat("\n")
       
