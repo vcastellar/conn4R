@@ -2,15 +2,17 @@
 % Please edit documentation in R/miniMax.R
 \name{minimax}
 \alias{minimax}
-\title{algoritmo minimax}
+\title{algoritmo minimax prueba2}
 \usage{
 minimax(
   tablero,
   profundidad,
   maximizandoIA,
+  .maxProf = profundidad,
   alpha = -Inf,
   beta = Inf,
-  env = NULL
+  env = NULL,
+  idPadre = NA_integer_
 )
 }
 \arguments{
@@ -49,12 +51,13 @@ a profundidad 5, con tres movimientos realizados en el tablero, el algoritmo min
 }
 }
 \examples{
-tablero <- crear_posicion_aleatoria(10)
+tablero <- crear_posicion_aleatoria(7)
 visualizar_tablero(tablero)
 system.time({
-  kk <- minimax(tablero = tablero, profundidad = 9, maximizandoIA = TRUE)
+  kk <- minimax(tablero = tablero, profundidad = 7, maximizandoIA = TRUE)
 })
-kk$env$contador
+max(kk$env$arbol@idNodo)
 kk$puntuacion
 kk$jugada
+kk$env$arbol
 }

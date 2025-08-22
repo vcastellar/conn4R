@@ -9,11 +9,11 @@
 #' iniciar_partida(profundidad = 7, turno = 2)
 #'
 #' para que sea la IA quien realice la primera jugada:
-#' iniciar_partida(autoplay = TRUE, profundidad = 5)
+#' iniciar_partida(auto = TRUE, profundidad = 5)
 
 
 
-iniciar_partida <- function(profundidad = 5, turno = 1, profAdaptative = TRUE, autoplay = FALSE) {
+iniciar_partida <- function(profundidad = 5, turno = 1, profAdaptative = TRUE, auto = FALSE) {
   
   resultado <- "DRAW"
   tablero <- reiniciar_tablero()
@@ -23,7 +23,7 @@ iniciar_partida <- function(profundidad = 5, turno = 1, profAdaptative = TRUE, a
   i <- 1
   j <- 0
   
-  if (!autoplay) {
+  if (!auto) {
     if (turno == 2) {
       # introducir jugada de la IA
       mejor_jugada_IA <- minimax(tablero, profundidad, maximizandoIA = TRUE)
@@ -103,7 +103,7 @@ iniciar_partida <- function(profundidad = 5, turno = 1, profAdaptative = TRUE, a
     cat(resultado)
   } 
   
-  if(autoplay) {
+  if(auto) {
     while (i <= 42) {
     # introducir jugada de la IA
       turno <- ((i-1) %% 2) + 1 

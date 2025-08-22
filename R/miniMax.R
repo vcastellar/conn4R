@@ -31,15 +31,16 @@
 #' visualizar_tablero(tablero)
 #' system.time({
 #'   kk <- minimax(tablero = tablero, profundidad = 7, maximizandoIA = TRUE)
-#'   kk <- minimax_parallel(tablero = tablero, profundidad = 7, maximizandoIA = TRUE)
 #' })
 #' max(kk$env$arbol@idNodo)
 #' kk$puntuacion
 #' kk$jugada
-#' kk$env$nodos
+#' kk$env$arbol
 
 
-minimax <- function(tablero, profundidad, maximizandoIA, alpha = -Inf, beta = Inf, env = NULL, idPadre = NA_integer_) {
+minimax <- function(tablero, profundidad, maximizandoIA, .maxProf = profundidad,
+                    alpha = -Inf, beta = Inf, env = NULL, 
+                    idPadre = NA_integer_) {
   
   if (is.null(env)) {
     env <- new.env()
@@ -61,7 +62,7 @@ minimax <- function(tablero, profundidad, maximizandoIA, alpha = -Inf, beta = In
   
   comparar <- if (maximizandoIA) `>` else `<`
   
-  jugadas_candidatas <- ordenar_jugadas(tablero, turno, profundidad)$jugadas
+  jugadas_candidatas <- ordenar_jugadas(tablero, turno)$jugadas
   
   for (columna in jugadas_candidatas) {
     nuevo_tablero <- realizar_jugada(tablero, columna, turno)
@@ -74,19 +75,16 @@ minimax <- function(tablero, profundidad, maximizandoIA, alpha = -Inf, beta = In
                             idPadre     = idPadre,
                             turno       = maximizandoIA,  # O usa turno == 2
                             jugada      = as.integer(columna),
-                            profundidad = as.integer(profundidad),
+                            profundidad = .maxProf - as.integer(profundidad) + 1,
                             puntuacion  = puntuacion_jugada)
+
     
     # Obtener ID del nodo recién añadido (último)
     nuevo_id <- tail(env$arbol@idNodo, 1)
     
     # Llamada recursiva pasando nuevo_id como padre
-    res <- minimax(nuevo_tablero,
-                   profundidad - 1,
-                   !maximizandoIA,
-                   alpha, beta,
-                   env,
-                   idPadre = nuevo_id)
+    res <- minimax(nuevo_tablero, profundidad - 1, !maximizandoIA, .maxProf = .maxProf,
+                   alpha, beta, env, idPadre = nuevo_id)
     
     if (comparar(res$puntuacion, mejor_puntuacion)) {
       mejor_puntuacion <- res$puntuacion
@@ -110,3 +108,76 @@ minimax <- function(tablero, profundidad, maximizandoIA, alpha = -Inf, beta = In
     env = env
   ))
 }
+
+# 
+# minimax <- function(tablero, profundidad, maximizandoIA, alpha = -Inf, beta = Inf, env = NULL, idPadre = NA_integer_) {
+#   
+#   if (is.null(env)) {
+#     env <- new.env()
+#     env$arbol <- new("arbol")
+#   }
+#   
+#   turno <- ifelse(maximizandoIA, 2, 1)
+#   mejor_puntuacion <- if (maximizandoIA) -Inf else Inf
+#   mejor_jugada <- NA
+#   
+#   # Caso base: profundidad 0 o juego terminado
+#   if (profundidad == 0 || juego_terminado(tablero)$finalizado) {
+#     return(list(
+#       puntuacion = evaluar_posicion(tablero, turno),
+#       jugada = NA,
+#       env = env
+#     ))
+#   }
+#   
+#   comparar <- if (maximizandoIA) `>` else `<`
+#   
+#   jugadas_candidatas <- ordenar_jugadas(tablero, turno, profundidad)$jugadas
+#   
+#   for (columna in jugadas_candidatas) {
+#     nuevo_tablero <- realizar_jugada(tablero, columna, turno)
+#     
+#     # Evaluación preliminar de la jugada actual para el árbol
+#     puntuacion_jugada <- evaluar_posicion(nuevo_tablero, turno)
+#     
+#     # Actualizar el árbol con el nodo actual
+#     env$arbol <- actualizar(env$arbol,
+#                             idPadre     = idPadre,
+#                             turno       = maximizandoIA,  # O usa turno == 2
+#                             jugada      = as.integer(columna),
+#                             profundidad = as.integer(profundidad),
+#                             puntuacion  = puntuacion_jugada)
+#     
+#     # Obtener ID del nodo recién añadido (último)
+#     nuevo_id <- tail(env$arbol@idNodo, 1)
+#     
+#     # Llamada recursiva pasando nuevo_id como padre
+#     res <- minimax(nuevo_tablero,
+#                    profundidad - 1,
+#                    !maximizandoIA,
+#                    alpha, beta,
+#                    env,
+#                    idPadre = nuevo_id)
+#     
+#     if (comparar(res$puntuacion, mejor_puntuacion)) {
+#       mejor_puntuacion <- res$puntuacion
+#       mejor_jugada <- columna
+#     }
+#     
+#     # Actualizar alpha/beta
+#     if (maximizandoIA) {
+#       alpha <- max(alpha, mejor_puntuacion)
+#     } else {
+#       beta <- min(beta, mejor_puntuacion)
+#     }
+#     
+#     # Poda
+#     if (beta <= alpha) break
+#   }
+#   
+#   return(list(
+#     puntuacion = mejor_puntuacion,
+#     jugada = mejor_jugada,
+#     env = env
+#   ))
+# }

@@ -5,11 +5,22 @@
 #' @param tablero matriz que representa el estado de un tablero
 #' @param turno qué jugador comienza pa partida: 1 para humano, 2 para IA.
 #' @examples
-#' tablero <- crear_posicion_aleatoria(5)
+#' tablero <- crear_posicion_aleatoria(15)
 #' visualizar_tablero(tablero)
+#' -----------------------------------------------------------------------------
+#' evaluación estática
+#' -----------------------------------------------------------------------------
 #' evaluar_posicion(tablero)
 #' .evaluar_turno(tablero, 1)
 #' .evaluar_turno(tablero, 2)
+#' -----------------------------------------------------------------------------
+#' 
+#'  -----------------------------------------------------------------------------
+#' evaluación dinámica
+#' -----------------------------------------------------------------------------
+#' kk <- minimax(tablero, 7, TRUE)
+#' kk$puntuacion
+#' -----------------------------------------------------------------------------
 
 
 # Precomputar en inicialización
@@ -30,14 +41,14 @@ generar_coordenadas_lineas <- function() {
     }
   }
 
-  # Diagonal ↘
+  # Diagonal
   for (fila in 1:3) {
     for (col in 1:4) {
       lineas[[length(lineas)+1]] <- cbind(fila:(fila+3), col:(col+3))
     }
   }
 
-  # Diagonal ↙
+  # Diagonal
   for (fila in 1:3) {
     for (col in 4:7) {
       lineas[[length(lineas)+1]] <- cbind(fila:(fila+3), col:(col-3))
@@ -49,6 +60,16 @@ generar_coordenadas_lineas <- function() {
 
 # Guardar globalmente (fuera de la función)
 lineas_posibles <- generar_coordenadas_lineas()
+
+generar_indices_posibles <- function(lineas_posibles) {
+  indices <- sapply(lineas_posibles, function(coords) {
+    (coords[,1]) + (coords[,2] - 1) * 6
+  })
+  
+  return(indices)
+}
+
+indices_posibles <- generar_indices_posibles(lineas_posibles)
 
 
 bitboards <- matrix(c(
@@ -64,24 +85,36 @@ bitboards <- matrix(c(
 # constantes
 punt1 <- 1
 punt2 <- 10
-punt3 <- 100
+punt3 <- 1000
 punt4 <- 100000
 
 # función principal
 evaluar_posicion <- function(tablero, turno) {
-  turno_ia <- 2
-  turno_oponente <- ifelse(turno_ia == 1, 2, 1)
+  #turno_ia <- 2
+  #turno_oponente <- ifelse(turno_ia == 1, 2, 1)
   
-  puntBit <- sum(bitboards * (1 * (tablero == turno_ia))) - sum(bitboards * (1 * (tablero == turno_oponente)))
+  # puntBit <- sum(bitboards * (1 * (tablero == turno_ia))) - sum(bitboards * (1 * (tablero == turno_oponente)))
+  # 
+  # eval_turno <- .evaluar_turno(tablero, turno_ia)
+  # eval_oponente <- .evaluar_turno(tablero, turno_oponente)
+  # eval_diff <- eval_turno - eval_oponente
   
-  eval_turno <- .evaluar_turno(tablero, turno_ia)
-  eval_oponente <- .evaluar_turno(tablero, turno_oponente)
-  eval_diff <- eval_turno - eval_oponente
+  puntBit <- sum(bitboards * (tablero == 2)) - sum(bitboards * (tablero == 1))
+  eval_diff <- .evaluar_turno(tablero, 2) - .evaluar_turno(tablero, 1)
   
+
   return(eval_diff + puntBit)
 }
 
-#función evaluar turno
+# función evaluar turno
+# .evaluar_turno <- function(tablero, turno) {
+#   puntuacion <- 0
+#   tab_vec <- as.vector(tablero)
+#   for (x in lineas_idx) {
+#     puntuacion <- puntuacion + .evaluar_linea(tab_vec[x], turno)
+#   }
+#   return(puntuacion)
+# }
 
 .evaluar_turno <- function(tablero, turno) {
   puntuacion <- 0
@@ -109,8 +142,6 @@ evaluar_posicion <- function(tablero, turno) {
   } else {
     puntuacion <- 0
   }
-  
-  # if (turno == 1) puntuacion <- -puntuacion
   
   return(puntuacion)
 }

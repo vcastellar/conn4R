@@ -1,7 +1,7 @@
 Package: conn4R
 Type: Package
 Title: What the Package Does (Title Case)
-Version: 0.1.2
+Version: 0.1.3
 Author: Vicente Castellar Sebastiá
 Maintainer:  <vic.sebastia@gmail.com>
 Description: More about what it does (maybe more than one line)
@@ -12,4 +12,7 @@ LazyData: true
 RoxygenNote: 7.3.2
 Imports:
   ggplot2,
-  methods
+  methods,
+  Rcpp
+LinkingTo:
+  Rcpp
