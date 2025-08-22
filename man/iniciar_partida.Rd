@@ -8,7 +8,7 @@ iniciar_partida(
   profundidad = 5,
   turno = 1,
   profAdaptative = TRUE,
-  autoplay = FALSE
+  auto = FALSE
 )
 }
 \arguments{
@@ -25,5 +25,5 @@ lo siguiente inicia una partida en la que  el jugador humano es el primero en ju
 iniciar_partida(profundidad = 7, turno = 2)
 
 para que sea la IA quien realice la primera jugada:
-iniciar_partida(autoplay = TRUE, profundidad = 5)
+iniciar_partida(auto = TRUE, profundidad = 5)
 }

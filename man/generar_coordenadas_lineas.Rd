@@ -16,9 +16,20 @@ evalua una posición mediante criterios estáticos basados en el
 número de casillas conectadas del jugador en turno
 }
 \examples{
-tablero <- crear_posicion_aleatoria(5)
+tablero <- crear_posicion_aleatoria(15)
 visualizar_tablero(tablero)
+-----------------------------------------------------------------------------
+evaluación estática
+-----------------------------------------------------------------------------
 evaluar_posicion(tablero)
 .evaluar_turno(tablero, 1)
 .evaluar_turno(tablero, 2)
+-----------------------------------------------------------------------------
+
+ -----------------------------------------------------------------------------
+evaluación dinámica
+-----------------------------------------------------------------------------
+kk <- minimax(tablero, 7, TRUE)
+kk$puntuacion
+-----------------------------------------------------------------------------
 }
