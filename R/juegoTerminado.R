@@ -11,7 +11,7 @@
 #' }
 #' @details
 #' \itemize{
-  #' \item{If the game is over is TRUE}: result can be "WIN HUMAN", "WIN IA" or "DRAW’.
+  #' \item{If the game is over is TRUE}: result can be "1", "2 or "0’.
   #' \item{If the game is over is TRUE}: result is NA
 #' }
 #' @examples

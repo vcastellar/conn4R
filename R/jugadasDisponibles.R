@@ -1,6 +1,6 @@
 #' Jugadas disponibles
 #'
-#' @description dada una situacvión en el tablero de juego, devuelve las posibles
+#' @description dada una situación en el tablero de juego, devuelve las posibles
 #'   jugadas existentes: columnas no completadas
 #' @param tablero matriz 6 x 7 que representa la situación del tablero de juego.
 #' @examples
@@ -40,7 +40,7 @@ ordenar_jugadas <- function(tablero, turno) {
 
     # Jugada del jugador actual
     tablero_j <- realizar_jugada(tablero, col, turno)
-    eval_j <- evaluar_posicion(tablero_j)  # AQUÍ SE PASA TURNO
+    eval_j <- evaluar_posicion(tablero_j, turno = turno)  # AQUÍ SE PASA TURNO
 
     # Jugada simulada del oponente
     tablero_o <- realizar_jugada(tablero, col, oponente)
