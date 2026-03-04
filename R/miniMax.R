@@ -14,6 +14,7 @@
 #' \itemize{
 #' \item{puntuacion}: puntuación optenida al evaluar la posición al realizar la 'jugada'
 #' \item{jugada}: jugada elegida por el algoritmo
+#' \item{arbol}: objeto de clase \code{arbol} con todos los nodos realmente analizados
 #' }
 #' @details
 #' \itemize{
@@ -45,6 +46,16 @@ minimax <- function(tablero, profundidad, maximizandoIA, .maxProf = profundidad,
   if (is.null(env)) {
     env <- new.env()
     env$arbol <- new("arbol")
+
+    # Crear nodo raíz para que el resultado sea un único árbol de búsqueda.
+    turno_raiz <- ifelse(maximizandoIA, 2, 1)
+    env$arbol <- actualizar(env$arbol,
+                            idPadre     = NA_integer_,
+                            turno       = maximizandoIA,
+                            jugada      = NA_integer_,
+                            profundidad = 0L,
+                            puntuacion  = evaluar_posicion(tablero, turno_raiz))
+    idPadre <- tail(env$arbol@idNodo, 1)
   }
   
   turno <- ifelse(maximizandoIA, 2, 1)
@@ -53,10 +64,21 @@ minimax <- function(tablero, profundidad, maximizandoIA, .maxProf = profundidad,
   
   # Caso base: profundidad 0 o juego terminado
   if (profundidad == 0 || juego_terminado(tablero)$finalizado) {
+    puntuacion_hoja <- evaluar_posicion(tablero, turno)
+
+    # El nodo terminal se marca con la puntuación final analizada.
+    if (!is.na(idPadre)) {
+      idx <- which(env$arbol@idNodo == idPadre)
+      if (length(idx) == 1) {
+        env$arbol@puntuacion[idx] <- puntuacion_hoja
+      }
+    }
+
     return(list(
-      puntuacion = evaluar_posicion(tablero, turno),
+      puntuacion = puntuacion_hoja,
       jugada = NA,
-      env = env
+      env = env,
+      arbol = env$arbol
     ))
   }
   
@@ -90,6 +112,12 @@ minimax <- function(tablero, profundidad, maximizandoIA, .maxProf = profundidad,
       mejor_puntuacion <- res$puntuacion
       mejor_jugada <- columna
     }
+
+    # El nodo queda etiquetado con su valor minimax final.
+    idx <- which(env$arbol@idNodo == nuevo_id)
+    if (length(idx) == 1) {
+      env$arbol@puntuacion[idx] <- res$puntuacion
+    }
     
     # Actualizar alpha/beta
     if (maximizandoIA) {
@@ -105,7 +133,8 @@ minimax <- function(tablero, profundidad, maximizandoIA, .maxProf = profundidad,
   return(list(
     puntuacion = mejor_puntuacion,
     jugada = mejor_jugada,
-    env = env
+    env = env,
+    arbol = env$arbol
   ))
 }
 
