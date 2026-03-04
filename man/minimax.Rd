@@ -32,6 +32,7 @@ returns a list with the following contents
 \itemize{
 \item{puntuacion}: puntuación optenida al evaluar la posición al realizar la 'jugada'
 \item{jugada}: jugada elegida por el algoritmo
+\item{arbol}: objeto de clase \code{arbol} con todos los nodos realmente analizados
 }
 }
 \description{
@@ -56,8 +57,8 @@ visualizar_tablero(tablero)
 system.time({
   kk <- minimax(tablero = tablero, profundidad = 7, maximizandoIA = TRUE)
 })
-max(kk$env$arbol@idNodo)
+max(kk$arbol@idNodo)
 kk$puntuacion
 kk$jugada
-kk$env$arbol
+kk$arbol
 }
