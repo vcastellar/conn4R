@@ -102,7 +102,9 @@ mostrar_mejor_variante <- function(tablero_inicial, variante, pausa_ms = 1000) {
   
   for (paso in variante) {
     jugada <- paso$jugada
-    turno <- ifelse(paso$turno, 2, 1)  # TRUE = IA = 2, FALSE = jugador = 1
+    # turno del nodo = quién va a mover DESDE ese nodo.
+    # Por tanto, el movimiento que llevó HASTA aquí fue del jugador contrario.
+    turno <- ifelse(paso$turno, 1, 2)  # turno=TRUE (IA mueve después) → human (1) hizo este movimiento
     
     if (!is.na(jugada)) {
       tablero <- realizar_jugada(tablero, jugada, turno)

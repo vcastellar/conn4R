@@ -1,7 +1,7 @@
-#' algoritmo minimax prueba2
+#' algoritmo minimax con poda alpha-beta
 #'
 #' @description función que mediante un algoritmo mini-max la IA decide cuál es su mejor
-#' jugada dada una cierta posición del tablero 
+#' jugada dada una cierta posición del tablero
 
 #' @param tablero a matrix representing the state of the game board
 #' @param profundidad un entero que fija la profundidad del árbol de jugadas a analizar
@@ -12,15 +12,11 @@
 
 #' @return returns a list with the following contents
 #' \itemize{
-#' \item{puntuacion}: puntuación optenida al evaluar la posición al realizar la 'jugada'
+#' \item{puntuacion}: puntuación obtenida al evaluar la posición al realizar la 'jugada'
 #' \item{jugada}: jugada elegida por el algoritmo
 #' \item{arbol}: objeto de clase \code{arbol} con todos los nodos realmente analizados
 #' }
 #' @details
-#' \itemize{
-#' \item{If the game is over is TRUE}: result can be "WIN HUMAN", "WIN IA" or "DRAW’.
-#' \item{If the game is over is TRUE}: result is NA
-#' }
 #' la poda alpha-beta reduce drásticamente el número de nodos que se evaluan:
 #' a profundidad 5, con tres movimientos realizados en el tablero, el algoritmo minimax calcula:
 #' \itemize{
@@ -40,173 +36,80 @@
 
 
 minimax <- function(tablero, profundidad, maximizandoIA, .maxProf = profundidad,
-                    alpha = -Inf, beta = Inf, env = NULL, 
+                    alpha = -Inf, beta = Inf, env = NULL,
                     idPadre = NA_integer_) {
-  
+
   if (is.null(env)) {
     env <- new.env()
     env$arbol <- new("arbol")
 
-    # Crear nodo raíz para que el resultado sea un único árbol de búsqueda.
-    turno_raiz <- ifelse(maximizandoIA, 2, 1)
+    # Crear nodo raíz: turno = TRUE significa que la IA (MAX) está a punto de jugar.
     env$arbol <- actualizar(env$arbol,
                             idPadre     = NA_integer_,
                             turno       = maximizandoIA,
                             jugada      = NA_integer_,
                             profundidad = 0L,
-                            puntuacion  = evaluar_posicion(tablero, turno_raiz))
+                            puntuacion  = evaluar_posicion(tablero, 2L))
     idPadre <- tail(env$arbol@idNodo, 1)
   }
-  
-  turno <- ifelse(maximizandoIA, 2, 1)
+
+  turno <- ifelse(maximizandoIA, 2L, 1L)
   mejor_puntuacion <- if (maximizandoIA) -Inf else Inf
   mejor_jugada <- NA
-  
-  # Caso base: profundidad 0 o juego terminado
+
+  # Caso base: profundidad 0 o juego terminado — el nodo ya fue creado por el llamador.
   if (profundidad == 0 || juego_terminado(tablero)$finalizado) {
-    puntuacion_hoja <- evaluar_posicion(tablero, turno)
-
-    # El nodo terminal se marca con la puntuación final analizada.
-    if (!is.na(idPadre)) {
-      idx <- which(env$arbol@idNodo == idPadre)
-      if (length(idx) == 1) {
-        env$arbol@puntuacion[idx] <- puntuacion_hoja
-      }
-    }
-
     return(list(
-      puntuacion = puntuacion_hoja,
-      jugada = NA,
-      env = env,
-      arbol = env$arbol
+      puntuacion = evaluar_posicion(tablero, turno),
+      jugada     = NA,
+      env        = env
     ))
   }
-  
+
   comparar <- if (maximizandoIA) `>` else `<`
-  
+
   jugadas_candidatas <- ordenar_jugadas(tablero, turno)$jugadas
-  
+
   for (columna in jugadas_candidatas) {
     nuevo_tablero <- realizar_jugada(tablero, columna, turno)
-    
-    # Evaluación preliminar de la jugada actual para el árbol
-    puntuacion_jugada <- evaluar_posicion(nuevo_tablero, turno)
-    
-    # Actualizar el árbol con el nodo actual
+
+    # turno = !maximizandoIA: el nodo hijo es el turno del jugador contrario.
     env$arbol <- actualizar(env$arbol,
                             idPadre     = idPadre,
-                            turno       = maximizandoIA,  # O usa turno == 2
+                            turno       = !maximizandoIA,
                             jugada      = as.integer(columna),
-                            profundidad = .maxProf - as.integer(profundidad) + 1,
-                            puntuacion  = puntuacion_jugada)
+                            profundidad = .maxProf - as.integer(profundidad) + 1L,
+                            puntuacion  = NA_real_)
 
-    
-    # Obtener ID del nodo recién añadido (último)
     nuevo_id <- tail(env$arbol@idNodo, 1)
-    
-    # Llamada recursiva pasando nuevo_id como padre
+
     res <- minimax(nuevo_tablero, profundidad - 1, !maximizandoIA, .maxProf = .maxProf,
                    alpha, beta, env, idPadre = nuevo_id)
-    
+
+    # Etiquetar el nodo con su valor minimax final propagado desde abajo.
+    idx <- which(env$arbol@idNodo == nuevo_id)
+    if (length(idx) == 1) {
+      env$arbol@puntuacion[idx] <- res$puntuacion
+    }
+
     if (comparar(res$puntuacion, mejor_puntuacion)) {
       mejor_puntuacion <- res$puntuacion
       mejor_jugada <- columna
     }
 
-    # El nodo queda etiquetado con su valor minimax final.
-    idx <- which(env$arbol@idNodo == nuevo_id)
-    if (length(idx) == 1) {
-      env$arbol@puntuacion[idx] <- res$puntuacion
-    }
-    
-    # Actualizar alpha/beta
     if (maximizandoIA) {
       alpha <- max(alpha, mejor_puntuacion)
     } else {
       beta <- min(beta, mejor_puntuacion)
     }
-    
-    # Poda
+
     if (beta <= alpha) break
   }
-  
+
   return(list(
     puntuacion = mejor_puntuacion,
-    jugada = mejor_jugada,
-    env = env,
-    arbol = env$arbol
+    jugada     = mejor_jugada,
+    env        = env,
+    arbol      = env$arbol
   ))
 }
-
-# 
-# minimax <- function(tablero, profundidad, maximizandoIA, alpha = -Inf, beta = Inf, env = NULL, idPadre = NA_integer_) {
-#   
-#   if (is.null(env)) {
-#     env <- new.env()
-#     env$arbol <- new("arbol")
-#   }
-#   
-#   turno <- ifelse(maximizandoIA, 2, 1)
-#   mejor_puntuacion <- if (maximizandoIA) -Inf else Inf
-#   mejor_jugada <- NA
-#   
-#   # Caso base: profundidad 0 o juego terminado
-#   if (profundidad == 0 || juego_terminado(tablero)$finalizado) {
-#     return(list(
-#       puntuacion = evaluar_posicion(tablero, turno),
-#       jugada = NA,
-#       env = env
-#     ))
-#   }
-#   
-#   comparar <- if (maximizandoIA) `>` else `<`
-#   
-#   jugadas_candidatas <- ordenar_jugadas(tablero, turno, profundidad)$jugadas
-#   
-#   for (columna in jugadas_candidatas) {
-#     nuevo_tablero <- realizar_jugada(tablero, columna, turno)
-#     
-#     # Evaluación preliminar de la jugada actual para el árbol
-#     puntuacion_jugada <- evaluar_posicion(nuevo_tablero, turno)
-#     
-#     # Actualizar el árbol con el nodo actual
-#     env$arbol <- actualizar(env$arbol,
-#                             idPadre     = idPadre,
-#                             turno       = maximizandoIA,  # O usa turno == 2
-#                             jugada      = as.integer(columna),
-#                             profundidad = as.integer(profundidad),
-#                             puntuacion  = puntuacion_jugada)
-#     
-#     # Obtener ID del nodo recién añadido (último)
-#     nuevo_id <- tail(env$arbol@idNodo, 1)
-#     
-#     # Llamada recursiva pasando nuevo_id como padre
-#     res <- minimax(nuevo_tablero,
-#                    profundidad - 1,
-#                    !maximizandoIA,
-#                    alpha, beta,
-#                    env,
-#                    idPadre = nuevo_id)
-#     
-#     if (comparar(res$puntuacion, mejor_puntuacion)) {
-#       mejor_puntuacion <- res$puntuacion
-#       mejor_jugada <- columna
-#     }
-#     
-#     # Actualizar alpha/beta
-#     if (maximizandoIA) {
-#       alpha <- max(alpha, mejor_puntuacion)
-#     } else {
-#       beta <- min(beta, mejor_puntuacion)
-#     }
-#     
-#     # Poda
-#     if (beta <= alpha) break
-#   }
-#   
-#   return(list(
-#     puntuacion = mejor_puntuacion,
-#     jugada = mejor_jugada,
-#     env = env
-#   ))
-# }
