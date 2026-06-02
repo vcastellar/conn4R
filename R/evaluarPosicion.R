@@ -138,8 +138,7 @@ evaluar_posicion <- function(tablero) {
 }
 
 
-<<<<<<< HEAD
-=======
+
 # función evaluar linea
 .evaluar_linea <- function(linea, turno) {
   n <- sum(linea == turno)
@@ -158,5 +157,5 @@ evaluar_posicion <- function(tablero) {
   }
 
 }
->>>>>>> 4e1e425 (update)
+
 
