@@ -73,20 +73,20 @@ indices_posibles <- generar_indices_posibles(lineas_posibles)
 
 
 bitboards <- matrix(c(
-  0.0, 0.5, 1.0, 1.5, 1.0, 0.5, 0.0,
-  0.5, 1.0, 1.5, 2.0, 1.5, 1.0, 0.5,
-  1.0, 1.5, 2.0, 2.5, 2.0, 1.5, 1.0,
-  1.5, 2.0, 2.5, 3.0, 2.5, 2.0, 1.5,
-  2.0, 2.5, 3.0, 3.5, 3.0, 2.5, 2.0,
-  0.5, 1.0, 1.5, 2.0, 1.5, 1.0, 0.5
+  0L, 1L, 2L, 3L, 2L, 1L, 0L,
+  1L, 2L, 3L, 4L, 3L, 2L, 1L,
+  2L, 3L, 4L, 5L, 2L, 3L, 2L,
+  3L, 4L, 5L, 6L, 5L, 4L, 3L,
+  4L, 5L, 6L, 7L, 6L, 5L, 4L,
+  1L, 2L, 3L, 4L, 3L, 2L, 1L
 ), nrow = 6, byrow = TRUE)
 
 
 # constantes
-punt1 <- 1
-punt2 <- 10
-punt3 <- 1000
-punt4 <- 100000
+punt1 <- 1L
+punt2 <- 10L
+punt3 <- 1000L
+punt4 <- 100000L
 
 # Cuenta amenazas abiertas: líneas con 3 piezas propias + 1 celda vacía accesible por gravedad
 .contar_amenazas_abiertas <- function(tablero, turno) {
@@ -138,4 +138,25 @@ evaluar_posicion <- function(tablero) {
 }
 
 
+<<<<<<< HEAD
+=======
+# función evaluar linea
+.evaluar_linea <- function(linea, turno) {
+  n <- sum(linea == turno)
+  v <- sum(linea == 0)
+  
+  if (n == 4) {
+    return(punt4)
+  } else if (n == 3 && v == 1) {
+    return(punt3)
+  } else if (n == 2 && v == 2) {
+    return(punt2)
+  } else if (n == 1 && v == 3) {
+    return(punt1)
+  } else {
+    return(0)
+  }
+
+}
+>>>>>>> 4e1e425 (update)
 
