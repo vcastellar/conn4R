@@ -23,15 +23,18 @@
 }
 
 
-.adaptativa <- function(tablero = tablero, profundidad_base = 5, profundidad_max = 15) {
+.adaptativa <- function(tablero = tablero, profundidad_base = 7, profundidad_max = 15) {
   b <- .columnasValidas(tablero)
   if (b <= 1) return(profundidad_max)
-  
+
+  # Presupuesto fijo de nodos equivalente a b_max^profundidad_base
   N <- 7 ^ profundidad_base
-  d_range <- 1:profundidad_max
-  nodos_estimados <- b^d_range
+  # Nunca bajar de profundidad_base — cuando el tablero está abierto (b grande) mantenemos
+  # la profundidad mínima; cuando se cierra (b pequeño) la aumentamos hasta profundidad_max
+  d_range <- profundidad_base:profundidad_max
+  nodos_estimados <- b ^ d_range
   d_mejor <- d_range[which.min(abs(nodos_estimados - N))]
-  
+
   return(d_mejor)
 }
 

@@ -88,61 +88,54 @@ punt2 <- 10
 punt3 <- 1000
 punt4 <- 100000
 
-# función principal
-evaluar_posicion <- function(tablero, turno) {
-  #turno_ia <- 2
-  #turno_oponente <- ifelse(turno_ia == 1, 2, 1)
-  
-  # puntBit <- sum(bitboards * (1 * (tablero == turno_ia))) - sum(bitboards * (1 * (tablero == turno_oponente)))
-  # 
-  # eval_turno <- .evaluar_turno(tablero, turno_ia)
-  # eval_oponente <- .evaluar_turno(tablero, turno_oponente)
-  # eval_diff <- eval_turno - eval_oponente
-  
-  puntBit <- sum(bitboards * (tablero == 2)) - sum(bitboards * (tablero == 1))
-  eval_diff <- .evaluar_turno(tablero, 2) - .evaluar_turno(tablero, 1)
-  
-
-  return(eval_diff + puntBit)
-}
-
-# función evaluar turno
-# .evaluar_turno <- function(tablero, turno) {
-#   puntuacion <- 0
-#   tab_vec <- as.vector(tablero)
-#   for (x in lineas_idx) {
-#     puntuacion <- puntuacion + .evaluar_linea(tab_vec[x], turno)
-#   }
-#   return(puntuacion)
-# }
-
-.evaluar_turno <- function(tablero, turno) {
-  puntuacion <- 0
+# Cuenta amenazas abiertas: líneas con 3 piezas propias + 1 celda vacía accesible por gravedad
+.contar_amenazas_abiertas <- function(tablero, turno) {
+  count <- 0L
   for (coords in lineas_posibles) {
     linea <- tablero[coords]
-    puntuacion <- puntuacion + .evaluar_linea(linea, turno)
+    if (sum(linea == turno) == 3L && sum(linea == 0L) == 1L) {
+      empty_pos <- which(linea == 0L)
+      fila <- coords[empty_pos, 1]
+      col  <- coords[empty_pos, 2]
+      # Celda accesible si está en la fila inferior o la celda de abajo está ocupada
+      if (fila == 6L || tablero[fila + 1L, col] != 0L) {
+        count <- count + 1L
+      }
+    }
   }
-  return(puntuacion)
+  count
+}
+
+# función principal — evalúa siempre desde la perspectiva de la IA (jugador 2)
+# positivo = bueno para IA, negativo = bueno para humano
+evaluar_posicion <- function(tablero) {
+  puntBit   <- sum(bitboards * (tablero == 2L)) - sum(bitboards * (tablero == 1L))
+  eval_diff <- .evaluar_turno(tablero, 2L) - .evaluar_turno(tablero, 1L)
+
+  # Bonus/penalización por amenazas dobles (dos amenazas simultáneas = trampa inevitable)
+  amenazas_ia  <- .contar_amenazas_abiertas(tablero, 2L)
+  amenazas_hum <- .contar_amenazas_abiertas(tablero, 1L)
+  bonus_doble   <- (amenazas_ia  >= 2L) * punt3 * 10L
+  penalty_doble <- (amenazas_hum >= 2L) * punt3 * 10L
+
+  return(eval_diff + puntBit + bonus_doble - penalty_doble)
+}
+
+# función evaluar turno — vectorizada sobre las 69 líneas usando indices_posibles (4x69)
+.evaluar_turno <- function(tablero, turno) {
+  tab_vec    <- as.integer(tablero)
+  lineas_mat <- matrix(tab_vec[indices_posibles], nrow = 4L)  # 4 x 69
+
+  n <- colSums(lineas_mat == turno)
+  v <- colSums(lineas_mat == 0L)
+
+  sum(
+    (n == 4L)              * punt4 +
+    (n == 3L & v == 1L)   * punt3 +
+    (n == 2L & v == 2L)   * punt2 +
+    (n == 1L & v == 3L)   * punt1
+  )
 }
 
 
-# función evaluar linea
-.evaluar_linea <- function(linea, turno) {
-  n <- sum(linea == turno)
-  v <- sum(linea == 0)
-  
-  if (n == 4) {
-    puntuacion <- punt4
-  } else if (n == 3 && v == 1) {
-    puntuacion <- punt3
-  } else if (n == 2 && v == 2) {
-    puntuacion <- punt2
-  } else if (n == 1 && v == 3) {
-    puntuacion <- punt1
-  } else {
-    puntuacion <- 0
-  }
-  
-  return(puntuacion)
-}
 
