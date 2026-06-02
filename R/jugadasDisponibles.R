@@ -40,11 +40,11 @@ ordenar_jugadas <- function(tablero, turno) {
 
     # Jugada del jugador actual
     tablero_j <- realizar_jugada(tablero, col, turno)
-    eval_j <- evaluar_posicion(tablero_j, turno = turno)  # AQUÍ SE PASA TURNO
+    eval_j <- evaluar_posicion(tablero_j)
 
     # Jugada simulada del oponente
     tablero_o <- realizar_jugada(tablero, col, oponente)
-    eval_o <- evaluar_posicion(tablero_o, turno = oponente)  # AQUÍ TAMBIÉN
+    eval_o <- evaluar_posicion(tablero_o)
 
     # Suma ponderada
     puntuaciones[i] <- abs(eval_j) + abs(eval_o)

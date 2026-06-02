@@ -49,7 +49,7 @@ minimax <- function(tablero, profundidad, maximizandoIA, .maxProf = profundidad,
                             turno       = maximizandoIA,
                             jugada      = NA_integer_,
                             profundidad = 0L,
-                            puntuacion  = evaluar_posicion(tablero, 2L))
+                            puntuacion  = evaluar_posicion(tablero))
     idPadre <- tail(env$arbol@idNodo, 1)
   }
 
@@ -60,7 +60,7 @@ minimax <- function(tablero, profundidad, maximizandoIA, .maxProf = profundidad,
   # Caso base: profundidad 0 o juego terminado — el nodo ya fue creado por el llamador.
   if (profundidad == 0 || juego_terminado(tablero)$finalizado) {
     return(list(
-      puntuacion = evaluar_posicion(tablero, turno),
+      puntuacion = evaluar_posicion(tablero),
       jugada     = NA,
       env        = env
     ))
