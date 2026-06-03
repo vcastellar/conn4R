@@ -22,42 +22,38 @@ jugadas_disponibles <- function(tablero) {
 
 ordenar_jugadas <- function(tablero, turno) {
   jugadas_candidatas <- jugadas_disponibles(tablero)
-  
-  # if (profundidad <= 2 & sum(tablero == 0) >= 0) {
-  #   df <- data.frame(jugadas = jugadas_candidatas, puntuacion = 0)
-  #   return(df)
-  # }
-  
+
   n <- length(jugadas_candidatas)
   puntuaciones <- numeric(n)
 
-  # Definir pesos: jugador actual y oponente
-  # pesos <- if (turno == 1) c(1.0, 0.5) else c(0.5, 1.0)
-  oponente <- ifelse(turno == 1, 2, 1)
+  oponente <- ifelse(turno == 1L, 2L, 1L)
+
+  # Prioridad máxima: victoria inmediata o bloqueo de victoria rival
+  WIN_SCORE  <- 1e9
+  BLOCK_SCORE <- 1e8
 
   for (i in seq_len(n)) {
     col <- jugadas_candidatas[i]
 
-    # Jugada del jugador actual
     tablero_j <- realizar_jugada(tablero, col, turno)
-    eval_j <- evaluar_posicion(tablero_j)
+    if (juego_terminado(tablero_j)$finalizado && !is.na(juego_terminado(tablero_j)$resultado) && juego_terminado(tablero_j)$resultado == turno) {
+      puntuaciones[i] <- WIN_SCORE
+      next
+    }
 
-    # Jugada simulada del oponente
     tablero_o <- realizar_jugada(tablero, col, oponente)
-    eval_o <- evaluar_posicion(tablero_o)
+    if (juego_terminado(tablero_o)$finalizado && !is.na(juego_terminado(tablero_o)$resultado) && juego_terminado(tablero_o)$resultado == oponente) {
+      puntuaciones[i] <- BLOCK_SCORE
+      next
+    }
 
-    # Suma ponderada
+    eval_j <- evaluar_posicion(tablero_j)
+    eval_o <- evaluar_posicion(tablero_o)
     puntuaciones[i] <- abs(eval_j) + abs(eval_o)
   }
 
-  # Crear data.frame ordenado por puntuación descendente
   df <- data.frame(jugadas = jugadas_candidatas, puntuacion = puntuaciones)
   df <- df[order(df$puntuacion, decreasing = TRUE), ]
-
-  # Poda opcional: mantener solo jugadas con evaluación fuerte
-  # if (any(abs(df$puntuacion) > 10000)) {
-  #   df <- df[which(abs(df$puntuacion) > 10000), ]
-  # }
 
   return(df)
 }

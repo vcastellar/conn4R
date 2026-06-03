@@ -75,7 +75,7 @@ indices_posibles <- generar_indices_posibles(lineas_posibles)
 bitboards <- matrix(c(
   0L, 1L, 2L, 3L, 2L, 1L, 0L,
   1L, 2L, 3L, 4L, 3L, 2L, 1L,
-  2L, 3L, 4L, 5L, 2L, 3L, 2L,
+  2L, 3L, 4L, 5L, 4L, 3L, 2L,
   3L, 4L, 5L, 6L, 5L, 4L, 3L,
   4L, 5L, 6L, 7L, 6L, 5L, 4L,
   1L, 2L, 3L, 4L, 3L, 2L, 1L
@@ -122,18 +122,25 @@ evaluar_posicion <- function(tablero) {
 }
 
 # función evaluar turno — vectorizada sobre las 69 líneas usando indices_posibles (4x69)
+# Solo puntúa líneas sin piezas del oponente (líneas "abiertas")
 .evaluar_turno <- function(tablero, turno) {
+  oponente   <- ifelse(turno == 1L, 2L, 1L)
   tab_vec    <- as.integer(tablero)
   lineas_mat <- matrix(tab_vec[indices_posibles], nrow = 4L)  # 4 x 69
 
   n <- colSums(lineas_mat == turno)
   v <- colSums(lineas_mat == 0L)
+  b <- colSums(lineas_mat == oponente)   # piezas del oponente en la línea
 
+  # Solo líneas sin piezas del oponente (b == 0)
+  abierta <- b == 0L
   sum(
-    (n == 4L)              * punt4 +
-    (n == 3L & v == 1L)   * punt3 +
-    (n == 2L & v == 2L)   * punt2 +
-    (n == 1L & v == 3L)   * punt1
+    abierta * (
+      (n == 4L)              * punt4 +
+      (n == 3L & v == 1L)   * punt3 +
+      (n == 2L & v == 2L)   * punt2 +
+      (n == 1L & v == 3L)   * punt1
+    )
   )
 }
 
