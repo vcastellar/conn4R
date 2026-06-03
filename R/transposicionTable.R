@@ -1,3 +1,9 @@
+# Flags de la tabla de transposición
+TT_EXACT <- 0L
+TT_LOWER <- 1L   # lower bound (fallo alto / corte beta)
+TT_UPPER <- 2L   # upper bound (fallo bajo / nodo ALL)
+
+
 #' Tabla de transposición para minimax con alpha-beta
 #'
 #' @description Crea y gestiona una tabla de transposición (TT) que almacena
@@ -16,15 +22,12 @@
 #'       candidatas en visitas posteriores para mejorar la ordenación.}
 #'   }
 #'
-#' @return \code{nueva_tt} devuelve un entorno con hash activado listo para
-#'   usarse como tabla de transposición.
-
-
-# Flags de la tabla de transposición
-TT_EXACT <- 0L
-TT_LOWER <- 1L   # lower bound (fallo alto / corte beta)
-TT_UPPER <- 2L   # upper bound (fallo bajo / nodo ALL)
-
+#' @return Entorno con hash activado listo para usarse como tabla de
+#'   transposición. Se crea una instancia nueva por llamada raíz a
+#'   \code{\link{minimax}} y se comparte por referencia entre todos los
+#'   nodos recursivos a través de \code{env$tt}.
+#'
+#' @export
 nueva_tt <- function() {
   new.env(hash = TRUE, parent = emptyenv())
 }
