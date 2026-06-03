@@ -13,35 +13,33 @@
 
 
 
-iniciar_partida <- function(profundidad = 5, turno = 1, profAdaptative = TRUE, auto = FALSE) {
-  
+iniciar_partida <- function(profundidad = 5, turno = 1, profAdaptative = TRUE, auto = FALSE, guardar_arbol = FALSE) {
+
   resultado <- "DRAW"
   tablero <- reiniciar_tablero()
   p <- visualizar_tablero(tablero)
   print(p)
-  puntuacion <- 0
   i <- 1
   j <- 0
-  
+
   if (!auto) {
     if (turno == 2) {
       # introducir jugada de la IA
-      mejor_jugada_IA <- minimax(tablero, profundidad, maximizandoIA = TRUE)
-      
+      mejor_jugada_IA <- minimax(tablero, profundidad, maximizandoIA = TRUE, guardar_arbol)
+
       tablero <- realizar_jugada(tablero, mejor_jugada_IA$jugada, 2)
       p <- visualizar_tablero(tablero)
       print(p)
       print(paste0("valoracion IA: ", evaluar_posicion(tablero)))
       print(paste0("jugada realizada: ", mejor_jugada_IA$jugada))
-      
-      
+
       if (juego_terminado(tablero)$finalizado) {
-        resultado <- "gana IA"
-        break
+        cat("gana IA")
+        return(tablero)
       }
       i <- i + 1
       j <- 1
-      
+
     }
     
     while (i <= (42 - j)) {
@@ -71,7 +69,7 @@ iniciar_partida <- function(profundidad = 5, turno = 1, profAdaptative = TRUE, a
       }
       
       tik <- system.time({
-        mejor_jugada_IA <- minimax(tablero, prof, maximizandoIA = TRUE)
+        mejor_jugada_IA <- minimax(tablero, prof, maximizandoIA = TRUE, guardar_arbol)
       })
       
       
@@ -117,9 +115,8 @@ iniciar_partida <- function(profundidad = 5, turno = 1, profAdaptative = TRUE, a
 
       maxIA <- (turno == 2)
       tik <- system.time({
-        mejor_jugada_IA <- minimax(tablero, prof, maximizandoIA = maxIA)
+        mejor_jugada_IA <- minimax(tablero, prof, maximizandoIA = maxIA, guardar_arbol)
       })
-      mejor_jugada_IA <- minimax(tablero, prof, maximizandoIA = TRUE)
 
       
       tablero <- realizar_jugada(tablero, mejor_jugada_IA$jugada, turno)
