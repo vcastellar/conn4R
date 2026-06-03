@@ -1,15 +1,32 @@
-#' Jugadas disponibles
+#' Jugadas disponibles y ordenación de candidatas
 #'
-#' @description dada una situación en el tablero de juego, devuelve las posibles
-#'   jugadas existentes: columnas no completadas
-#' @param tablero matriz 6 x 7 que representa la situación del tablero de juego.
+#' @description
+#' \code{jugadas_disponibles} devuelve las columnas no completadas del tablero.
+#'
+#' \code{ordenar_jugadas} ordena esas columnas de mejor a peor candidata para
+#' maximizar la eficacia de la poda alpha-beta:
+#' \enumerate{
+#'   \item Victorias inmediatas del jugador en turno (prioridad máxima).
+#'   \item Bloqueos de victoria inmediata del oponente.
+#'   \item Resto de jugadas ordenadas por evaluación estática combinada.
+#' }
+#'
+#' @param tablero Matriz 6x7 que representa el estado del tablero.
+#' @param turno Jugador en turno: \code{1} (humano) o \code{2} (IA).
+#'
+#' @return
+#' \code{jugadas_disponibles}: vector entero con los índices de columna (1-7)
+#' que no están llenas.
+#'
+#' \code{ordenar_jugadas}: data.frame con columnas \code{jugadas} (columna 1-7)
+#' y \code{puntuacion} (heurística de ordenación), ordenado de mayor a menor
+#' puntuación.
+#'
 #' @examples
 #' tablero <- crear_posicion_aleatoria(11)
-#' tablero <- readRDS("tableroPruebas.rds")
 #' visualizar_tablero(tablero)
-#' (jugadas_candidatas <- jugadas_disponibles(tablero))
+#' jugadas_disponibles(tablero)
 #' ordenar_jugadas(tablero, turno = 2)
-#' ordenar_jugadas_cpp(tablero, turno = 2, profundidad = 0)
 
 
 
@@ -22,42 +39,38 @@ jugadas_disponibles <- function(tablero) {
 
 ordenar_jugadas <- function(tablero, turno) {
   jugadas_candidatas <- jugadas_disponibles(tablero)
-  
-  # if (profundidad <= 2 & sum(tablero == 0) >= 0) {
-  #   df <- data.frame(jugadas = jugadas_candidatas, puntuacion = 0)
-  #   return(df)
-  # }
-  
+
   n <- length(jugadas_candidatas)
   puntuaciones <- numeric(n)
 
-  # Definir pesos: jugador actual y oponente
-  # pesos <- if (turno == 1) c(1.0, 0.5) else c(0.5, 1.0)
-  oponente <- ifelse(turno == 1, 2, 1)
+  oponente <- ifelse(turno == 1L, 2L, 1L)
+
+  # Prioridad máxima: victoria inmediata o bloqueo de victoria rival
+  WIN_SCORE  <- 1e9
+  BLOCK_SCORE <- 1e8
 
   for (i in seq_len(n)) {
     col <- jugadas_candidatas[i]
 
-    # Jugada del jugador actual
     tablero_j <- realizar_jugada(tablero, col, turno)
-    eval_j <- evaluar_posicion(tablero_j)
+    if (juego_terminado(tablero_j)$finalizado && !is.na(juego_terminado(tablero_j)$resultado) && juego_terminado(tablero_j)$resultado == turno) {
+      puntuaciones[i] <- WIN_SCORE
+      next
+    }
 
-    # Jugada simulada del oponente
     tablero_o <- realizar_jugada(tablero, col, oponente)
-    eval_o <- evaluar_posicion(tablero_o)
+    if (juego_terminado(tablero_o)$finalizado && !is.na(juego_terminado(tablero_o)$resultado) && juego_terminado(tablero_o)$resultado == oponente) {
+      puntuaciones[i] <- BLOCK_SCORE
+      next
+    }
 
-    # Suma ponderada
+    eval_j <- evaluar_posicion(tablero_j)
+    eval_o <- evaluar_posicion(tablero_o)
     puntuaciones[i] <- abs(eval_j) + abs(eval_o)
   }
 
-  # Crear data.frame ordenado por puntuación descendente
   df <- data.frame(jugadas = jugadas_candidatas, puntuacion = puntuaciones)
   df <- df[order(df$puntuacion, decreasing = TRUE), ]
-
-  # Poda opcional: mantener solo jugadas con evaluación fuerte
-  # if (any(abs(df$puntuacion) > 10000)) {
-  #   df <- df[which(abs(df$puntuacion) > 10000), ]
-  # }
 
   return(df)
 }
