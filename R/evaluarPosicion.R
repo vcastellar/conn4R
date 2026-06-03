@@ -1,26 +1,33 @@
-#' evaluación estática de una posición representada en tablero
+#' Evaluación estática de una posición
 #'
-#' @description evalua una posición mediante criterios estáticos basados en el
-#' número de casillas conectadas del jugador en turno
-#' @param tablero matriz que representa el estado de un tablero
-#' @param turno qué jugador comienza pa partida: 1 para humano, 2 para IA.
+#' @description Evalúa una posición del tablero mediante criterios estáticos.
+#'   El resultado es siempre desde la perspectiva de la IA (jugador 2):
+#'   valores positivos son favorables para la IA, negativos para el humano.
+#'
+#'   La puntuación combina tres componentes:
+#'   \enumerate{
+#'     \item \strong{Líneas abiertas}: solo se puntúan líneas de 4 que no
+#'       contengan piezas del oponente. Esquema de puntos: 1 pieza = 1,
+#'       2 piezas = 10, 3 piezas = 1.000, 4 piezas = 100.000.
+#'     \item \strong{Control de centro}: bonus posicional mediante la matriz
+#'       \code{bitboards} (valores 0-7, máximo en el centro del tablero).
+#'     \item \strong{Amenazas dobles}: bonus/penalización de 10.000 cuando un
+#'       jugador tiene dos o más amenazas abiertas simultáneas (trampa inevitable).
+#'   }
+#'
+#' @param tablero Matriz 6x7 que representa el estado del tablero. Celdas:
+#'   0 vacío, 1 humano, 2 IA.
+#'
+#' @return Entero. Puntuación de la posición desde la perspectiva de la IA.
+#'
 #' @examples
 #' tablero <- crear_posicion_aleatoria(15)
 #' visualizar_tablero(tablero)
-#' -----------------------------------------------------------------------------
-#' evaluación estática
-#' -----------------------------------------------------------------------------
 #' evaluar_posicion(tablero)
-#' .evaluar_turno(tablero, 1)
-#' .evaluar_turno(tablero, 2)
-#' -----------------------------------------------------------------------------
-#' 
-#'  -----------------------------------------------------------------------------
-#' evaluación dinámica
-#' -----------------------------------------------------------------------------
-#' kk <- minimax(tablero, 7, TRUE)
-#' kk$puntuacion
-#' -----------------------------------------------------------------------------
+#'
+#' # Evaluación individual por jugador (función interna)
+#' conn4R:::.evaluar_turno(tablero, 1)
+#' conn4R:::.evaluar_turno(tablero, 2)
 
 
 # Precomputar en inicialización

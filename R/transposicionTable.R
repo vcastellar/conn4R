@@ -1,20 +1,23 @@
-#' Transposition Table para minimax con alpha-beta
+#' Tabla de transposición para minimax con alpha-beta
 #'
-#' @description
-#' Implementa una tabla de transposición (TT) que almacena resultados de
-#' posiciones ya evaluadas. Evita recalcular nodos que se alcanzan por
-#' distintas secuencias de movimientos (transposiciones).
+#' @description Crea y gestiona una tabla de transposición (TT) que almacena
+#'   resultados de posiciones ya evaluadas, evitando recalcular nodos que se
+#'   alcanzan por distintas secuencias de movimientos (transposiciones).
 #'
-#' Cada entrada almacena:
-#'   prof   — profundidad restante con la que se evaluó el nodo
-#'   punt   — puntuación obtenida
-#'   flag   — tipo de cota: 0L EXACT | 1L LOWER (fallo alto) | 2L UPPER (fallo bajo)
-#'   jugada — mejor jugada encontrada (útil para ordenar en futuras búsquedas)
+#'   Cada entrada contiene:
+#'   \describe{
+#'     \item{prof}{Profundidad restante con la que se evaluó el nodo. Solo se
+#'       usa una entrada si \code{prof >= profundidad} requerida.}
+#'     \item{punt}{Puntuación minimax obtenida.}
+#'     \item{flag}{Tipo de cota: \code{TT_EXACT} (0) valor exacto;
+#'       \code{TT_LOWER} (1) cota inferior — el nodo causó un corte beta;
+#'       \code{TT_UPPER} (2) cota superior — el nodo no mejoró alpha.}
+#'     \item{jugada}{Mejor jugada encontrada. Se antepone a la lista de
+#'       candidatas en visitas posteriores para mejorar la ordenación.}
+#'   }
 #'
-#' Uso de cotas:
-#'   EXACT : valor real conocido → usar directamente
-#'   LOWER : score >= beta en la búsqueda original → produce corte beta
-#'   UPPER : score <= alpha original  → produce corte alpha
+#' @return \code{nueva_tt} devuelve un entorno con hash activado listo para
+#'   usarse como tabla de transposición.
 
 
 # Flags de la tabla de transposición

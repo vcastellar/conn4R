@@ -1,15 +1,32 @@
-#' Jugadas disponibles
+#' Jugadas disponibles y ordenación de candidatas
 #'
-#' @description dada una situación en el tablero de juego, devuelve las posibles
-#'   jugadas existentes: columnas no completadas
-#' @param tablero matriz 6 x 7 que representa la situación del tablero de juego.
+#' @description
+#' \code{jugadas_disponibles} devuelve las columnas no completadas del tablero.
+#'
+#' \code{ordenar_jugadas} ordena esas columnas de mejor a peor candidata para
+#' maximizar la eficacia de la poda alpha-beta:
+#' \enumerate{
+#'   \item Victorias inmediatas del jugador en turno (prioridad máxima).
+#'   \item Bloqueos de victoria inmediata del oponente.
+#'   \item Resto de jugadas ordenadas por evaluación estática combinada.
+#' }
+#'
+#' @param tablero Matriz 6x7 que representa el estado del tablero.
+#' @param turno Jugador en turno: \code{1} (humano) o \code{2} (IA).
+#'
+#' @return
+#' \code{jugadas_disponibles}: vector entero con los índices de columna (1-7)
+#' que no están llenas.
+#'
+#' \code{ordenar_jugadas}: data.frame con columnas \code{jugadas} (columna 1-7)
+#' y \code{puntuacion} (heurística de ordenación), ordenado de mayor a menor
+#' puntuación.
+#'
 #' @examples
 #' tablero <- crear_posicion_aleatoria(11)
-#' tablero <- readRDS("tableroPruebas.rds")
 #' visualizar_tablero(tablero)
-#' (jugadas_candidatas <- jugadas_disponibles(tablero))
+#' jugadas_disponibles(tablero)
 #' ordenar_jugadas(tablero, turno = 2)
-#' ordenar_jugadas_cpp(tablero, turno = 2, profundidad = 0)
 
 
 
