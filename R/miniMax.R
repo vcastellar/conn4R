@@ -59,6 +59,7 @@
 #' kk_analisis$arbol
 
 
+#' @export
 minimax <- function(tablero, profundidad, maximizandoIA, .maxProf = profundidad,
                     alpha = -Inf, beta = Inf, env = NULL,
                     idPadre = NA_integer_, guardar_arbol = FALSE) {

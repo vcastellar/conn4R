@@ -12,6 +12,7 @@
 #' visualizar_tablero(tablero)
 #' sum(tablero == 1)
 #' sum(tablero == 2)
+#' @export
 crear_posicion_aleatoria <- function(profundidad = 10) {
 
   reiniciar <- TRUE

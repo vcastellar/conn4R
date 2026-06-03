@@ -2,6 +2,7 @@
 # función mejor_jugada_minimax la realice en el tablero
 # prueba
 
+#' @export
 realizar_jugada <- function(tablero, columna, jugador) {
   for (fila in 6:1) {
     if (tablero[fila, columna] == 0) {

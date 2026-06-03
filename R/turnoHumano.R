@@ -24,6 +24,7 @@
 
 
 
+#' @export
 turno_humano <- function(tablero, jugada = NULL) {
 
   jugadas_posibles <- jugadas_disponibles(tablero)
