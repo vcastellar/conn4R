@@ -67,10 +67,10 @@ iniciar_partida <- function(profundidad = 5, turno = 1, profAdaptative = TRUE, a
       }
       
       tik <- system.time({
-        mejor_jugada_IA <- minimax(tablero, prof, maximizandoIA = TRUE, guardar_arbol)
+        mejor_jugada_IA <- minimax(tablero, prof, maximizandoIA = TRUE, guardar_arbol = guardar_arbol)
       })
-      
-      
+
+
       tablero <- realizar_jugada(tablero, mejor_jugada_IA$jugada, 2)
       p <- visualizar_tablero(tablero)
       print(p)
@@ -113,7 +113,7 @@ iniciar_partida <- function(profundidad = 5, turno = 1, profAdaptative = TRUE, a
 
       maxIA <- (turno == 2)
       tik <- system.time({
-        mejor_jugada_IA <- minimax(tablero, prof, maximizandoIA = maxIA, guardar_arbol)
+        mejor_jugada_IA <- minimax(tablero, prof, maximizandoIA = maxIA, guardar_arbol = guardar_arbol)
       })
 
       
