@@ -2,18 +2,18 @@
 # Generator token: 10BE3573-1514-4C36-9D1C-5A225CD40393
 
 jugadas_disponibles_cpp <- function(tablero) {
-    .Call('_conn4R_jugadas_disponibles_cpp', PACKAGE = 'conn4R', tablero)
+    .Call(`_conn4R_jugadas_disponibles_cpp`, tablero)
 }
 
 realizar_jugada_cpp <- function(tablero, columna, jugador) {
-    .Call('_conn4R_realizar_jugada_cpp', PACKAGE = 'conn4R', tablero, columna, jugador)
+    .Call(`_conn4R_realizar_jugada_cpp`, tablero, columna, jugador)
 }
 
 suma <- function(x, y) {
-    .Call('_conn4R_suma', PACKAGE = 'conn4R', x, y)
+    .Call(`_conn4R_suma`, x, y)
 }
 
 ordenar_jugadas_cpp <- function(tablero, turno) {
-    .Call('_conn4R_ordenar_jugadas_cpp', PACKAGE = 'conn4R', tablero, turno)
+    .Call(`_conn4R_ordenar_jugadas_cpp`, tablero, turno)
 }
 
