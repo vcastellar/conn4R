@@ -10,9 +10,7 @@
 #'
 #' para que sea la IA quien realice la primera jugada:
 #' iniciar_partida(auto = TRUE, profundidad = 5)
-
-
-
+#' @export
 iniciar_partida <- function(profundidad = 5, turno = 1, profAdaptative = TRUE, auto = FALSE, guardar_arbol = FALSE) {
 
   resultado <- "DRAW"

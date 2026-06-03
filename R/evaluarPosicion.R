@@ -30,7 +30,7 @@
 #' conn4R:::.evaluar_turno(tablero, 2)
 
 
-# Precomputar en inicialización
+#' @export
 generar_coordenadas_lineas <- function() {
   lineas <- list()
 
@@ -68,6 +68,7 @@ generar_coordenadas_lineas <- function() {
 # Guardar globalmente (fuera de la función)
 lineas_posibles <- generar_coordenadas_lineas()
 
+#' @export
 generar_indices_posibles <- function(lineas_posibles) {
   indices <- sapply(lineas_posibles, function(coords) {
     (coords[,1]) + (coords[,2] - 1) * 6
@@ -115,6 +116,7 @@ punt4 <- 100000L
 
 # función principal — evalúa siempre desde la perspectiva de la IA (jugador 2)
 # positivo = bueno para IA, negativo = bueno para humano
+#' @export
 evaluar_posicion <- function(tablero) {
   puntBit   <- sum(bitboards * (tablero == 2L)) - sum(bitboards * (tablero == 1L))
   eval_diff <- .evaluar_turno(tablero, 2L) - .evaluar_turno(tablero, 1L)

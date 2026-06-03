@@ -82,6 +82,7 @@
   )
 }
 
+#' @export
 visualizar_tablero <- function(tablero) {
   library(ggplot2)
 

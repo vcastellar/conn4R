@@ -19,7 +19,7 @@
 #' p <- visualizar_tablero(tablero)
 #' print(p)
 #' juego_terminado(tablero)
-
+#' @export
 juego_terminado <- function(tablero) {
   # Verificar si hay 4 en línea para el jugador 1 o 2
   for (jugador in 1:2) {

@@ -30,6 +30,7 @@
 
 
 
+#' @export
 jugadas_disponibles <- function(tablero) {
   # Encuentra las columnas que no están llenas
   jugadas_candidatas <- which(tablero[1, ] == 0)
@@ -37,6 +38,7 @@ jugadas_disponibles <- function(tablero) {
 }
 
 
+#' @export
 ordenar_jugadas <- function(tablero, turno) {
   jugadas_candidatas <- jugadas_disponibles(tablero)
 

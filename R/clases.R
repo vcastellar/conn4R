@@ -59,6 +59,7 @@ setMethod("actUltNodo", "arbol",
   })
 
 
+#' @export
 encontrar_mejor_variante <- function(arbol) {
   
   # Encontrar nodo raíz (idPadre == NA o NA_integer_)
@@ -97,6 +98,7 @@ encontrar_mejor_variante <- function(arbol) {
   return(mejor_variante)
 }
 
+#' @export
 mostrar_mejor_variante <- function(tablero_inicial, variante, pausa_ms = 1000) {
   tablero <- tablero_inicial
   
