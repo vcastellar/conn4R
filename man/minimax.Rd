@@ -2,7 +2,7 @@
 % Please edit documentation in R/miniMax.R
 \name{minimax}
 \alias{minimax}
-\title{algoritmo minimax prueba2}
+\title{Algoritmo minimax con poda alpha-beta, tabla de transposición y árbol opcional}
 \usage{
 minimax(
   tablero,
@@ -12,53 +12,73 @@ minimax(
   alpha = -Inf,
   beta = Inf,
   env = NULL,
-  idPadre = NA_integer_
+  idPadre = NA_integer_,
+  guardar_arbol = FALSE
 )
 }
 \arguments{
-\item{tablero}{a matrix representing the state of the game board}
+\item{tablero}{Matriz 6x7 que representa el estado del tablero. Celdas: 0 vacío,
+1 humano, 2 IA.}
 
-\item{profundidad}{un entero que fija la profundidad del árbol de jugadas a analizar}
+\item{profundidad}{Entero. Profundidad máxima del árbol de búsqueda.}
 
-\item{maximizandoIA}{Booleano. TRUE significa que se maximiza la puntuación de la IA
-FALSE se minimiza la puntuación del jugador humano}
+\item{maximizandoIA}{Lógico. \code{TRUE} indica nodo MAX (turno de la IA);
+\code{FALSE} indica nodo MIN (turno del humano).}
 
-\item{alpha}{parámetro de la poda alpha-beta. Por defecto -Inf}
+\item{alpha}{Cota inferior de la ventana alpha-beta. Por defecto \code{-Inf}.}
 
-\item{beta}{parámetro de la poda alpha-beta. Por defecto +Inf}
+\item{beta}{Cota superior de la ventana alpha-beta. Por defecto \code{+Inf}.}
+
+\item{guardar_arbol}{Lógico. Si \code{TRUE} construye y devuelve el árbol S4
+completo de búsqueda en \code{$arbol}. Por defecto \code{FALSE} para evitar
+el coste O(n²) de los appends a slots S4 durante la partida normal.}
 }
 \value{
-returns a list with the following contents
-\itemize{
-\item{puntuacion}: puntuación optenida al evaluar la posición al realizar la 'jugada'
-\item{jugada}: jugada elegida por el algoritmo
-\item{arbol}: objeto de clase \code{arbol} con todos los nodos realmente analizados
+Lista con los siguientes elementos:
+\describe{
+  \item{puntuacion}{Puntuación minimax de la posición resultante.}
+  \item{jugada}{Columna elegida por la IA (entero 1-7).}
+  \item{env}{Entorno interno con la tabla de transposición (\code{env$tt})
+    y, si \code{guardar_arbol = TRUE}, el árbol S4 (\code{env$arbol}).}
+  \item{arbol}{Objeto \code{\link{arbol}} con todos los nodos evaluados, o
+    \code{NULL} si \code{guardar_arbol = FALSE}.}
 }
 }
 \description{
-función que mediante un algoritmo mini-max la IA decide cuál es su mejor
-jugada dada una cierta posición del tablero
+Implementa el algoritmo minimax con poda alpha-beta para decidir
+  la mejor jugada dado un estado del tablero. Incorpora una tabla de transposición
+  que evita re-evaluar posiciones ya visitadas, y permite activar opcionalmente
+  la construcción del árbol de búsqueda completo para análisis.
 }
 \details{
-\itemize{
-\item{If the game is over is TRUE}: result can be "WIN HUMAN", "WIN IA" or "DRAW’.
-\item{If the game is over is TRUE}: result is NA
-}
-la poda alpha-beta reduce drásticamente el número de nodos que se evaluan:
-a profundidad 5, con tres movimientos realizados en el tablero, el algoritmo minimax calcula:
-\itemize{
-\item con poda alpha-beta: 4.677 nodos
-\item sin poda alpha-beta: 19.607 nodos
-}
+\strong{Poda alpha-beta:} reduce el espacio de búsqueda descartando ramas que
+no pueden mejorar la evaluación ya conocida. A profundidad 5 con 3 movimientos
+realizados: 4.677 nodos con poda frente a 19.607 sin poda.
+
+\strong{Tabla de transposición:} al inicio de cada nodo se consulta si la
+posición ya fue evaluada a profundidad suficiente. Si la cota almacenada
+(EXACT, LOWER o UPPER) es compatible con la ventana actual se retorna
+directamente sin explorar el subárbol. La mejor jugada almacenada también
+se usa para mejorar el orden de exploración en visitas posteriores.
+
+\strong{Ordenación de jugadas:} las victorias inmediatas se evalúan primero,
+seguidas de los bloqueos de victoria rival, y finalmente el resto ordenado
+por evaluación estática. Esto maximiza la eficacia de la poda alpha-beta.
 }
 \examples{
 tablero <- crear_posicion_aleatoria(7)
 visualizar_tablero(tablero)
+
+# Uso normal durante la partida (sin árbol, más rápido)
 system.time({
   kk <- minimax(tablero = tablero, profundidad = 7, maximizandoIA = TRUE)
 })
-max(kk$arbol@idNodo)
 kk$puntuacion
 kk$jugada
-kk$arbol
+
+# Con árbol completo para análisis
+kk_analisis <- minimax(tablero, profundidad = 5, maximizandoIA = TRUE,
+                       guardar_arbol = TRUE)
+max(kk_analisis$env$arbol@idNodo)
+kk_analisis$arbol
 }

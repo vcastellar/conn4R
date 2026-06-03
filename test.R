@@ -43,6 +43,7 @@ tablero <- matrix(c(0, 0, 0, 0, 0, 0, 0,
                     0, 0, 1, 1, 2, 1, 1), byrow = TRUE, ncol = 7)
 visualizar_tablero(tablero)
 kk <- minimax(tablero = tablero, profundidad = 7, maximizandoIA = FALSE)
+mostrar_mejor_variante(tablero, encontrar_mejor_variante(kk$env$arbol))
 
 
 #-------------------------------------------------------------------------------
