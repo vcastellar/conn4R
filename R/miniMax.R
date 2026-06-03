@@ -37,20 +37,23 @@
 
 minimax <- function(tablero, profundidad, maximizandoIA, .maxProf = profundidad,
                     alpha = -Inf, beta = Inf, env = NULL,
-                    idPadre = NA_integer_) {
+                    idPadre = NA_integer_, guardar_arbol = FALSE) {
 
   if (is.null(env)) {
     env <- new.env()
-    env$arbol <- new("arbol")
-    env$tt    <- nueva_tt()
+    env$tt           <- nueva_tt()
+    env$guardar_arbol <- guardar_arbol
 
-    env$arbol <- actualizar(env$arbol,
-                            idPadre     = NA_integer_,
-                            turno       = maximizandoIA,
-                            jugada      = NA_integer_,
-                            profundidad = 0L,
-                            puntuacion  = evaluar_posicion(tablero))
-    idPadre <- tail(env$arbol@idNodo, 1)
+    if (guardar_arbol) {
+      env$arbol <- new("arbol")
+      env$arbol <- actualizar(env$arbol,
+                              idPadre     = NA_integer_,
+                              turno       = maximizandoIA,
+                              jugada      = NA_integer_,
+                              profundidad = 0L,
+                              puntuacion  = evaluar_posicion(tablero))
+      idPadre <- tail(env$arbol@idNodo, 1)
+    }
   }
 
   turno <- ifelse(maximizandoIA, 2L, 1L)
@@ -96,22 +99,25 @@ minimax <- function(tablero, profundidad, maximizandoIA, .maxProf = profundidad,
   for (columna in jugadas_candidatas) {
     nuevo_tablero <- realizar_jugada(tablero, columna, turno)
 
-    env$arbol <- actualizar(env$arbol,
-                            idPadre     = idPadre,
-                            turno       = !maximizandoIA,
-                            jugada      = as.integer(columna),
-                            profundidad = .maxProf - as.integer(profundidad) + 1L,
-                            puntuacion  = NA_real_)
-
-    nuevo_id <- tail(env$arbol@idNodo, 1)
+    if (env$guardar_arbol) {
+      env$arbol <- actualizar(env$arbol,
+                              idPadre     = idPadre,
+                              turno       = !maximizandoIA,
+                              jugada      = as.integer(columna),
+                              profundidad = .maxProf - as.integer(profundidad) + 1L,
+                              puntuacion  = NA_real_)
+      nuevo_id <- tail(env$arbol@idNodo, 1)
+    }
 
     res <- minimax(nuevo_tablero, profundidad - 1L, !maximizandoIA,
                    .maxProf = .maxProf, alpha, beta, env,
-                   idPadre = nuevo_id)
+                   idPadre = if (env$guardar_arbol) nuevo_id else NA_integer_)
 
-    idx <- which(env$arbol@idNodo == nuevo_id)
-    if (length(idx) == 1L) {
-      env$arbol@puntuacion[idx] <- res$puntuacion
+    if (env$guardar_arbol) {
+      idx <- which(env$arbol@idNodo == nuevo_id)
+      if (length(idx) == 1L) {
+        env$arbol@puntuacion[idx] <- res$puntuacion
+      }
     }
 
     if (comparar(res$puntuacion, mejor_puntuacion)) {
@@ -136,6 +142,6 @@ minimax <- function(tablero, profundidad, maximizandoIA, .maxProf = profundidad,
     puntuacion = mejor_puntuacion,
     jugada     = mejor_jugada,
     env        = env,
-    arbol      = env$arbol
+    arbol      = if (env$guardar_arbol) env$arbol else NULL
   ))
 }
