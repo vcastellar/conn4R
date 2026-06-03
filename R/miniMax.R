@@ -1,15 +1,15 @@
-#' algoritmo minimax con poda alpha-beta
+#' algoritmo minimax con poda alpha-beta y tabla de transposición
 #'
 #' @description función que mediante un algoritmo mini-max la IA decide cuál es su mejor
 #' jugada dada una cierta posición del tablero
-
+#'
 #' @param tablero a matrix representing the state of the game board
 #' @param profundidad un entero que fija la profundidad del árbol de jugadas a analizar
 #' @param maximizandoIA Booleano. TRUE significa que se maximiza la puntuación de la IA
 #'   FALSE se minimiza la puntuación del jugador humano
 #' @param alpha parámetro de la poda alpha-beta. Por defecto -Inf
 #' @param beta parámetro de la poda alpha-beta. Por defecto +Inf
-
+#'
 #' @return returns a list with the following contents
 #' \itemize{
 #' \item{puntuacion}: puntuación obtenida al evaluar la posición al realizar la 'jugada'
@@ -42,8 +42,8 @@ minimax <- function(tablero, profundidad, maximizandoIA, .maxProf = profundidad,
   if (is.null(env)) {
     env <- new.env()
     env$arbol <- new("arbol")
+    env$tt    <- nueva_tt()
 
-    # Crear nodo raíz: turno = TRUE significa que la IA (MAX) está a punto de jugar.
     env$arbol <- actualizar(env$arbol,
                             idPadre     = NA_integer_,
                             turno       = maximizandoIA,
@@ -54,11 +54,9 @@ minimax <- function(tablero, profundidad, maximizandoIA, .maxProf = profundidad,
   }
 
   turno <- ifelse(maximizandoIA, 2L, 1L)
-  mejor_puntuacion <- if (maximizandoIA) -Inf else Inf
-  mejor_jugada <- NA
 
-  # Caso base: profundidad 0 o juego terminado — el nodo ya fue creado por el llamador.
-  if (profundidad == 0 || juego_terminado(tablero)$finalizado) {
+  # Caso base
+  if (profundidad == 0L || juego_terminado(tablero)$finalizado) {
     return(list(
       puntuacion = evaluar_posicion(tablero),
       jugada     = NA,
@@ -66,14 +64,38 @@ minimax <- function(tablero, profundidad, maximizandoIA, .maxProf = profundidad,
     ))
   }
 
-  comparar <- if (maximizandoIA) `>` else `<`
+  # ── Consulta tabla de transposición ──────────────────────────────────────
+  clave   <- .tt_clave(tablero)
+  tt_hit  <- .tt_lookup(env$tt, clave, profundidad, alpha, beta)
+  if (!is.null(tt_hit)) {
+    return(list(
+      puntuacion = tt_hit$punt,
+      jugada     = tt_hit$jugada,
+      env        = env
+    ))
+  }
 
-  jugadas_candidatas <- ordenar_jugadas(tablero, turno)$jugadas
+  # Guardar ventana original para clasificar la cota al final
+  alpha_orig <- alpha
+  beta_orig  <- beta
+
+  mejor_puntuacion <- if (maximizandoIA) -Inf else Inf
+  mejor_jugada     <- NA
+  comparar         <- if (maximizandoIA) `>` else `<`
+
+  # Ordenar jugadas; si la TT tiene una mejor jugada, ponerla primero
+  jugadas_df <- ordenar_jugadas(tablero, turno)
+  jugadas_candidatas <- jugadas_df$jugadas
+
+  tt_jugada <- env$tt[[clave]]$jugada
+  if (!is.null(tt_jugada) && !is.na(tt_jugada)) {
+    jugadas_candidatas <- c(tt_jugada,
+                            jugadas_candidatas[jugadas_candidatas != tt_jugada])
+  }
 
   for (columna in jugadas_candidatas) {
     nuevo_tablero <- realizar_jugada(tablero, columna, turno)
 
-    # turno = !maximizandoIA: el nodo hijo es el turno del jugador contrario.
     env$arbol <- actualizar(env$arbol,
                             idPadre     = idPadre,
                             turno       = !maximizandoIA,
@@ -83,28 +105,32 @@ minimax <- function(tablero, profundidad, maximizandoIA, .maxProf = profundidad,
 
     nuevo_id <- tail(env$arbol@idNodo, 1)
 
-    res <- minimax(nuevo_tablero, profundidad - 1, !maximizandoIA, .maxProf = .maxProf,
-                   alpha, beta, env, idPadre = nuevo_id)
+    res <- minimax(nuevo_tablero, profundidad - 1L, !maximizandoIA,
+                   .maxProf = .maxProf, alpha, beta, env,
+                   idPadre = nuevo_id)
 
-    # Etiquetar el nodo con su valor minimax final propagado desde abajo.
     idx <- which(env$arbol@idNodo == nuevo_id)
-    if (length(idx) == 1) {
+    if (length(idx) == 1L) {
       env$arbol@puntuacion[idx] <- res$puntuacion
     }
 
     if (comparar(res$puntuacion, mejor_puntuacion)) {
       mejor_puntuacion <- res$puntuacion
-      mejor_jugada <- columna
+      mejor_jugada     <- columna
     }
 
     if (maximizandoIA) {
       alpha <- max(alpha, mejor_puntuacion)
     } else {
-      beta <- min(beta, mejor_puntuacion)
+      beta  <- min(beta,  mejor_puntuacion)
     }
 
     if (beta <= alpha) break
   }
+
+  # ── Almacenar en tabla de transposición ──────────────────────────────────
+  .tt_store(env$tt, clave, profundidad, mejor_puntuacion,
+            alpha_orig, beta_orig, mejor_jugada)
 
   return(list(
     puntuacion = mejor_puntuacion,
