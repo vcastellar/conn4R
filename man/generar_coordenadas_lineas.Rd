@@ -2,39 +2,25 @@
 % Please edit documentation in R/evaluarPosicion.R
 \name{generar_coordenadas_lineas}
 \alias{generar_coordenadas_lineas}
-\title{Evaluación estática de una posición}
+\title{Generar todas las coordenadas de líneas posibles del tablero}
 \usage{
 generar_coordenadas_lineas()
 }
-\arguments{
-\item{tablero}{Matriz 6x7 que representa el estado del tablero. Celdas:
-0 vacío, 1 humano, 2 IA.}
-}
 \value{
-Entero. Puntuación de la posición desde la perspectiva de la IA.
+Lista de 69 matrices de 4×2, donde cada fila es la coordenada
+  \code{[fila, columna]} (1-based) de una celda de la línea.
 }
 \description{
-Evalúa una posición del tablero mediante criterios estáticos.
-  El resultado es siempre desde la perspectiva de la IA (jugador 2):
-  valores positivos son favorables para la IA, negativos para el humano.
+Genera la lista completa de las 69 líneas de 4 celdas
+  contiguas que existen en un tablero de Conecta 4 (6×7): 24 horizontales,
+  21 verticales, 12 diagonales ascendentes y 12 descendentes.
 
-  La puntuación combina tres componentes:
-  \enumerate{
-    \item \strong{Líneas abiertas}: solo se puntúan líneas de 4 que no
-      contengan piezas del oponente. Esquema de puntos: 1 pieza = 1,
-      2 piezas = 10, 3 piezas = 1.000, 4 piezas = 100.000.
-    \item \strong{Control de centro}: bonus posicional mediante la matriz
-      \code{bitboards} (valores 0-7, máximo en el centro del tablero).
-    \item \strong{Amenazas dobles}: bonus/penalización de 10.000 cuando un
-      jugador tiene dos o más amenazas abiertas simultáneas (trampa inevitable).
-  }
+  El resultado se guarda en el objeto global \code{lineas_posibles} al
+  cargar el paquete para evitar su recálculo en cada evaluación.
 }
 \examples{
-tablero <- crear_posicion_aleatoria(15)
-visualizar_tablero(tablero)
-evaluar_posicion(tablero)
+lineas <- generar_coordenadas_lineas()
+length(lineas)   # 69
+lineas[[1]]      # primera línea horizontal (fila 1, columnas 1-4)
 
-# Evaluación individual por jugador (función interna)
-conn4R:::.evaluar_turno(tablero, 1)
-conn4R:::.evaluar_turno(tablero, 2)
 }

@@ -2,22 +2,21 @@
 % Please edit documentation in R/visualizarTablero.R
 \name{.detectar_lineas}
 \alias{.detectar_lineas}
-\title{visualiza gráficamente la posición de un tablero}
+\title{Detectar y devolver las coordenadas de la línea ganadora}
 \usage{
 .detectar_lineas(tablero)
 }
 \arguments{
-\item{tablero}{matriz 6x7 que representa la posición de un tablero}
+\item{tablero}{Matriz 6×7 con el estado del tablero.}
 }
 \value{
-devuelve un objeto ggplot listo para representar gráficamente el tablero
+Data frame con columnas \code{x}, \code{y} y \code{ficha} (valor 3)
+  para las 4 celdas de la línea ganadora, o \code{NULL} si no hay ganador.
 }
 \description{
-representa gráficamente el estado de un "tablero"
-}
-\examples{
-tablero <- crear_posicion_aleatoria(21)
-p <- visualizar_tablero(tablero)
-print(p)
-linea <- .detectar_lineas(tablero)
+Recorre todas las posibles líneas de 4 del tablero y devuelve
+  las coordenadas de visualización de la primera línea ganadora encontrada
+  (puntuación ≥ 10 000), o \code{NULL} si no existe ninguna. Usada
+  internamente por \code{\link{visualizar_tablero}} para resaltar en rojo
+  las fichas ganadoras.
 }
