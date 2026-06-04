@@ -58,7 +58,6 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-
 // minimax_r
 List minimax_r(IntegerMatrix tablero, int profundidad, bool maximizandoIA);
 RcppExport SEXP _conn4R_minimax_r(SEXP tableroSEXP, SEXP profundidadSEXP, SEXP maximizandoIASEXP) {
