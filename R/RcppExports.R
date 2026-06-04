@@ -17,3 +17,27 @@ ordenar_jugadas_cpp <- function(tablero, turno) {
     .Call(`_conn4R_ordenar_jugadas_cpp`, tablero, turno)
 }
 
+minimax_r <- function(tablero, profundidad, maximizandoIA) {
+    .Call(`_conn4R_minimax_r`, tablero, profundidad, maximizandoIA)
+}
+
+evaluar_posicion_cpp <- function(tablero) {
+    .Call(`_conn4R_evaluar_posicion_cpp`, tablero)
+}
+
+juego_terminado_cpp <- function(tablero) {
+    .Call(`_conn4R_juego_terminado_cpp`, tablero)
+}
+
+realizar_jugada_r <- function(tablero, columna, jugador) {
+    .Call(`_conn4R_realizar_jugada_r`, tablero, columna, jugador)
+}
+
+jugadas_disponibles_r <- function(tablero) {
+    .Call(`_conn4R_jugadas_disponibles_r`, tablero)
+}
+
+ordenar_jugadas_r <- function(tablero, turno) {
+    .Call(`_conn4R_ordenar_jugadas_r`, tablero, turno)
+}
+
