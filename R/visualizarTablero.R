@@ -1,100 +1,106 @@
-#' visualiza gráficamente la posición de un tablero
+#' Detectar y devolver las coordenadas de la línea ganadora
 #'
-#' @description representa gráficamente el estado de un "tablero"
-#' @param tablero matriz 6x7 que representa la posición de un tablero
-#' @return devuelve un objeto ggplot listo para representar gráficamente el tablero
+#' @description Recorre todas las posibles líneas de 4 del tablero y devuelve
+#'   las coordenadas de visualización de la primera línea ganadora encontrada
+#'   (puntuación ≥ 10 000), o \code{NULL} si no existe ninguna. Usada
+#'   internamente por \code{\link{visualizar_tablero}} para resaltar en rojo
+#'   las fichas ganadoras.
+#'
+#' @param tablero Matriz 6×7 con el estado del tablero.
+#'
+#' @return Data frame con columnas \code{x}, \code{y} y \code{ficha} (valor 3)
+#'   para las 4 celdas de la línea ganadora, o \code{NULL} si no hay ganador.
+.detectar_lineas <- function(tablero) {
+  puntuacion <- 0
+
+  tryCatch({
+
+    for (turno in c(1, 2)) {
+
+      for (fila in 1:6) {
+        for (columna in 1:4) {
+          linea       <- tablero[fila, columna:(columna + 3)]
+          coordenadas <- data.frame(x = 7 - fila, y = columna:(columna + 3), ficha = 3)
+          puntuacion  <- .evaluar_linea(linea, turno)
+          if (abs(puntuacion) >= 10000) stop()
+        }
+      }
+
+      for (columna in 1:7) {
+        for (fila in 1:3) {
+          linea       <- tablero[fila:(fila + 3), columna]
+          coordenadas <- data.frame(x = 7 - (fila:(fila + 3)), y = columna, ficha = 3)
+          puntuacion  <- .evaluar_linea(linea, turno)
+          if (abs(puntuacion) >= 10000) stop()
+        }
+      }
+
+      for (fila in 1:3) {
+        for (columna in 1:4) {
+          linea <- c(tablero[fila,     columna],
+                     tablero[fila + 1, columna + 1],
+                     tablero[fila + 2, columna + 2],
+                     tablero[fila + 3, columna + 3])
+          coordenadas <- data.frame(x = 7 - (fila:(fila + 3)),
+                                    y = columna:(columna + 3), ficha = 3)
+          puntuacion  <- .evaluar_linea(linea, turno)
+          if (abs(puntuacion) >= 10000) stop()
+        }
+      }
+
+      for (fila in 1:3) {
+        for (columna in 4:7) {
+          linea <- c(tablero[fila,     columna],
+                     tablero[fila + 1, columna - 1],
+                     tablero[fila + 2, columna - 2],
+                     tablero[fila + 3, columna - 3])
+          coordenadas <- data.frame(x = 7 - (fila:(fila + 3)),
+                                    y = columna:(columna - 3), ficha = 3)
+          puntuacion  <- .evaluar_linea(linea, turno)
+          if (puntuacion >= 10000) stop()
+        }
+      }
+    }
+
+  }, error = function(e) {
+    return(coordenadas)
+  })
+}
+
+#' Visualizar el tablero de Conecta 4
+#'
+#' @description Genera un gráfico \pkg{ggplot2} del estado actual del tablero.
+#'   Las fichas del jugador 1 (humano) se muestran en color \emph{papayawhip}
+#'   (crema), las del jugador 2 (IA) en gris oscuro y las casillas vacías en
+#'   blanco. Si existe una línea ganadora, sus cuatro celdas se resaltan en
+#'   rojo.
+#'
+#' @param tablero Matriz 6×7 con el estado del tablero. Celdas: 0 vacío,
+#'   1 humano, 2 IA.
+#'
+#' @return Objeto \code{ggplot} listo para imprimir con \code{print()} o
+#'   \code{plot()}.
+#'
 #' @examples
 #' tablero <- crear_posicion_aleatoria(21)
 #' p <- visualizar_tablero(tablero)
 #' print(p)
-#' linea <- .detectar_lineas(tablero)
-
-.detectar_lineas <- function(tablero) {
-  puntuacion <- 0
-  
-  tryCatch({
-    
-    for (turno in c(1, 2)) {
-      
-      # Evaluar líneas horizontales
-      for (fila in 1:6) {
-        for (columna in 1:4) {
-          linea <- tablero[fila, columna:(columna + 3)]
-          
-          coordenadas <- data.frame(x = 7 - fila, y = (columna:(columna + 3)), ficha = 3)
-          
-          puntuacion <- .evaluar_linea(linea, turno)
-          if (abs(puntuacion) >= 10000) {
-            stop()
-          }
-        }
-      }
-      
-      # Evaluar líneas verticales
-      for (columna in 1:7) {
-        for (fila in 1:3) {
-          linea <- tablero[fila:(fila + 3), columna]
-          puntuacion <- .evaluar_linea(linea, turno)
-          
-          coordenadas <- data.frame(x = 7 - (fila:(fila + 3)), y = columna, ficha = 3)
-          
-          if (abs(puntuacion) >= 10000) {
-            stop()
-          }
-        }
-      }
-      
-      # Evaluar líneas diagonales (de izquierda a derecha)
-      for (fila in 1:3) {
-        for (columna in 1:4) {
-          linea <- c(tablero[fila, columna], tablero[fila + 1, columna + 1],
-                     tablero[fila + 2, columna + 2], tablero[fila + 3, columna + 3])
-          
-          coordenadas <- data.frame(x = 7 - (fila:(fila + 3)), y = (columna:(columna + 3)), ficha = 3)
-          
-          puntuacion <- .evaluar_linea(linea, turno)
-          if (abs(puntuacion) >= 10000) {
-            stop()
-          }
-        }
-      }
-      
-      # Evaluar líneas diagonales (de derecha a izquierda)
-      for (fila in 1:3) {
-        for (columna in 4:7) {
-          linea <- c(tablero[fila, columna], tablero[fila + 1, columna - 1],
-                     tablero[fila + 2, columna - 2], tablero[fila + 3, columna - 3])
-          
-          coordenadas <- data.frame(x = 7 - (fila:(fila + 3)), y = (columna:(columna - 3)), ficha = 3)
-          
-          puntuacion <- .evaluar_linea(linea, turno)
-          if (puntuacion >= 10000) {
-            stop()
-          }
-        }
-      }
-    }
-    
-    
-  }, error = function(e) {
-    return(coordenadas)
-  }
-  )
-}
-
+#'
+#' # Tablero vacío
+#' print(visualizar_tablero(reiniciar_tablero()))
+#'
+#' @seealso \code{\link{crear_posicion_aleatoria}}, \code{\link{reiniciar_tablero}}
+#'
 #' @export
 visualizar_tablero <- function(tablero) {
   library(ggplot2)
 
-  # Creamos un data frame con las coordenadas de las fichas
   df_fichas <- data.frame(
-    x = rev(rep(1:7, each = 6)),
-    y = rep(1:6, times = 7),
+    x     = rev(rep(1:7, each = 6)),
+    y     = rep(1:6, times = 7),
     ficha = factor(rev(as.vector(tablero)), levels = c(0, 1, 2, 3))
   )
 
-
-  # Creamos un data frame con las coordenadas de las líneas del grid
   df_lineas_h <- data.frame(
     xini = rep(1, 7) - .5,
     xend = rep(7, 7) + .5,
@@ -108,46 +114,53 @@ visualizar_tablero <- function(tablero) {
     xini = (1:8) - .5,
     xend = (1:8) - .5
   )
+
   df_columnas_labels <- data.frame(
-    x = 1:7,
-    y = 7,
+    x      = 1:7,
+    y      = 7,
     labels = paste0("col.", 1:7)
   )
-  
+
   df_fichas <- transform(df_fichas,
                          x_centro = x,
-                         y_centro = y, 
-                         alpha = ifelse(ficha == 0, 0, 1))
-  
+                         y_centro = y,
+                         alpha    = ifelse(ficha == 0, 0, 1))
+
   linea <- .detectar_lineas(tablero)
-  
+
   if (!is.null(linea)) {
     for (k in 1:4) {
-      r <- which(df_fichas$x == linea[k,]$y & df_fichas$y == linea[k, ]$x)
-      print(r)
+      r <- which(df_fichas$x == linea[k, ]$y & df_fichas$y == linea[k, ]$x)
       df_fichas$ficha[r] <- 3
       df_fichas$alpha[r] <- 1
     }
   }
 
-  
   p <- ggplot() +
-    geom_point(data = df_fichas, 
+    geom_point(data = df_fichas,
                aes(x = x_centro, y = y_centro, fill = ficha, alpha = alpha),
                shape = 21, size = 23) +
-    scale_fill_manual(values = c( "0" = "white", "1" = "papayawhip", "2" = "grey15", "3" = "red"), name = "ficha") +
-    geom_segment(data = df_lineas_h, aes(x = xini, y = yini, xend = xend, yend = yend), size = 0.5, color = "black") +
-    geom_segment(data = df_lineas_v, aes(x = xini, y = yini, xend = xend, yend = yend), size = 0.5, color = "black") +
-    geom_text(data = df_columnas_labels, aes(x = x, y = y, label = labels)) +
+    scale_fill_manual(
+      values = c("0" = "white", "1" = "papayawhip", "2" = "grey15", "3" = "red"),
+      name   = "ficha"
+    ) +
+    geom_segment(data = df_lineas_h,
+                 aes(x = xini, y = yini, xend = xend, yend = yend),
+                 linewidth = 0.5, color = "black") +
+    geom_segment(data = df_lineas_v,
+                 aes(x = xini, y = yini, xend = xend, yend = yend),
+                 linewidth = 0.5, color = "black") +
+    geom_text(data = df_columnas_labels,
+              aes(x = x, y = y, label = labels)) +
     coord_fixed() +
     scale_x_continuous(breaks = 1:7) +
     scale_y_continuous(breaks = 1:6) +
     theme_void() +
     labs(title = "Tablero de Conecta 4") +
     theme(
-      plot.title = element_text(hjust = 0.5),
+      plot.title    = element_text(hjust = 0.5),
       legend.position = "none"
     )
+
   return(p)
 }
-
