@@ -340,7 +340,9 @@ struct MMResult {
 };
 
 static MMResult minimax_cpp(const Board& b, int prof, bool maximizandoIA,
-                             int alpha, int beta, TT& tt) {
+                             int alpha, int beta, TT& tt, long long& nodes) {
+  nodes++;
+
   int go = game_over(b);
   if (prof == 0 || go != 0) {
     return {evaluar_posicion(b), -1};
@@ -376,7 +378,7 @@ static MMResult minimax_cpp(const Board& b, int prof, bool maximizandoIA,
 
   for (const MoveScore& ms : moves) {
     Board nuevo = make_move(b, ms.col, turno);
-    MMResult res = minimax_cpp(nuevo, prof - 1, !maximizandoIA, alpha, beta, tt);
+    MMResult res = minimax_cpp(nuevo, prof - 1, !maximizandoIA, alpha, beta, tt, nodes);
 
     if (maximizandoIA) {
       if (res.puntuacion > mejor_punt) {
@@ -400,6 +402,31 @@ static MMResult minimax_cpp(const Board& b, int prof, bool maximizandoIA,
 }
 
 // ============================================================
+// Extracción de variante principal (PV) desde la TT
+// ============================================================
+
+static IntegerVector extract_pv(Board b, const TT& tt, int max_depth) {
+  std::vector<int> pv;
+  for (int d = 0; d < max_depth; d++) {
+    if (game_over(b) != 0) break;
+    std::string key = tt_key(b);
+    auto it = tt.find(key);
+    if (it == tt.end() || it->second.jugada < 0) break;
+    int col = it->second.jugada;
+    pv.push_back(col + 1); // 1-indexed
+    // Inferir turno: jugador con menos piezas mueve
+    int p1 = 0, p2 = 0;
+    for (int i = 0; i < 42; i++) {
+      if (b[i] == 1) p1++;
+      else if (b[i] == 2) p2++;
+    }
+    int player = (p1 <= p2) ? 1 : 2;
+    b = make_move(b, col, player);
+  }
+  return wrap(pv);
+}
+
+// ============================================================
 // Funciones exportadas a R
 // ============================================================
 
@@ -407,11 +434,15 @@ static MMResult minimax_cpp(const Board& b, int prof, bool maximizandoIA,
 List minimax_r(IntegerMatrix tablero, int profundidad, bool maximizandoIA) {
   Board b = from_r(tablero);
   TT tt;
-  MMResult res = minimax_cpp(b, profundidad, maximizandoIA, INT_MIN, INT_MAX, tt);
+  long long nodes = 0;
+  MMResult res = minimax_cpp(b, profundidad, maximizandoIA, INT_MIN, INT_MAX, tt, nodes);
+  IntegerVector pv = extract_pv(b, tt, profundidad);
   // Devolver jugada 1-indexada (como el resto del paquete)
   return List::create(
     Named("puntuacion") = res.puntuacion,
-    Named("jugada")     = (res.jugada >= 0) ? (res.jugada + 1) : NA_INTEGER
+    Named("jugada")     = (res.jugada >= 0) ? (res.jugada + 1) : NA_INTEGER,
+    Named("nodos")      = (double)nodes,
+    Named("variante")   = pv
   );
 }
 

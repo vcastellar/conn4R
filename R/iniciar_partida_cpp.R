@@ -40,7 +40,11 @@ iniciar_partida_cpp <- function(profundidad = 5, turno = 1,
     tik <- system.time({
       res <- minimax_r(tab, prof, maximizandoIA)
     })
-    list(jugada = res$jugada, puntuacion = res$puntuacion, tiempo = tik[[3]])
+    list(jugada     = res$jugada,
+         puntuacion = res$puntuacion,
+         nodos      = res$nodos,
+         variante   = res$variante,
+         tiempo     = tik[[3]])
   }
 
   fin_turno <- function(tab, turno_actual, prof, max_ia) {
@@ -49,11 +53,15 @@ iniciar_partida_cpp <- function(profundidad = 5, turno = 1,
     p   <- visualizar_tablero(tab)
     print(p)
     cat("\n")
+    nods_s <- if (res$tiempo > 0) round(res$nodos / res$tiempo) else NA
     cat("-----------------------------------------------------------------\n")
-    cat(sprintf("valoracion:       %d\n",   res$puntuacion))
-    cat(sprintf("jugada realizada: %d\n",   res$jugada))
-    cat(sprintf("profundidad:      %d\n",   prof))
+    cat(sprintf("valoracion:       %d\n",     res$puntuacion))
+    cat(sprintf("jugada realizada: %d\n",     res$jugada))
+    cat(sprintf("profundidad:      %d\n",     prof))
+    cat(sprintf("nodos evaluados:  %.0f\n",   res$nodos))
+    cat(sprintf("nod/s:            %.0f\n",   nods_s))
     cat(sprintf("tiempo:           %.2f s\n", res$tiempo))
+    cat(sprintf("variante:         %s\n",     paste(res$variante, collapse = " -> ")))
     cat("-----------------------------------------------------------------\n\n")
     tab
   }
