@@ -15,6 +15,10 @@ knitr::opts_chunk$set(
   fig.height = 5
 )
 set.seed(123)
+has_cpp <- tryCatch({
+  library(conn4R)
+  is.function(minimax_r)
+}, error = function(e) FALSE)
 ```
 
 ## Introducción
@@ -38,7 +42,7 @@ library(conn4R)
 el número de nodos evaluados y la variante principal extraída de la tabla de
 transposición.
 
-```{r minimax-cpp}
+```{r minimax-cpp, eval = has_cpp}
 set.seed(42)
 tablero <- crear_posicion_aleatoria(10)
 visualizar_tablero(tablero)
@@ -67,7 +71,7 @@ cat("Puntuación minimax:    ", res_r$puntuacion, "\n")
 
 ## 2. Comparación de rendimiento R vs C++
 
-```{r benchmark, cache = TRUE}
+```{r benchmark, cache = TRUE, eval = has_cpp}
 tablero_bench <- crear_posicion_aleatoria(8)
 
 t_cpp <- system.time(minimax_r(tablero_bench, profundidad = 7L, maximizandoIA = TRUE))
@@ -93,7 +97,7 @@ El motor C++ almacena las mejores jugadas en su tabla de transposición interna.
 `minimax_r()` extrae automáticamente la variante principal y la devuelve en
 `$variante`.
 
-```{r variante-cpp}
+```{r variante-cpp, eval = has_cpp}
 tablero <- crear_posicion_aleatoria(12)
 res     <- minimax_r(tablero, profundidad = 7L, maximizandoIA = TRUE)
 
@@ -182,7 +186,7 @@ cat("Puntuaciones:                    ", paste(punts_var,   collapse = ", "), "\
 
 ### Verificar coincidencia con el motor C++
 
-```{r verificar-coincidencia}
+```{r verificar-coincidencia, eval = has_cpp}
 res_cpp    <- minimax_r(tablero, profundidad = 4L, maximizandoIA = TRUE)
 jugada_cpp <- res_cpp$jugada
 jugada_r   <- variante[[2]]$jugada   # el elemento 1 es la raíz
@@ -196,7 +200,7 @@ cat("¿Coinciden?        ", jugada_cpp == jugada_r, "\n")
 
 ## 6. Efecto de la profundidad sobre la calidad del análisis
 
-```{r efecto-profundidad, cache = TRUE}
+```{r efecto-profundidad, cache = TRUE, eval = has_cpp}
 tablero <- crear_posicion_aleatoria(10)
 
 profundidades <- 3:7
@@ -209,7 +213,7 @@ df_prof <- do.call(rbind, lapply(resultados, as.data.frame))
 print(df_prof)
 ```
 
-```{r plot-profundidad}
+```{r plot-profundidad, eval = has_cpp}
 par(mfrow = c(1, 2))
 
 plot(df_prof$prof, df_prof$nodos / 1000,
@@ -233,7 +237,7 @@ par(mfrow = c(1, 1))
 Construimos una posición donde el humano está a punto de ganar y comprobamos
 si la IA la detecta y la bloquea.
 
-```{r posicion-critica}
+```{r posicion-critica, eval = has_cpp}
 # El humano tiene 3 en fila en la columna 3, 4, 5 (fila inferior)
 t <- reiniciar_tablero()
 t <- realizar_jugada(t, 3, 1)
@@ -265,7 +269,7 @@ visualizar_tablero(t_tras_ia)
 La tabla de transposición evita recalcular posiciones ya evaluadas que se
 alcanzan por distintas secuencias de movimientos.
 
-```{r tabla-transposicion}
+```{r tabla-transposicion, eval = has_cpp}
 tablero <- crear_posicion_aleatoria(8)
 
 res   <- minimax(tablero, profundidad = 5, maximizandoIA = TRUE)
