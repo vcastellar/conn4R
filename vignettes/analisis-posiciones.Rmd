@@ -15,6 +15,10 @@ knitr::opts_chunk$set(
   fig.height = 5
 )
 set.seed(42)
+has_cpp <- tryCatch({
+  library(conn4R)
+  is.function(evaluar_posicion_cpp)
+}, error = function(e) FALSE)
 ```
 
 ## Introducción
@@ -77,7 +81,7 @@ La función `evaluar_posicion()` (R) y `evaluar_posicion_cpp()` (C++) calculan
 una puntuación numérica del tablero **siempre desde la perspectiva de la IA**
 (jugador 2): valores positivos benefician a la IA, negativos al humano.
 
-```{r evaluacion}
+```{r evaluacion, eval = has_cpp}
 tablero <- crear_posicion_aleatoria(12)
 visualizar_tablero(tablero)
 
@@ -101,7 +105,7 @@ cat("¿Coinciden?", identical(punt_R, punt_cpp), "\n")
 
 ### Comparar varias posiciones
 
-```{r comparar-posiciones}
+```{r comparar-posiciones, eval = has_cpp}
 puntuaciones <- sapply(1:6, function(i) {
   t <- crear_posicion_aleatoria(10 + i * 3)
   evaluar_posicion_cpp(t)
@@ -133,7 +137,7 @@ cat("Resultado:  ", estado$resultado,  "\n")
 
 ### Comparar R vs C++ en fin de juego
 
-```{r fin-r-vs-cpp}
+```{r fin-r-vs-cpp, eval = has_cpp}
 estado_R   <- juego_terminado(tablero)
 estado_cpp <- juego_terminado_cpp(tablero)
 
@@ -149,7 +153,7 @@ Antes de explorar el árbol, el motor ordena las columnas según su potencial:
 victorias inmediatas primero, luego bloqueos, y finalmente el resto por
 evaluación estática. Esto maximiza la eficacia de la poda alpha-beta.
 
-```{r ordenar}
+```{r ordenar, eval = has_cpp}
 tablero <- crear_posicion_aleatoria(11)
 visualizar_tablero(tablero)
 
@@ -168,7 +172,7 @@ cat("Ordenación C++:\n"); print(ord_cpp)
 Podemos simular una secuencia de movimientos y observar cómo evoluciona la
 evaluación estática en cada turno.
 
-```{r evolucion}
+```{r evolucion, eval = has_cpp}
 tablero    <- reiniciar_tablero()
 jugadas    <- c(4, 4, 3, 5, 3, 3, 5, 2, 4, 5, 6, 5)
 turnos     <- rep(1:2, length.out = length(jugadas))
