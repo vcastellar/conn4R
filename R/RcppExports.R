@@ -12,3 +12,15 @@ evaluar_posicion_cpp <- function(tablero) {
 juego_terminado_cpp <- function(tablero) {
     .Call(`_conn4R_juego_terminado_cpp`, tablero)
 }
+
+realizar_jugada_r <- function(tablero, columna, jugador) {
+    .Call(`_conn4R_realizar_jugada_r`, tablero, columna, jugador)
+}
+
+jugadas_disponibles_r <- function(tablero) {
+    .Call(`_conn4R_jugadas_disponibles_r`, tablero)
+}
+
+ordenar_jugadas_r <- function(tablero, turno) {
+    .Call(`_conn4R_ordenar_jugadas_r`, tablero, turno)
+}

@@ -5,6 +5,9 @@ export(iniciar_partida)
 export(minimax_r)
 export(evaluar_posicion_cpp)
 export(juego_terminado_cpp)
+export(realizar_jugada_r)
+export(jugadas_disponibles_r)
+export(ordenar_jugadas_r)
 
 # Implementacion R de referencia
 export(iniciar_partida_r)

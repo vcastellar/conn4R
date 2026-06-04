@@ -45,11 +45,50 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// realizar_jugada_r
+IntegerMatrix realizar_jugada_r(IntegerMatrix tablero, int columna, int jugador);
+RcppExport SEXP _conn4R_realizar_jugada_r(SEXP tableroSEXP, SEXP columnaSEXP, SEXP jugadorSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< IntegerMatrix >::type tablero(tableroSEXP);
+    Rcpp::traits::input_parameter< int >::type columna(columnaSEXP);
+    Rcpp::traits::input_parameter< int >::type jugador(jugadorSEXP);
+    rcpp_result_gen = Rcpp::wrap(realizar_jugada_r(tablero, columna, jugador));
+    return rcpp_result_gen;
+END_RCPP
+}
+// jugadas_disponibles_r
+IntegerVector jugadas_disponibles_r(IntegerMatrix tablero);
+RcppExport SEXP _conn4R_jugadas_disponibles_r(SEXP tableroSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< IntegerMatrix >::type tablero(tableroSEXP);
+    rcpp_result_gen = Rcpp::wrap(jugadas_disponibles_r(tablero));
+    return rcpp_result_gen;
+END_RCPP
+}
+// ordenar_jugadas_r
+DataFrame ordenar_jugadas_r(IntegerMatrix tablero, int turno);
+RcppExport SEXP _conn4R_ordenar_jugadas_r(SEXP tableroSEXP, SEXP turnoSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< IntegerMatrix >::type tablero(tableroSEXP);
+    Rcpp::traits::input_parameter< int >::type turno(turnoSEXP);
+    rcpp_result_gen = Rcpp::wrap(ordenar_jugadas_r(tablero, turno));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_conn4R_minimax_r", (DL_FUNC) &_conn4R_minimax_r, 3},
     {"_conn4R_evaluar_posicion_cpp", (DL_FUNC) &_conn4R_evaluar_posicion_cpp, 1},
     {"_conn4R_juego_terminado_cpp", (DL_FUNC) &_conn4R_juego_terminado_cpp, 1},
+    {"_conn4R_realizar_jugada_r", (DL_FUNC) &_conn4R_realizar_jugada_r, 3},
+    {"_conn4R_jugadas_disponibles_r", (DL_FUNC) &_conn4R_jugadas_disponibles_r, 1},
+    {"_conn4R_ordenar_jugadas_r", (DL_FUNC) &_conn4R_ordenar_jugadas_r, 2},
     {NULL, NULL, 0}
 };
 
