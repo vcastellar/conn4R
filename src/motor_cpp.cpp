@@ -430,6 +430,39 @@ static IntegerVector extract_pv(Board b, const TT& tt, int max_depth) {
 // Funciones exportadas a R
 // ============================================================
 
+//' Motor minimax con alpha-beta y tabla de transposición (C++)
+//'
+//' @description Implementación C++ del algoritmo minimax con poda alpha-beta y
+//'   tabla de transposición interna. Es la versión de producción del paquete:
+//'   significativamente más rápida que \code{\link{minimax}} (implementación R
+//'   pura) y devuelve además el conteo de nodos evaluados y la variante
+//'   principal extraída de la tabla de transposición.
+//'
+//' @param tablero IntegerMatrix 6×7. Estado del tablero: 0 vacío, 1 humano, 2 IA.
+//' @param profundidad int. Profundidad máxima del árbol de búsqueda.
+//' @param maximizandoIA bool. \code{TRUE} si el turno actual es de la IA
+//'   (nodo MAX); \code{FALSE} si es del humano (nodo MIN).
+//'
+//' @return Lista con cuatro elementos:
+//' \describe{
+//'   \item{puntuacion}{int. Puntuación minimax de la posición raíz.}
+//'   \item{jugada}{int. Columna óptima (1-7) para el jugador en turno, o
+//'     \code{NA} si no hay jugadas disponibles.}
+//'   \item{nodos}{double. Número total de nodos evaluados durante la búsqueda.}
+//'   \item{variante}{IntegerVector. Secuencia de columnas (1-7) de la variante
+//'     principal extraída de la tabla de transposición.}
+//' }
+//'
+//' @examples
+//' tablero <- crear_posicion_aleatoria(10)
+//' system.time(res <- minimax_r(tablero, profundidad = 7L, maximizandoIA = TRUE))
+//' res$puntuacion
+//' res$jugada
+//' res$nodos
+//' res$variante
+//'
+//' @seealso \code{\link{minimax}} (implementación R equivalente),
+//'   \code{\link{evaluar_posicion_cpp}}, \code{\link{iniciar_partida}}
 // [[Rcpp::export]]
 List minimax_r(IntegerMatrix tablero, int profundidad, bool maximizandoIA) {
   Board b = from_r(tablero);
@@ -446,11 +479,50 @@ List minimax_r(IntegerMatrix tablero, int profundidad, bool maximizandoIA) {
   );
 }
 
+//' Evaluación estática de una posición (C++)
+//'
+//' @description Versión C++ de \code{\link{evaluar_posicion}}. Evalúa el
+//'   tablero combinando seis componentes: líneas abiertas, control de centro
+//'   (bitboard posicional), amenazas dobles, paridad de amenazas, amenazas
+//'   apiladas y conectividad de piezas. El resultado se expresa siempre desde
+//'   la perspectiva de la IA (jugador 2): positivo = ventaja IA.
+//'
+//' @param tablero IntegerMatrix 6×7. Estado del tablero: 0 vacío, 1 humano, 2 IA.
+//'
+//' @return int. Puntuación estática de la posición.
+//'
+//' @examples
+//' tablero <- crear_posicion_aleatoria(12)
+//' evaluar_posicion_cpp(tablero)
+//' evaluar_posicion(tablero)   # debe coincidir con la versión R
+//'
+//' @seealso \code{\link{evaluar_posicion}}, \code{\link{minimax_r}}
 // [[Rcpp::export]]
 int evaluar_posicion_cpp(IntegerMatrix tablero) {
   return evaluar_posicion(from_r(tablero));
 }
 
+//' Detectar fin de partida (C++)
+//'
+//' @description Versión C++ de \code{\link{juego_terminado}}. Comprueba si el
+//'   tablero es un estado terminal (victoria o empate) de forma más eficiente
+//'   que la implementación R.
+//'
+//' @param tablero IntegerMatrix 6×7. Estado del tablero.
+//'
+//' @return Lista con dos elementos:
+//' \describe{
+//'   \item{finalizado}{logical. \code{TRUE} si la partida ha concluido.}
+//'   \item{resultado}{int o \code{NA}. Si \code{finalizado}: \code{1} gana
+//'     el humano, \code{2} gana la IA, \code{0} empate. Si no ha terminado,
+//'     \code{NA}.}
+//' }
+//'
+//' @examples
+//' tablero <- crear_posicion_aleatoria(10)
+//' juego_terminado_cpp(tablero)
+//'
+//' @seealso \code{\link{juego_terminado}}
 // [[Rcpp::export]]
 List juego_terminado_cpp(IntegerMatrix tablero) {
   Board b = from_r(tablero);
@@ -463,6 +535,27 @@ List juego_terminado_cpp(IntegerMatrix tablero) {
   );
 }
 
+//' Colocar una ficha en el tablero (C++)
+//'
+//' @description Versión C++ de \code{\link{realizar_jugada}}. Deposita una
+//'   ficha en la columna indicada, respetando la gravedad (la pieza cae a la
+//'   fila libre más baja). Si la columna está llena devuelve el tablero sin
+//'   modificar.
+//'
+//' @param tablero IntegerMatrix 6×7. Estado del tablero.
+//' @param columna int. Columna donde se deposita la ficha (1-7, 1-indexado).
+//' @param jugador int. Identificador del jugador: \code{1} (humano) o
+//'   \code{2} (IA).
+//'
+//' @return IntegerMatrix 6×7 con la ficha insertada.
+//'
+//' @examples
+//' tablero <- reiniciar_tablero()
+//' tablero <- realizar_jugada_r(tablero, columna = 4L, jugador = 1L)
+//' tablero <- realizar_jugada_r(tablero, columna = 4L, jugador = 2L)
+//' visualizar_tablero(tablero)
+//'
+//' @seealso \code{\link{realizar_jugada}}
 // [[Rcpp::export]]
 IntegerMatrix realizar_jugada_r(IntegerMatrix tablero, int columna, int jugador) {
   Board b = from_r(tablero);
@@ -470,6 +563,21 @@ IntegerMatrix realizar_jugada_r(IntegerMatrix tablero, int columna, int jugador)
   return to_r(nb);
 }
 
+//' Columnas disponibles (C++)
+//'
+//' @description Versión C++ de \code{\link{jugadas_disponibles}}. Devuelve los
+//'   índices (1-7) de las columnas que no están completamente llenas.
+//'
+//' @param tablero IntegerMatrix 6×7. Estado del tablero.
+//'
+//' @return IntegerVector con los índices de columna disponibles (1-indexados).
+//'
+//' @examples
+//' tablero <- crear_posicion_aleatoria(20)
+//' jugadas_disponibles_r(tablero)
+//' jugadas_disponibles(tablero)   # versión R equivalente
+//'
+//' @seealso \code{\link{jugadas_disponibles}}, \code{\link{ordenar_jugadas_r}}
 // [[Rcpp::export]]
 IntegerVector jugadas_disponibles_r(IntegerMatrix tablero) {
   Board b = from_r(tablero);
@@ -479,6 +587,33 @@ IntegerVector jugadas_disponibles_r(IntegerMatrix tablero) {
   return out;
 }
 
+//' Ordenar jugadas por heurística (C++)
+//'
+//' @description Versión C++ de \code{\link{ordenar_jugadas}}. Devuelve las
+//'   columnas disponibles ordenadas de mejor a peor candidata para maximizar
+//'   la eficacia de la poda alpha-beta:
+//'   \enumerate{
+//'     \item Victorias inmediatas del jugador en turno (puntuación = 1e9).
+//'     \item Bloqueos de victoria inmediata del oponente (1e8).
+//'     \item Resto ordenado por evaluación estática combinada (|eval_propia|
+//'       + |eval_oponente| tras el movimiento).
+//'   }
+//'
+//' @param tablero IntegerMatrix 6×7. Estado del tablero.
+//' @param turno int. Jugador en turno: \code{1} (humano) o \code{2} (IA).
+//'
+//' @return Data frame con columnas:
+//' \describe{
+//'   \item{jugadas}{int. Índice de columna (1-7).}
+//'   \item{puntuacion}{double. Puntuación heurística de ordenación (mayor = mejor).}
+//' }
+//'
+//' @examples
+//' tablero <- crear_posicion_aleatoria(11)
+//' ordenar_jugadas_r(tablero, turno = 2L)
+//' ordenar_jugadas(tablero, turno = 2L)   # versión R equivalente
+//'
+//' @seealso \code{\link{ordenar_jugadas}}, \code{\link{minimax_r}}
 // [[Rcpp::export]]
 DataFrame ordenar_jugadas_r(IntegerMatrix tablero, int turno) {
   Board b = from_r(tablero);

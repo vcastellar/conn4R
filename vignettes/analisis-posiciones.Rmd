@@ -1,0 +1,228 @@
+---
+title: "Análisis de posiciones en Conecta 4"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Análisis de posiciones en Conecta 4}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment  = "#>",
+  fig.width  = 6,
+  fig.height = 5
+)
+set.seed(42)
+```
+
+## Introducción
+
+El paquete **conn4R** proporciona un motor de Conecta 4 con IA basada en
+minimax con poda alpha-beta, compilado en C++ mediante Rcpp. Esta viñeta
+muestra cómo usar las herramientas de análisis de posiciones para entender
+el estado de un tablero: evaluación estática, detección de amenazas y
+comparación entre posiciones.
+
+```{r library}
+library(conn4R)
+```
+
+---
+
+## 1. Crear y visualizar posiciones
+
+### Tablero vacío
+
+```{r tablero-vacio}
+tablero <- reiniciar_tablero()
+dim(tablero)   # 6 filas x 7 columnas
+visualizar_tablero(tablero)
+```
+
+### Posición aleatoria
+
+`crear_posicion_aleatoria(n)` simula `n` jugadas aleatorias alternando entre
+los dos jugadores, garantizando que la posición no sea terminal.
+
+```{r posicion-aleatoria}
+tablero <- crear_posicion_aleatoria(14)
+visualizar_tablero(tablero)
+
+# Recuento de piezas
+cat("Piezas humano (1):", sum(tablero == 1), "\n")
+cat("Piezas IA    (2):", sum(tablero == 2), "\n")
+```
+
+### Construir una posición manualmente
+
+```{r posicion-manual}
+t <- reiniciar_tablero()
+# Jugadas alternadas: humano en columnas 4, 3, 5 y IA en 4, 4, 4
+t <- realizar_jugada(t, 4, 1)
+t <- realizar_jugada(t, 4, 2)
+t <- realizar_jugada(t, 3, 1)
+t <- realizar_jugada(t, 4, 2)
+t <- realizar_jugada(t, 5, 1)
+t <- realizar_jugada(t, 4, 2)
+visualizar_tablero(t)
+```
+
+---
+
+## 2. Evaluación estática
+
+La función `evaluar_posicion()` (R) y `evaluar_posicion_cpp()` (C++) calculan
+una puntuación numérica del tablero **siempre desde la perspectiva de la IA**
+(jugador 2): valores positivos benefician a la IA, negativos al humano.
+
+```{r evaluacion}
+tablero <- crear_posicion_aleatoria(12)
+visualizar_tablero(tablero)
+
+punt_R   <- evaluar_posicion(tablero)
+punt_cpp <- evaluar_posicion_cpp(tablero)
+
+cat("Puntuación (R):   ", punt_R,   "\n")
+cat("Puntuación (C++): ", punt_cpp, "\n")
+cat("¿Coinciden?", identical(punt_R, punt_cpp), "\n")
+```
+
+### Interpretación de la puntuación
+
+| Rango             | Significado                              |
+|-------------------|------------------------------------------|
+| > 100 000         | La IA tiene 4 en línea (victoria)        |
+| 1 000 – 100 000   | La IA tiene amenazas serias (3 en línea) |
+| 0                 | Posición equilibrada                     |
+| −1 000 – −100 000 | El humano tiene amenazas serias          |
+| < −100 000        | El humano tiene 4 en línea (victoria)    |
+
+### Comparar varias posiciones
+
+```{r comparar-posiciones}
+puntuaciones <- sapply(1:6, function(i) {
+  t <- crear_posicion_aleatoria(10 + i * 3)
+  evaluar_posicion_cpp(t)
+})
+
+barplot(puntuaciones,
+        names.arg = paste0("pos.", 1:6),
+        main      = "Evaluación estática de 6 posiciones aleatorias",
+        ylab      = "Puntuación (positivo = ventaja IA)",
+        col       = ifelse(puntuaciones > 0, "steelblue", "tomato"))
+abline(h = 0, lty = 2)
+```
+
+---
+
+## 3. Columnas disponibles y detección de fin de juego
+
+```{r disponibles-y-fin}
+tablero <- crear_posicion_aleatoria(20)
+
+# Columnas con espacio disponible
+jugadas_disponibles(tablero)
+
+# ¿Ha terminado la partida?
+estado <- juego_terminado(tablero)
+cat("¿Finalizado?", estado$finalizado, "\n")
+cat("Resultado:  ", estado$resultado,  "\n")
+```
+
+### Comparar R vs C++ en fin de juego
+
+```{r fin-r-vs-cpp}
+estado_R   <- juego_terminado(tablero)
+estado_cpp <- juego_terminado_cpp(tablero)
+
+cat("R   — finalizado:", estado_R$finalizado,   "resultado:", estado_R$resultado,   "\n")
+cat("C++ — finalizado:", estado_cpp$finalizado, "resultado:", estado_cpp$resultado, "\n")
+```
+
+---
+
+## 4. Ordenación de jugadas candidatas
+
+Antes de explorar el árbol, el motor ordena las columnas según su potencial:
+victorias inmediatas primero, luego bloqueos, y finalmente el resto por
+evaluación estática. Esto maximiza la eficacia de la poda alpha-beta.
+
+```{r ordenar}
+tablero <- crear_posicion_aleatoria(11)
+visualizar_tablero(tablero)
+
+# Desde la perspectiva de la IA (turno 2)
+ord_R   <- ordenar_jugadas(tablero,   turno = 2)
+ord_cpp <- ordenar_jugadas_r(tablero, turno = 2L)
+
+cat("Ordenación R:\n");   print(ord_R)
+cat("Ordenación C++:\n"); print(ord_cpp)
+```
+
+---
+
+## 5. Simulación de varias jugadas y seguimiento de la evaluación
+
+Podemos simular una secuencia de movimientos y observar cómo evoluciona la
+evaluación estática en cada turno.
+
+```{r evolucion}
+tablero    <- reiniciar_tablero()
+jugadas    <- c(4, 4, 3, 5, 3, 3, 5, 2, 4, 5, 6, 5)
+turnos     <- rep(1:2, length.out = length(jugadas))
+evaluacion <- numeric(length(jugadas))
+
+for (i in seq_along(jugadas)) {
+  tablero        <- realizar_jugada(tablero, jugadas[i], turnos[i])
+  evaluacion[i]  <- evaluar_posicion_cpp(tablero)
+  if (juego_terminado_cpp(tablero)$finalizado) break
+}
+
+plot(evaluacion, type = "b", pch = 19,
+     col  = ifelse(evaluacion > 0, "steelblue", "tomato"),
+     xlab = "Número de jugada", ylab = "Evaluación estática",
+     main = "Evolución de la evaluación durante la partida")
+abline(h = 0, lty = 2)
+```
+
+---
+
+## 6. Profundidad de búsqueda adaptativa
+
+La función interna `.adaptativa()` ajusta la profundidad minimax en función del
+número efectivo de columnas disponibles, manteniendo un presupuesto de nodos
+equivalente a `7^profundidad_base`.
+
+```{r adaptativa}
+profundidades <- sapply(seq(5, 40, by = 5), function(n) {
+  t <- crear_posicion_aleatoria(n)
+  conn4R:::.adaptativa(t, profundidad_base = 5)
+})
+
+plot(seq(5, 40, by = 5), profundidades, type = "b", pch = 19,
+     xlab = "Número de piezas en el tablero",
+     ylab = "Profundidad adaptativa",
+     main = "Profundidad de búsqueda según ocupación del tablero")
+```
+
+---
+
+## Resumen de funciones de análisis de posiciones
+
+| Función                      | Motor | Descripción                                    |
+|------------------------------|-------|------------------------------------------------|
+| `reiniciar_tablero()`        | R     | Crea tablero 6×7 vacío                         |
+| `crear_posicion_aleatoria()` | R     | Genera posición tras N jugadas aleatorias      |
+| `realizar_jugada()`          | R     | Deposita una ficha en una columna              |
+| `realizar_jugada_r()`        | C++   | Igual, compilado                               |
+| `visualizar_tablero()`       | R     | Gráfico ggplot2 del tablero                    |
+| `evaluar_posicion()`         | R     | Evaluación estática (6 componentes)            |
+| `evaluar_posicion_cpp()`     | C++   | Igual, compilado (más rápido)                  |
+| `juego_terminado()`          | R     | Detecta victoria o empate                      |
+| `juego_terminado_cpp()`      | C++   | Igual, compilado                               |
+| `jugadas_disponibles()`      | R     | Columnas con espacio libre                     |
+| `jugadas_disponibles_r()`    | C++   | Igual, compilado                               |
+| `ordenar_jugadas()`          | R     | Ordena columnas por heurística                 |
+| `ordenar_jugadas_r()`        | C++   | Igual, compilado                               |
