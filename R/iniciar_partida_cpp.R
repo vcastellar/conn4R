@@ -1,29 +1,41 @@
-#' Iniciar una partida usando el motor C++
+#' Iniciar una partida de Conecta 4
 #'
-#' @description Versión de \code{iniciar_partida} que delega el cálculo minimax,
-#'   la evaluación estática y la detección de fin de partida al motor C++ compilado.
-#'   El resto de la interfaz (visualización, entrada del usuario, profundidad adaptativa)
-#'   es idéntica a la versión R.
+#' @description Punto de entrada principal del paquete. Inicia una partida de
+#'   Conecta 4 usando el motor C++ compilado via Rcpp para el cálculo minimax,
+#'   la evaluación estática y la detección de fin de partida. La interfaz
+#'   (visualización, entrada del usuario, profundidad adaptativa) se gestiona
+#'   desde R.
+#'
+#'   Para una implementación equivalente íntegramente en R (más lenta pero
+#'   completamente legible), véase \code{\link{iniciar_partida_r}}.
 #'
 #' @param profundidad Profundidad de búsqueda del algoritmo minimax. Por defecto 5.
 #' @param turno Jugador que comienza: 1 para humano, 2 para IA. Por defecto 1.
-#' @param profAdaptative Lógico. Si TRUE ajusta la profundidad dinámicamente según
-#'   las columnas disponibles. Por defecto TRUE.
-#' @param auto Lógico. Si TRUE la IA juega contra sí misma sin intervención humana.
-#'   Por defecto FALSE.
+#' @param profAdaptative Lógico. Si \code{TRUE} ajusta la profundidad
+#'   dinámicamente según las columnas disponibles. Por defecto \code{TRUE}.
+#' @param auto Lógico. Si \code{TRUE} la IA juega contra sí misma sin
+#'   intervención humana. Por defecto \code{FALSE}.
 #'
 #' @return La matriz 6×7 con el estado final del tablero (invisible).
 #'
 #' @examples
-#' # Partida humano vs IA (humano primero)
-#' iniciar_partida_cpp(profundidad = 6)
+#' \dontrun{
+#' # Partida humano vs IA (humano primero, profundidad 6)
+#' iniciar_partida(profundidad = 6)
+#'
+#' # La IA abre la partida
+#' iniciar_partida(turno = 2)
 #'
 #' # IA contra sí misma
-#' iniciar_partida_cpp(auto = TRUE, profundidad = 5)
+#' iniciar_partida(auto = TRUE, profundidad = 5)
+#' }
+#'
+#' @seealso \code{\link{iniciar_partida_r}}, \code{\link{minimax_r}},
+#'   \code{\link{evaluar_posicion_cpp}}
 #'
 #' @export
-iniciar_partida_cpp <- function(profundidad = 5, turno = 1,
-                                profAdaptative = TRUE, auto = FALSE) {
+iniciar_partida <- function(profundidad = 5, turno = 1,
+                            profAdaptative = TRUE, auto = FALSE) {
 
   tablero  <- reiniciar_tablero()
   p        <- visualizar_tablero(tablero)
@@ -32,10 +44,7 @@ iniciar_partida_cpp <- function(profundidad = 5, turno = 1,
   j        <- 0
   resultado <- "DRAW"
 
-  # --------------------------------------------------------------------------
   # Helpers internos que llaman al motor C++
-  # --------------------------------------------------------------------------
-
   ia_mueve <- function(tab, prof, maximizandoIA) {
     tik <- system.time({
       res <- minimax_r(tab, prof, maximizandoIA)
@@ -70,12 +79,8 @@ iniciar_partida_cpp <- function(profundidad = 5, turno = 1,
     juego_terminado_cpp(tab)
   }
 
-  # --------------------------------------------------------------------------
   # Modo humano vs IA
-  # --------------------------------------------------------------------------
   if (!auto) {
-
-    # Si la IA abre la partida
     if (turno == 2) {
       prof    <- if (profAdaptative) .adaptativa(tablero, profundidad) else profundidad
       tablero <- fin_turno(tablero, 2L, prof, TRUE)
@@ -85,8 +90,6 @@ iniciar_partida_cpp <- function(profundidad = 5, turno = 1,
     }
 
     while (i <= (42 - j)) {
-
-      # Turno humano
       tablero <- turno_humano(tablero)
       p       <- visualizar_tablero(tablero)
       print(p)
@@ -96,7 +99,6 @@ iniciar_partida_cpp <- function(profundidad = 5, turno = 1,
       if (fin$finalizado) { resultado <- fin$resultado; break }
       i <- i + 1
 
-      # Turno IA
       prof    <- if (profAdaptative) .adaptativa(tablero, profundidad) else profundidad
       tablero <- fin_turno(tablero, 2L, prof, TRUE)
 
@@ -108,9 +110,7 @@ iniciar_partida_cpp <- function(profundidad = 5, turno = 1,
     cat(sprintf("Resultado: %s\n", resultado))
   }
 
-  # --------------------------------------------------------------------------
   # Modo automático (IA vs IA)
-  # --------------------------------------------------------------------------
   if (auto) {
     while (i <= 42) {
       turno_actual <- ((i - 1) %% 2) + 1
