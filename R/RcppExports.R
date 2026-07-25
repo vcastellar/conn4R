@@ -35,7 +35,7 @@
 #' @seealso \code{\link{minimax}} (implementación R equivalente),
 #'   \code{\link{evaluar_posicion_cpp}}, \code{\link{iniciar_partida}}
 minimax_r <- function(tablero, profundidad, maximizandoIA) {
-    .Call('_conn4R_minimax_r', PACKAGE = 'conn4R', tablero, profundidad, maximizandoIA)
+    .Call(`_conn4R_minimax_r`, tablero, profundidad, maximizandoIA)
 }
 
 #' Evaluación estática de una posición (C++)
@@ -57,7 +57,7 @@ minimax_r <- function(tablero, profundidad, maximizandoIA) {
 #'
 #' @seealso \code{\link{evaluar_posicion}}, \code{\link{minimax_r}}
 evaluar_posicion_cpp <- function(tablero) {
-    .Call('_conn4R_evaluar_posicion_cpp', PACKAGE = 'conn4R', tablero)
+    .Call(`_conn4R_evaluar_posicion_cpp`, tablero)
 }
 
 #' Detectar fin de partida (C++)
@@ -82,7 +82,7 @@ evaluar_posicion_cpp <- function(tablero) {
 #'
 #' @seealso \code{\link{juego_terminado}}
 juego_terminado_cpp <- function(tablero) {
-    .Call('_conn4R_juego_terminado_cpp', PACKAGE = 'conn4R', tablero)
+    .Call(`_conn4R_juego_terminado_cpp`, tablero)
 }
 
 #' Colocar una ficha en el tablero (C++)
@@ -107,7 +107,7 @@ juego_terminado_cpp <- function(tablero) {
 #'
 #' @seealso \code{\link{realizar_jugada}}
 realizar_jugada_r <- function(tablero, columna, jugador) {
-    .Call('_conn4R_realizar_jugada_r', PACKAGE = 'conn4R', tablero, columna, jugador)
+    .Call(`_conn4R_realizar_jugada_r`, tablero, columna, jugador)
 }
 
 #' Columnas disponibles (C++)
@@ -126,7 +126,7 @@ realizar_jugada_r <- function(tablero, columna, jugador) {
 #'
 #' @seealso \code{\link{jugadas_disponibles}}, \code{\link{ordenar_jugadas_r}}
 jugadas_disponibles_r <- function(tablero) {
-    .Call('_conn4R_jugadas_disponibles_r', PACKAGE = 'conn4R', tablero)
+    .Call(`_conn4R_jugadas_disponibles_r`, tablero)
 }
 
 #' Ordenar jugadas por heurística (C++)
@@ -157,6 +157,6 @@ jugadas_disponibles_r <- function(tablero) {
 #'
 #' @seealso \code{\link{ordenar_jugadas}}, \code{\link{minimax_r}}
 ordenar_jugadas_r <- function(tablero, turno) {
-    .Call('_conn4R_ordenar_jugadas_r', PACKAGE = 'conn4R', tablero, turno)
+    .Call(`_conn4R_ordenar_jugadas_r`, tablero, turno)
 }
 
