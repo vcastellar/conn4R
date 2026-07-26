@@ -22,6 +22,7 @@ static const int PUNT4 = 100000;
 static const int BONUS_PARIDAD = 300;
 static const int BONUS_APILADA = 8000;
 static const int BONUS_CONEXION = 3;
+static const int MATE_SCORE = 1000000000;
 static const double WIN_SCORE  = 1e9;
 static const double BLOCK_SCORE = 1e8;
 
@@ -151,6 +152,17 @@ static int game_over(const Board& b) {
   if (evaluar_turno(b, 2) >= 50000) return 2;
   if (available_cols(b).empty())    return 3;
   return 0;
+}
+
+// Los estados terminales deben dominar siempre a la evaluación heurística.
+// Se usa el número de huecos para preferir victorias rápidas y retrasar derrotas;
+// al depender solo del tablero, la puntuación sigue siendo segura para la TT.
+static int terminal_score(const Board& b, int resultado) {
+  if (resultado == 3) return 0;
+  int huecos = 0;
+  for (int i = 0; i < 42; i++)
+    if (b[i] == 0) huecos++;
+  return (resultado == 2) ? MATE_SCORE + huecos : -MATE_SCORE - huecos;
 }
 
 struct ThreatDetail {
@@ -345,9 +357,8 @@ static MMResult minimax_cpp(const Board& b, int prof, bool maximizandoIA,
   nodes++;
 
   int go = game_over(b);
-  if (prof == 0 || go != 0) {
-    return {evaluar_posicion_impl(b), -1};
-  }
+  if (go != 0) return {terminal_score(b, go), -1};
+  if (prof == 0) return {evaluar_posicion_impl(b), -1};
 
   std::string key = tt_key(b);
   const TTEntry* hit = tt_lookup(tt, key, prof, alpha, beta);
