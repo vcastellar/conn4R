@@ -37,3 +37,26 @@ test_that("visualizar_variante valida sus argumentos y jugadas", {
     "columna 4 está llena"
   )
 })
+
+test_that("visualizar_tablero destaca únicamente la última jugada indicada", {
+  tablero <- reiniciar_tablero()
+  tablero <- realizar_jugada(tablero, 4L, 1L)
+
+  grafico <- visualizar_tablero(tablero, c(6L, 4L))
+  expect_equal(nrow(grafico$layers[[2]]$data), 1L)
+  expect_equal(grafico$layers[[2]]$data$x, 4L)
+  expect_equal(grafico$layers[[2]]$data$y, 1L)
+  expect_equal(grafico$layers[[2]]$aes_params$colour, "deepskyblue3")
+
+  tablero <- realizar_jugada(tablero, 5L, 2L)
+  grafico <- visualizar_tablero(tablero, c(6L, 5L))
+  expect_equal(grafico$layers[[2]]$data$x, 5L)
+  expect_equal(nrow(grafico$layers[[2]]$data), 1L)
+})
+
+test_that("visualizar_tablero valida las coordenadas de la última jugada", {
+  tablero <- reiniciar_tablero()
+
+  expect_error(visualizar_tablero(tablero, c(6L, 4L)), "señalar una ficha")
+  expect_error(visualizar_tablero(tablero, c(7L, 4L)), "señalar una ficha")
+})

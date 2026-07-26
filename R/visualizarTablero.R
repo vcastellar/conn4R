@@ -39,10 +39,13 @@
 #'   Las fichas del jugador 1 (humano) se muestran en color \emph{papayawhip}
 #'   (crema), las del jugador 2 (IA) en gris oscuro y las casillas vacías en
 #'   blanco. Si existe una línea ganadora, sus cuatro celdas se resaltan en
-#'   rojo.
+#'   rojo. Cuando se proporciona \code{ultima_jugada}, esa ficha se distingue
+#'   con un aro azul.
 #'
 #' @param tablero Matriz 6×7 con el estado del tablero. Celdas: 0 vacío,
 #'   1 humano, 2 IA.
+#' @param ultima_jugada Coordenadas \code{c(fila, columna)} de la última ficha
+#'   colocada, o \code{NULL} para no destacarla.
 #'
 #' @return Objeto \code{ggplot} listo para imprimir con \code{print()} o
 #'   \code{plot()}.
@@ -58,8 +61,18 @@
 #' @seealso \code{\link{crear_posicion_aleatoria}}, \code{\link{reiniciar_tablero}}
 #'
 #' @export
-visualizar_tablero <- function(tablero) {
+visualizar_tablero <- function(tablero, ultima_jugada = NULL) {
   library(ggplot2)
+
+  if (!is.null(ultima_jugada) &&
+      (length(ultima_jugada) != 2L || anyNA(ultima_jugada) ||
+       any(!is.finite(ultima_jugada)) ||
+       any(ultima_jugada != as.integer(ultima_jugada)) ||
+       !ultima_jugada[[1]] %in% 1:6 || !ultima_jugada[[2]] %in% 1:7 ||
+       tablero[ultima_jugada[[1]], ultima_jugada[[2]]] == 0L)) {
+    stop("`ultima_jugada` debe señalar una ficha del tablero mediante c(fila, columna).",
+         call. = FALSE)
+  }
 
   df_fichas <- data.frame(
     x     = rev(rep(1:7, each = 6)),
@@ -109,7 +122,22 @@ visualizar_tablero <- function(tablero) {
     scale_fill_manual(
       values = c("0" = "white", "1" = "papayawhip", "2" = "grey15", "3" = "red"),
       name   = "ficha"
-    ) +
+    )
+
+  if (!is.null(ultima_jugada)) {
+    df_ultima <- data.frame(
+      x = as.integer(ultima_jugada[[2]]),
+      y = 7L - as.integer(ultima_jugada[[1]])
+    )
+    p <- p + geom_point(
+      data = df_ultima,
+      aes(x = x, y = y),
+      shape = 21, size = 23, fill = NA, color = "deepskyblue3",
+      stroke = 2.5
+    )
+  }
+
+  p <- p +
     geom_segment(data = df_lineas_h,
                  aes(x = xini, y = yini, xend = xend, yend = yend),
                  linewidth = 0.5, color = "black") +
@@ -192,7 +220,8 @@ visualizar_variante <- function(tablero, turno, variante, lapso = 1) {
 
     Sys.sleep(lapso)
     tablero_actual <- realizar_jugada(tablero_actual, columna, jugador)
-    print(visualizar_tablero(tablero_actual))
+    fila <- min(which(tablero_actual[, columna] != 0L))
+    print(visualizar_tablero(tablero_actual, c(fila, columna)))
     jugador <- 3L - jugador
   }
 
