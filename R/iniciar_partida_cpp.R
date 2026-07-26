@@ -55,7 +55,8 @@ iniciar_partida <- function(profundidad = 5, turno = 1,
   fin_turno <- function(tab, turno_actual, prof, max_ia) {
     res <- ia_mueve(tab, prof, max_ia)
     tab <- realizar_jugada(tab, res$jugada, turno_actual)
-    p   <- visualizar_tablero(tab)
+    fila <- min(which(tab[, res$jugada] != 0L))
+    p   <- visualizar_tablero(tab, c(fila, res$jugada))
     print(p)
     cat("\n")
     nods_s <- if (res$tiempo > 0) round(res$nodos / res$tiempo) else NA
@@ -86,8 +87,10 @@ iniciar_partida <- function(profundidad = 5, turno = 1,
     }
 
     while (i <= (42 - j)) {
+      tablero_anterior <- tablero
       tablero <- turno_humano(tablero)
-      p       <- visualizar_tablero(tablero)
+      ultima_jugada <- which(tablero != tablero_anterior, arr.ind = TRUE)
+      p       <- visualizar_tablero(tablero, ultima_jugada[1, ])
       print(p)
       cat(sprintf("valoracion HU: %d\n", evaluar_posicion(tablero)))
 
