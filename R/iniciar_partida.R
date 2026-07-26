@@ -1,147 +1,123 @@
-#' Iniciar una partida de Conecta 4 (implementación R pura)
+#' Iniciar una partida de Conecta 4
 #'
-#' @description Implementación de referencia del bucle de juego íntegramente en
-#'   R. Es funcionalmente equivalente a \code{\link{iniciar_partida}} pero usa
-#'   el motor minimax escrito en R (\code{\link{minimax}}) en lugar del motor
-#'   C++ compilado. Es más lenta que la versión por defecto, pero el código es
-#'   directamente legible en R y resulta útil para entender el algoritmo o para
-#'   depuración.
+#' @description Punto de entrada principal del paquete. Inicia una partida de
+#'   Conecta 4 usando el motor C++ compilado via Rcpp para el cálculo minimax,
+#'   la evaluación estática y la detección de fin de partida. La interfaz
+#'   (visualización, entrada del usuario, profundidad adaptativa) se gestiona
+#'   desde R.
 #'
-#'   Permite además guardar el árbol de búsqueda completo mediante
-#'   \code{guardar_arbol = TRUE} y después analizarlo con
-#'   \code{\link{encontrar_mejor_variante}} y
-#'   \code{\link{mostrar_mejor_variante}}.
-#'
-#' @param profundidad Profundidad de búsqueda del algoritmo minimax.
-#'   Por defecto 5.
-#' @param turno Jugador que comienza: 1 para humano, 2 para IA.
-#'   Por defecto 1.
+#' @param profundidad Profundidad de búsqueda del algoritmo minimax. Por defecto 5.
+#' @param turno Jugador que comienza: 1 para humano, 2 para IA. Por defecto 1.
 #' @param profAdaptative Lógico. Si \code{TRUE} ajusta la profundidad
 #'   dinámicamente según las columnas disponibles. Por defecto \code{TRUE}.
 #' @param auto Lógico. Si \code{TRUE} la IA juega contra sí misma sin
 #'   intervención humana. Por defecto \code{FALSE}.
-#' @param guardar_arbol Lógico. Si \code{TRUE} el minimax construye el árbol
-#'   completo de búsqueda, accesible a través del objeto devuelto.
-#'   Por defecto \code{FALSE}.
 #'
 #' @return La matriz 6×7 con el estado final del tablero (invisible).
 #'
 #' @examples
 #' \dontrun{
-#' # Partida humano vs IA con motor R
-#' iniciar_partida_r(profundidad = 5)
+#' # Partida humano vs IA (humano primero, profundidad 6)
+#' iniciar_partida(profundidad = 6)
 #'
-#' # IA contra sí misma guardando el árbol de búsqueda
-#' tablero <- iniciar_partida_r(auto = TRUE, profundidad = 5, guardar_arbol = TRUE)
+#' # La IA abre la partida
+#' iniciar_partida(turno = 2)
+#'
+#' # IA contra sí misma
+#' iniciar_partida(auto = TRUE, profundidad = 5)
 #' }
 #'
-#' @seealso \code{\link{iniciar_partida}}, \code{\link{minimax}},
-#'   \code{\link{encontrar_mejor_variante}}
+#' @seealso \code{\link{minimax}}, \code{\link{evaluar_posicion}}
 #'
 #' @export
-iniciar_partida_r <- function(profundidad = 5, turno = 1,
-                               profAdaptative = TRUE, auto = FALSE,
-                               guardar_arbol = FALSE) {
+iniciar_partida <- function(profundidad = 5, turno = 1,
+                            profAdaptative = TRUE, auto = FALSE) {
 
-  resultado <- "DRAW"
-  tablero <- reiniciar_tablero()
-  p <- visualizar_tablero(tablero)
+  tablero  <- reiniciar_tablero()
+  p        <- visualizar_tablero(tablero)
   print(p)
-  i <- 1
-  j <- 0
+  i        <- 1
+  j        <- 0
+  resultado <- "DRAW"
 
+  # Helpers internos que llaman al motor C++
+  ia_mueve <- function(tab, prof, maximizandoIA) {
+    tik <- system.time({
+      res <- minimax(tab, prof, maximizandoIA)
+    })
+    list(jugada     = res$jugada,
+         puntuacion = res$puntuacion,
+         nodos      = res$nodos,
+         variante   = res$variante,
+         tiempo     = tik[[3]])
+  }
+
+  fin_turno <- function(tab, turno_actual, prof, max_ia) {
+    res <- ia_mueve(tab, prof, max_ia)
+    tab <- realizar_jugada(tab, res$jugada, turno_actual)
+    p   <- visualizar_tablero(tab)
+    print(p)
+    cat("\n")
+    nods_s <- if (res$tiempo > 0) round(res$nodos / res$tiempo) else NA
+    cat("-----------------------------------------------------------------\n")
+    cat(sprintf("valoracion:       %d\n",     res$puntuacion))
+    cat(sprintf("jugada realizada: %d\n",     res$jugada))
+    cat(sprintf("profundidad:      %d\n",     prof))
+    cat(sprintf("nodos evaluados:  %.0f\n",   res$nodos))
+    cat(sprintf("nod/s:            %.0f\n",   nods_s))
+    cat(sprintf("tiempo:           %.2f s\n", res$tiempo))
+    cat(sprintf("variante:         %s\n",     paste(res$variante, collapse = " -> ")))
+    cat("-----------------------------------------------------------------\n\n")
+    tab
+  }
+
+  terminado <- function(tab) {
+    juego_terminado(tab)
+  }
+
+  # Modo humano vs IA
   if (!auto) {
     if (turno == 2) {
-      mejor_jugada_IA <- minimax(tablero, profundidad, maximizandoIA = TRUE,
-                                 guardar_arbol = guardar_arbol)
-      tablero <- realizar_jugada(tablero, mejor_jugada_IA$jugada, 2)
-      p <- visualizar_tablero(tablero)
-      print(p)
-      cat(sprintf("valoracion IA: %d\n", evaluar_posicion(tablero)))
-      cat(sprintf("jugada realizada: %d\n", mejor_jugada_IA$jugada))
-
-      if (juego_terminado(tablero)$finalizado) {
-        cat("gana IA\n")
-        return(invisible(tablero))
-      }
-      i <- i + 1
-      j <- 1
+      prof    <- if (profAdaptative) .adaptativa(tablero, profundidad) else profundidad
+      tablero <- fin_turno(tablero, 2L, prof, TRUE)
+      fin     <- terminado(tablero)
+      if (fin$finalizado) { cat("gana IA\n"); return(invisible(tablero)) }
+      i <- i + 1; j <- 1
     }
 
     while (i <= (42 - j)) {
-
       tablero <- turno_humano(tablero)
-      p <- visualizar_tablero(tablero)
+      p       <- visualizar_tablero(tablero)
       print(p)
       cat(sprintf("valoracion HU: %d\n", evaluar_posicion(tablero)))
 
-      if (juego_terminado(tablero)$finalizado) {
-        resultado <- juego_terminado(tablero)$resultado
-        break
-      }
+      fin <- terminado(tablero)
+      if (fin$finalizado) { resultado <- fin$resultado; break }
       i <- i + 1
 
-      prof <- if (profAdaptative) .adaptativa(tablero, profundidad_base = profundidad) else profundidad
+      prof    <- if (profAdaptative) .adaptativa(tablero, profundidad) else profundidad
+      tablero <- fin_turno(tablero, 2L, prof, TRUE)
 
-      tik <- system.time({
-        mejor_jugada_IA <- minimax(tablero, prof, maximizandoIA = TRUE,
-                                   guardar_arbol = guardar_arbol)
-      })
-
-      tablero <- realizar_jugada(tablero, mejor_jugada_IA$jugada, 2)
-      p <- visualizar_tablero(tablero)
-      print(p)
-
-      cat("\n")
-      cat("-----------------------------------------------------------------\n")
-      cat(sprintf("valoracion IA:    %d\n",    mejor_jugada_IA$puntuacion))
-      cat(sprintf("jugada realizada: %d\n",    mejor_jugada_IA$jugada))
-      cat(sprintf("profundidad:      %d\n",    prof))
-      n_nodos <- if (!is.null(mejor_jugada_IA$arbol)) length(mejor_jugada_IA$env$arbol@idNodo) else NA
-      cat(sprintf("num. nodos:       %s\n",    ifelse(is.na(n_nodos), "NA", n_nodos)))
-      cat(sprintf("tiempo:           %.2f s\n", round(tik[[3]], 2)))
-      cat(sprintf("nod/s:            %s\n",    ifelse(is.na(n_nodos), "NA", round(n_nodos / tik[[3]], 3))))
-      cat("-----------------------------------------------------------------\n\n")
-
-      if (juego_terminado(tablero)$finalizado) {
-        resultado <- juego_terminado(tablero)$resultado
-        break
-      }
+      fin <- terminado(tablero)
+      if (fin$finalizado) { resultado <- fin$resultado; break }
       i <- i + 1
     }
 
     cat(sprintf("Resultado: %s\n", resultado))
   }
 
+  # Modo automático (IA vs IA)
   if (auto) {
     while (i <= 42) {
       turno_actual <- ((i - 1) %% 2) + 1
+      max_ia       <- (turno_actual == 2)
+      prof         <- if (profAdaptative) .adaptativa(tablero, profundidad) else profundidad
 
-      prof <- if (profAdaptative) .adaptativa(tablero, profundidad_base = profundidad) else profundidad
-      maxIA <- (turno_actual == 2)
+      tablero <- fin_turno(tablero, turno_actual, prof, max_ia)
 
-      tik <- system.time({
-        mejor_jugada_IA <- minimax(tablero, prof, maximizandoIA = maxIA,
-                                   guardar_arbol = guardar_arbol)
-      })
-
-      tablero <- realizar_jugada(tablero, mejor_jugada_IA$jugada, turno_actual)
-      p <- visualizar_tablero(tablero)
-      print(p)
-
-      cat("\n")
-      cat("-----------------------------------------------------------------\n")
-      cat(sprintf("valoracion IA:    %d\n",    mejor_jugada_IA$puntuacion))
-      cat(sprintf("jugada realizada: %d\n",    mejor_jugada_IA$jugada))
-      cat(sprintf("profundidad:      %d\n",    prof))
-      n_nodos <- if (!is.null(mejor_jugada_IA$arbol)) length(mejor_jugada_IA$env$arbol@idNodo) else NA
-      cat(sprintf("num. nodos:       %s\n",    ifelse(is.na(n_nodos), "NA", n_nodos)))
-      cat(sprintf("tiempo:           %.2f s\n", round(tik[[3]], 2)))
-      cat(sprintf("nod/s:            %s\n",    ifelse(is.na(n_nodos), "NA", round(n_nodos / tik[[3]], 3))))
-      cat("-----------------------------------------------------------------\n\n")
-
-      if (juego_terminado(tablero)$finalizado) {
-        resultado <- switch(as.character(juego_terminado(tablero)$resultado),
+      fin <- terminado(tablero)
+      if (fin$finalizado) {
+        resultado <- switch(as.character(fin$resultado),
                             "1" = "GANA HUMANO (jugador 1)",
                             "2" = "GANA IA (jugador 2)",
                             "0" = "EMPATE")

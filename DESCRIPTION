@@ -7,19 +7,13 @@ Maintainer: Vicente Castellar Sebastiá <vic.sebastia@gmail.com>
 Description: Implementación de Conecta 4 con inteligencia artificial basada en
     el algoritmo minimax con poda alfa-beta, tabla de transposición y evaluación
     estática de posición. El motor principal está compilado en C++ via Rcpp para
-    máximo rendimiento. Se incluye también una implementación de referencia íntegra
-    en R puro, didácticamente equivalente, para facilitar la comprensión del
-    algoritmo a usuarios de R.
+    máximo rendimiento. Las funciones R proporcionan exclusivamente la interfaz,
+    la visualización y las utilidades de juego.
 License: GPL-3
 Encoding: UTF-8
 RoxygenNote: 7.3.2
 Imports:
   ggplot2,
-  methods,
   Rcpp
 LinkingTo:
   Rcpp
-Suggests:
-  knitr,
-  rmarkdown
-VignetteBuilder: knitr

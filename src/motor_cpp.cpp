@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <climits>
 
@@ -211,7 +212,7 @@ static int bonus_conectividad(const Board& b, int turno) {
   return total;
 }
 
-static int evaluar_posicion(const Board& b) {
+static int evaluar_posicion_impl(const Board& b) {
   // Bitboard posicional
   int puntBit = 0;
   for (int r = 0; r < 6; r++)
@@ -253,7 +254,7 @@ struct MoveScore {
   double score;
 };
 
-static std::vector<MoveScore> ordenar_jugadas(const Board& b, int turno) {
+static std::vector<MoveScore> ordenar_jugadas_impl(const Board& b, int turno) {
   std::vector<int> cols = available_cols(b);
   int oponente = (turno == 1) ? 2 : 1;
   std::vector<MoveScore> ms;
@@ -270,7 +271,7 @@ static std::vector<MoveScore> ordenar_jugadas(const Board& b, int turno) {
       if (go_o == oponente) {
         score = BLOCK_SCORE;
       } else {
-        score = std::abs((double)evaluar_posicion(bj)) + std::abs((double)evaluar_posicion(bo));
+        score = std::abs((double)evaluar_posicion_impl(bj)) + std::abs((double)evaluar_posicion_impl(bo));
       }
     }
     ms.push_back({c, score});
@@ -345,7 +346,7 @@ static MMResult minimax_cpp(const Board& b, int prof, bool maximizandoIA,
 
   int go = game_over(b);
   if (prof == 0 || go != 0) {
-    return {evaluar_posicion(b), -1};
+    return {evaluar_posicion_impl(b), -1};
   }
 
   std::string key = tt_key(b);
@@ -358,7 +359,7 @@ static MMResult minimax_cpp(const Board& b, int prof, bool maximizandoIA,
   int beta_orig  = beta;
 
   int turno = maximizandoIA ? 2 : 1;
-  std::vector<MoveScore> moves = ordenar_jugadas(b, turno);
+  std::vector<MoveScore> moves = ordenar_jugadas_impl(b, turno);
 
   // Si la TT tiene mejor jugada, moverla al frente
   auto it_tt = tt.find(key);
@@ -433,9 +434,8 @@ static IntegerVector extract_pv(Board b, const TT& tt, int max_depth) {
 //' Motor minimax con alpha-beta y tabla de transposición (C++)
 //'
 //' @description Implementación C++ del algoritmo minimax con poda alpha-beta y
-//'   tabla de transposición interna. Es la versión de producción del paquete:
-//'   significativamente más rápida que \code{\link{minimax}} (implementación R
-//'   pura) y devuelve además el conteo de nodos evaluados y la variante
+//'   tabla de transposición interna. Devuelve además el conteo de nodos
+//'   evaluados y la variante
 //'   principal extraída de la tabla de transposición.
 //'
 //' @param tablero IntegerMatrix 6×7. Estado del tablero: 0 vacío, 1 humano, 2 IA.
@@ -455,16 +455,15 @@ static IntegerVector extract_pv(Board b, const TT& tt, int max_depth) {
 //'
 //' @examples
 //' tablero <- crear_posicion_aleatoria(10)
-//' system.time(res <- minimax_r(tablero, profundidad = 7L, maximizandoIA = TRUE))
+//' system.time(res <- minimax(tablero, profundidad = 7L, maximizandoIA = TRUE))
 //' res$puntuacion
 //' res$jugada
 //' res$nodos
 //' res$variante
 //'
-//' @seealso \code{\link{minimax}} (implementación R equivalente),
-//'   \code{\link{evaluar_posicion_cpp}}, \code{\link{iniciar_partida}}
+//' @seealso \code{\link{evaluar_posicion}}, \code{\link{iniciar_partida}}
 // [[Rcpp::export]]
-List minimax_r(IntegerMatrix tablero, int profundidad, bool maximizandoIA) {
+List minimax(IntegerMatrix tablero, int profundidad, bool maximizandoIA) {
   Board b = from_r(tablero);
   TT tt;
   long long nodes = 0;
@@ -481,7 +480,7 @@ List minimax_r(IntegerMatrix tablero, int profundidad, bool maximizandoIA) {
 
 //' Evaluación estática de una posición (C++)
 //'
-//' @description Versión C++ de \code{\link{evaluar_posicion}}. Evalúa el
+//' @description Evalúa el
 //'   tablero combinando seis componentes: líneas abiertas, control de centro
 //'   (bitboard posicional), amenazas dobles, paridad de amenazas, amenazas
 //'   apiladas y conectividad de piezas. El resultado se expresa siempre desde
@@ -493,20 +492,18 @@ List minimax_r(IntegerMatrix tablero, int profundidad, bool maximizandoIA) {
 //'
 //' @examples
 //' tablero <- crear_posicion_aleatoria(12)
-//' evaluar_posicion_cpp(tablero)
-//' evaluar_posicion(tablero)   # debe coincidir con la versión R
+//' evaluar_posicion(tablero)
 //'
-//' @seealso \code{\link{evaluar_posicion}}, \code{\link{minimax_r}}
+//' @seealso \code{\link{minimax}}
 // [[Rcpp::export]]
-int evaluar_posicion_cpp(IntegerMatrix tablero) {
-  return evaluar_posicion(from_r(tablero));
+int evaluar_posicion(IntegerMatrix tablero) {
+  return evaluar_posicion_impl(from_r(tablero));
 }
 
 //' Detectar fin de partida (C++)
 //'
-//' @description Versión C++ de \code{\link{juego_terminado}}. Comprueba si el
-//'   tablero es un estado terminal (victoria o empate) de forma más eficiente
-//'   que la implementación R.
+//' @description Comprueba si el tablero es un estado terminal (victoria o
+//'   empate).
 //'
 //' @param tablero IntegerMatrix 6×7. Estado del tablero.
 //'
@@ -520,11 +517,10 @@ int evaluar_posicion_cpp(IntegerMatrix tablero) {
 //'
 //' @examples
 //' tablero <- crear_posicion_aleatoria(10)
-//' juego_terminado_cpp(tablero)
+//' juego_terminado(tablero)
 //'
-//' @seealso \code{\link{juego_terminado}}
 // [[Rcpp::export]]
-List juego_terminado_cpp(IntegerMatrix tablero) {
+List juego_terminado(IntegerMatrix tablero) {
   Board b = from_r(tablero);
   int go = game_over(b);
   bool finalizado = (go != 0);
@@ -537,7 +533,7 @@ List juego_terminado_cpp(IntegerMatrix tablero) {
 
 //' Colocar una ficha en el tablero (C++)
 //'
-//' @description Versión C++ de \code{\link{realizar_jugada}}. Deposita una
+//' @description Deposita una
 //'   ficha en la columna indicada, respetando la gravedad (la pieza cae a la
 //'   fila libre más baja). Si la columna está llena devuelve el tablero sin
 //'   modificar.
@@ -551,13 +547,12 @@ List juego_terminado_cpp(IntegerMatrix tablero) {
 //'
 //' @examples
 //' tablero <- reiniciar_tablero()
-//' tablero <- realizar_jugada_r(tablero, columna = 4L, jugador = 1L)
-//' tablero <- realizar_jugada_r(tablero, columna = 4L, jugador = 2L)
+//' tablero <- realizar_jugada(tablero, columna = 4L, jugador = 1L)
+//' tablero <- realizar_jugada(tablero, columna = 4L, jugador = 2L)
 //' visualizar_tablero(tablero)
 //'
-//' @seealso \code{\link{realizar_jugada}}
 // [[Rcpp::export]]
-IntegerMatrix realizar_jugada_r(IntegerMatrix tablero, int columna, int jugador) {
+IntegerMatrix realizar_jugada(IntegerMatrix tablero, int columna, int jugador) {
   Board b = from_r(tablero);
   Board nb = make_move(b, columna - 1, jugador); // 1-indexed a 0-indexed
   return to_r(nb);
@@ -565,7 +560,7 @@ IntegerMatrix realizar_jugada_r(IntegerMatrix tablero, int columna, int jugador)
 
 //' Columnas disponibles (C++)
 //'
-//' @description Versión C++ de \code{\link{jugadas_disponibles}}. Devuelve los
+//' @description Devuelve los
 //'   índices (1-7) de las columnas que no están completamente llenas.
 //'
 //' @param tablero IntegerMatrix 6×7. Estado del tablero.
@@ -574,12 +569,11 @@ IntegerMatrix realizar_jugada_r(IntegerMatrix tablero, int columna, int jugador)
 //'
 //' @examples
 //' tablero <- crear_posicion_aleatoria(20)
-//' jugadas_disponibles_r(tablero)
-//' jugadas_disponibles(tablero)   # versión R equivalente
+//' jugadas_disponibles(tablero)
 //'
-//' @seealso \code{\link{jugadas_disponibles}}, \code{\link{ordenar_jugadas_r}}
+//' @seealso \code{\link{ordenar_jugadas}}
 // [[Rcpp::export]]
-IntegerVector jugadas_disponibles_r(IntegerMatrix tablero) {
+IntegerVector jugadas_disponibles(IntegerMatrix tablero) {
   Board b = from_r(tablero);
   std::vector<int> cols = available_cols(b);
   IntegerVector out(cols.size());
@@ -589,7 +583,7 @@ IntegerVector jugadas_disponibles_r(IntegerMatrix tablero) {
 
 //' Ordenar jugadas por heurística (C++)
 //'
-//' @description Versión C++ de \code{\link{ordenar_jugadas}}. Devuelve las
+//' @description Devuelve las
 //'   columnas disponibles ordenadas de mejor a peor candidata para maximizar
 //'   la eficacia de la poda alpha-beta:
 //'   \enumerate{
@@ -610,14 +604,13 @@ IntegerVector jugadas_disponibles_r(IntegerMatrix tablero) {
 //'
 //' @examples
 //' tablero <- crear_posicion_aleatoria(11)
-//' ordenar_jugadas_r(tablero, turno = 2L)
-//' ordenar_jugadas(tablero, turno = 2L)   # versión R equivalente
+//' ordenar_jugadas(tablero, turno = 2L)
 //'
-//' @seealso \code{\link{ordenar_jugadas}}, \code{\link{minimax_r}}
+//' @seealso \code{\link{minimax}}
 // [[Rcpp::export]]
-DataFrame ordenar_jugadas_r(IntegerMatrix tablero, int turno) {
+DataFrame ordenar_jugadas(IntegerMatrix tablero, int turno) {
   Board b = from_r(tablero);
-  std::vector<MoveScore> ms = ordenar_jugadas(b, turno);
+  std::vector<MoveScore> ms = ordenar_jugadas_impl(b, turno);
   IntegerVector jugadas(ms.size());
   NumericVector puntuaciones(ms.size());
   for (int i = 0; i < (int)ms.size(); i++) {

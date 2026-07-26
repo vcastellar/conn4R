@@ -45,14 +45,7 @@ turno_humano <- function(tablero, jugada = NULL) {
     }
 
     if (jugada_humano %in% jugadas_posibles) {
-      # Encuentra la primera fila vacía en la columna elegida
-      for (fila in 6:1) {
-        if (tablero[fila, jugada_humano] == 0) {
-          tablero[fila, jugada_humano] <- 1  # Representa la jugada del humano
-          return(tablero)
-        }
-      }
-
+      return(realizar_jugada(tablero, jugada_humano, 1L))
     } else {
       cat("Jugada no válida. Intenta de nuevo.\n")
     }
