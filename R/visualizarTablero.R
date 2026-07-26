@@ -130,3 +130,71 @@ visualizar_tablero <- function(tablero) {
 
   return(p)
 }
+
+#' Visualizar una variante jugada paso a paso
+#'
+#' @description Reproduce sobre un tablero una secuencia de jugadas alternando
+#'   los jugadores. Muestra primero la posición inicial mediante
+#'   \code{\link{visualizar_tablero}} y, después de cada pausa, muestra la
+#'   posición resultante de la siguiente jugada.
+#'
+#' @param tablero Matriz 6×7 con la posición inicial. Celdas: 0 vacío,
+#'   1 humano, 2 IA.
+#' @param turno Jugador que realiza la primera jugada de \code{variante}:
+#'   \code{1} (humano) o \code{2} (IA).
+#' @param variante Vector de columnas (1-7) que se reproducirán en orden.
+#' @param lapso Segundos de espera entre posiciones. Por defecto, 1 segundo.
+#'   Puede usarse \code{0} para reproducir la variante sin espera.
+#'
+#' @return Invisiblemente, la matriz 6×7 resultante después de reproducir toda
+#'   la variante.
+#'
+#' @examples
+#' \dontrun{
+#' tablero <- reiniciar_tablero()
+#' visualizar_variante(tablero, turno = 1, variante = c(4, 4, 3, 5))
+#' }
+#'
+#' @seealso \code{\link{visualizar_tablero}}, \code{\link{realizar_jugada}}
+#'
+#' @export
+visualizar_variante <- function(tablero, turno, variante, lapso = 1) {
+  if (!is.matrix(tablero) || !identical(dim(tablero), c(6L, 7L)) ||
+      anyNA(tablero) || any(!tablero %in% 0:2)) {
+    stop("`tablero` debe ser una matriz 6x7 con valores 0, 1 o 2.",
+         call. = FALSE)
+  }
+  if (length(turno) != 1L || is.na(turno) || !turno %in% c(1, 2)) {
+    stop("`turno` debe ser 1 o 2.", call. = FALSE)
+  }
+  if (!is.numeric(variante) || anyNA(variante) ||
+      any(!is.finite(variante)) || any(variante != as.integer(variante)) ||
+      any(!variante %in% 1:7)) {
+    stop("`variante` debe contener columnas enteras entre 1 y 7.",
+         call. = FALSE)
+  }
+  if (length(lapso) != 1L || !is.numeric(lapso) || is.na(lapso) ||
+      !is.finite(lapso) || lapso < 0) {
+    stop("`lapso` debe ser un número finito mayor o igual que 0.",
+         call. = FALSE)
+  }
+
+  tablero_actual <- matrix(as.integer(tablero), nrow = 6L, ncol = 7L)
+  jugador <- as.integer(turno)
+  print(visualizar_tablero(tablero_actual))
+
+  for (i in seq_along(variante)) {
+    columna <- as.integer(variante[[i]])
+    if (!columna %in% jugadas_disponibles(tablero_actual)) {
+      stop(sprintf("La jugada %d no es válida: la columna %d está llena.",
+                   i, columna), call. = FALSE)
+    }
+
+    Sys.sleep(lapso)
+    tablero_actual <- realizar_jugada(tablero_actual, columna, jugador)
+    print(visualizar_tablero(tablero_actual))
+    jugador <- 3L - jugador
+  }
+
+  invisible(tablero_actual)
+}
