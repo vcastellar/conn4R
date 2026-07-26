@@ -11,60 +11,26 @@
 #' @return Data frame con columnas \code{x}, \code{y} y \code{ficha} (valor 3)
 #'   para las 4 celdas de la línea ganadora, o \code{NULL} si no hay ganador.
 .detectar_lineas <- function(tablero) {
-  puntuacion <- 0
+  direcciones <- rbind(c(0L, 1L), c(1L, 0L), c(1L, 1L), c(1L, -1L))
 
-  tryCatch({
+  for (fila in seq_len(6L)) {
+    for (columna in seq_len(7L)) {
+      jugador <- tablero[fila, columna]
+      if (jugador == 0L) next
 
-    for (turno in c(1, 2)) {
+      for (i in seq_len(nrow(direcciones))) {
+        filas <- fila + (0:3) * direcciones[i, 1]
+        columnas <- columna + (0:3) * direcciones[i, 2]
+        if (any(filas < 1L | filas > 6L | columnas < 1L | columnas > 7L)) next
 
-      for (fila in 1:6) {
-        for (columna in 1:4) {
-          linea       <- tablero[fila, columna:(columna + 3)]
-          coordenadas <- data.frame(x = 7 - fila, y = columna:(columna + 3), ficha = 3)
-          puntuacion  <- .evaluar_linea(linea, turno)
-          if (abs(puntuacion) >= 10000) stop()
-        }
-      }
-
-      for (columna in 1:7) {
-        for (fila in 1:3) {
-          linea       <- tablero[fila:(fila + 3), columna]
-          coordenadas <- data.frame(x = 7 - (fila:(fila + 3)), y = columna, ficha = 3)
-          puntuacion  <- .evaluar_linea(linea, turno)
-          if (abs(puntuacion) >= 10000) stop()
-        }
-      }
-
-      for (fila in 1:3) {
-        for (columna in 1:4) {
-          linea <- c(tablero[fila,     columna],
-                     tablero[fila + 1, columna + 1],
-                     tablero[fila + 2, columna + 2],
-                     tablero[fila + 3, columna + 3])
-          coordenadas <- data.frame(x = 7 - (fila:(fila + 3)),
-                                    y = columna:(columna + 3), ficha = 3)
-          puntuacion  <- .evaluar_linea(linea, turno)
-          if (abs(puntuacion) >= 10000) stop()
-        }
-      }
-
-      for (fila in 1:3) {
-        for (columna in 4:7) {
-          linea <- c(tablero[fila,     columna],
-                     tablero[fila + 1, columna - 1],
-                     tablero[fila + 2, columna - 2],
-                     tablero[fila + 3, columna - 3])
-          coordenadas <- data.frame(x = 7 - (fila:(fila + 3)),
-                                    y = columna:(columna - 3), ficha = 3)
-          puntuacion  <- .evaluar_linea(linea, turno)
-          if (puntuacion >= 10000) stop()
+        if (all(tablero[cbind(filas, columnas)] == jugador)) {
+          return(data.frame(x = 7L - filas, y = columnas, ficha = 3L))
         }
       }
     }
+  }
 
-  }, error = function(e) {
-    return(coordenadas)
-  })
+  NULL
 }
 
 #' Visualizar el tablero de Conecta 4

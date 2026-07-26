@@ -6,9 +6,6 @@
 #'   (visualización, entrada del usuario, profundidad adaptativa) se gestiona
 #'   desde R.
 #'
-#'   Para una implementación equivalente íntegramente en R (más lenta pero
-#'   completamente legible), véase \code{\link{iniciar_partida_r}}.
-#'
 #' @param profundidad Profundidad de búsqueda del algoritmo minimax. Por defecto 5.
 #' @param turno Jugador que comienza: 1 para humano, 2 para IA. Por defecto 1.
 #' @param profAdaptative Lógico. Si \code{TRUE} ajusta la profundidad
@@ -30,8 +27,7 @@
 #' iniciar_partida(auto = TRUE, profundidad = 5)
 #' }
 #'
-#' @seealso \code{\link{iniciar_partida_r}}, \code{\link{minimax_r}},
-#'   \code{\link{evaluar_posicion_cpp}}
+#' @seealso \code{\link{minimax}}, \code{\link{evaluar_posicion}}
 #'
 #' @export
 iniciar_partida <- function(profundidad = 5, turno = 1,
@@ -47,7 +43,7 @@ iniciar_partida <- function(profundidad = 5, turno = 1,
   # Helpers internos que llaman al motor C++
   ia_mueve <- function(tab, prof, maximizandoIA) {
     tik <- system.time({
-      res <- minimax_r(tab, prof, maximizandoIA)
+      res <- minimax(tab, prof, maximizandoIA)
     })
     list(jugada     = res$jugada,
          puntuacion = res$puntuacion,
@@ -76,7 +72,7 @@ iniciar_partida <- function(profundidad = 5, turno = 1,
   }
 
   terminado <- function(tab) {
-    juego_terminado_cpp(tab)
+    juego_terminado(tab)
   }
 
   # Modo humano vs IA
@@ -93,7 +89,7 @@ iniciar_partida <- function(profundidad = 5, turno = 1,
       tablero <- turno_humano(tablero)
       p       <- visualizar_tablero(tablero)
       print(p)
-      cat(sprintf("valoracion HU: %d\n", evaluar_posicion_cpp(tablero)))
+      cat(sprintf("valoracion HU: %d\n", evaluar_posicion(tablero)))
 
       fin <- terminado(tablero)
       if (fin$finalizado) { resultado <- fin$resultado; break }

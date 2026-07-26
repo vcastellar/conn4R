@@ -32,8 +32,6 @@ Punto de entrada principal del paquete. Inicia una partida de
   (visualización, entrada del usuario, profundidad adaptativa) se gestiona
   desde R.
 
-  Para una implementación equivalente íntegramente en R (más lenta pero
-  completamente legible), véase \code{\link{iniciar_partida_r}}.
 }
 \examples{
 \dontrun{
@@ -49,6 +47,5 @@ iniciar_partida(auto = TRUE, profundidad = 5)
 
 }
 \seealso{
-\code{\link{iniciar_partida_r}}, \code{\link{minimax_r}},
-  \code{\link{evaluar_posicion_cpp}}
+\code{\link{minimax}}, \code{\link{evaluar_posicion}}
 }
