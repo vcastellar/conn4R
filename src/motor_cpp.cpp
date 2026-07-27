@@ -352,13 +352,60 @@ struct MMResult {
   int jugada; // col 0-based, -1 si no hay
 };
 
+// Devuelve las jugadas que ganan inmediatamente para un jugador. Además de
+// servir para ordenar, esta información permite no evaluar de forma estática
+// una posición "ruidosa" justo antes de un mate (efecto horizonte).
+static std::vector<int> jugadas_ganadoras(const Board& b, int turno) {
+  std::vector<int> ganadoras;
+  for (int c : available_cols(b)) {
+    Board nuevo = make_move(b, c, turno);
+    if (game_over(nuevo) == turno) ganadoras.push_back(c);
+  }
+  return ganadoras;
+}
+
+// Búsqueda de quiescencia específica de Conecta 4. En el horizonte solo se
+// prolongan las secuencias forzadas: ganar ahora o responder a una amenaza de
+// victoria inmediata. Así una evaluación a profundidad N nunca ignora que el
+// rival da mate en N+1. La recursión siempre añade una ficha y por tanto está
+// acotada por los huecos restantes del tablero.
+static MMResult buscar_tacticas(const Board& b, bool maximizandoIA,
+                                long long& nodes) {
+  int turno = maximizandoIA ? 2 : 1;
+  int oponente = maximizandoIA ? 1 : 2;
+
+  std::vector<int> propias = jugadas_ganadoras(b, turno);
+  if (!propias.empty()) {
+    Board victoria = make_move(b, propias[0], turno);
+    return {terminal_score(victoria, turno), propias[0]};
+  }
+
+  std::vector<int> rivales = jugadas_ganadoras(b, oponente);
+  if (rivales.empty()) return {evaluar_posicion_impl(b), -1};
+
+  // Dos casillas ganadoras distintas no pueden bloquearse con una sola ficha.
+  if (rivales.size() > 1) {
+    Board derrota = make_move(b, rivales[0], oponente);
+    return {terminal_score(derrota, oponente), -1};
+  }
+
+  // La única jugada no perdedora es ocupar la casilla amenazada. Tras hacerlo
+  // se vuelve a estabilizar la posición porque la ficha puede habilitar una
+  // nueva amenaza en la celda inmediatamente superior.
+  int bloqueo = rivales[0];
+  Board nuevo = make_move(b, bloqueo, turno);
+  nodes++;
+  MMResult res = buscar_tacticas(nuevo, !maximizandoIA, nodes);
+  return {res.puntuacion, bloqueo};
+}
+
 static MMResult minimax_cpp(const Board& b, int prof, bool maximizandoIA,
                              int alpha, int beta, TT& tt, long long& nodes) {
   nodes++;
 
   int go = game_over(b);
   if (go != 0) return {terminal_score(b, go), -1};
-  if (prof == 0) return {evaluar_posicion_impl(b), -1};
+  if (prof == 0) return buscar_tacticas(b, maximizandoIA, nodes);
 
   std::string key = tt_key(b);
   const TTEntry* hit = tt_lookup(tt, key, prof, alpha, beta);
@@ -445,7 +492,9 @@ static IntegerVector extract_pv(Board b, const TT& tt, int max_depth) {
 //' Motor minimax con alpha-beta y tabla de transposición (C++)
 //'
 //' @description Implementación C++ del algoritmo minimax con poda alpha-beta y
-//'   tabla de transposición interna. Devuelve además el conteo de nodos
+//'   tabla de transposición interna. En el horizonte aplica una búsqueda de
+//'   quiescencia que prolonga victorias y bloqueos inmediatos hasta alcanzar
+//'   una posición tácticamente estable. Devuelve además el conteo de nodos
 //'   evaluados y la variante
 //'   principal extraída de la tabla de transposición.
 //'

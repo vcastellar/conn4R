@@ -9,6 +9,20 @@ test_that("una victoria humana inmediata se bloquea a cualquier profundidad", {
   }
 })
 
+test_that("la búsqueda de quiescencia ve una victoria justo tras el horizonte", {
+  tablero <- matrix(0L, nrow = 6, ncol = 7)
+  tablero[6, 1:3] <- 1L
+  tablero[6, 5:6] <- 2L
+
+  # Aunque no queden plies normales, el turno humano gana en la columna 4.
+  resultado <- minimax(tablero, profundidad = 0L, maximizandoIA = FALSE)
+  expect_equal(resultado$jugada, 4L)
+  expect_lt(resultado$puntuacion, -1e9)
+
+  # Desde el ply anterior, la IA debe impedir ese mate fuera del horizonte.
+  expect_equal(minimax(tablero, profundidad = 1L, maximizandoIA = TRUE)$jugada, 4L)
+})
+
 test_that("una posición terminal puntúa por resultado y no por heurística", {
   tablero <- matrix(0L, nrow = 6, ncol = 7)
   tablero[6, 1:3] <- 1L

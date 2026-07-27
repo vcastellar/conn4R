@@ -27,9 +27,11 @@ Lista con cuatro elementos:
 }
 \description{
 Implementación C++ del algoritmo minimax con poda alpha-beta y
-  tabla de transposición interna. Es la versión de producción del paquete:
-  devuelve el conteo de nodos evaluados y la variante principal extraída
-  de la tabla de transposición.
+  tabla de transposición interna. En el horizonte aplica una búsqueda de
+  quiescencia que prolonga victorias y bloqueos inmediatos hasta alcanzar
+  una posición tácticamente estable. Devuelve además el conteo de nodos
+  evaluados y la variante
+  principal extraída de la tabla de transposición.
 }
 \examples{
 tablero <- crear_posicion_aleatoria(10)

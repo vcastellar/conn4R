@@ -4,7 +4,9 @@
 #' Motor minimax con alpha-beta y tabla de transposición (C++)
 #'
 #' @description Implementación C++ del algoritmo minimax con poda alpha-beta y
-#'   tabla de transposición interna. Devuelve además el conteo de nodos
+#'   tabla de transposición interna. En el horizonte aplica una búsqueda de
+#'   quiescencia que prolonga victorias y bloqueos inmediatos hasta alcanzar
+#'   una posición tácticamente estable. Devuelve además el conteo de nodos
 #'   evaluados y la variante
 #'   principal extraída de la tabla de transposición.
 #'
