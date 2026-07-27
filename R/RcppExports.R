@@ -4,7 +4,9 @@
 #' Motor minimax con alpha-beta y tabla de transposición (C++)
 #'
 #' @description Implementación C++ del algoritmo minimax con poda alpha-beta y
-#'   tabla de transposición interna. Devuelve además el conteo de nodos
+#'   tabla de transposición interna. En el horizonte aplica una búsqueda de
+#'   quiescencia que prolonga victorias y bloqueos inmediatos hasta alcanzar
+#'   una posición tácticamente estable. Devuelve además el conteo de nodos
 #'   evaluados y la variante
 #'   principal extraída de la tabla de transposición.
 #'
@@ -13,12 +15,15 @@
 #' @param maximizandoIA bool. \code{TRUE} si el turno actual es de la IA
 #'   (nodo MAX); \code{FALSE} si es del humano (nodo MIN).
 #'
-#' @return Lista con cuatro elementos:
+#' @return Lista con seis elementos:
 #' \describe{
 #'   \item{puntuacion}{int. Puntuación minimax de la posición raíz.}
 #'   \item{jugada}{int. Columna óptima (1-7) para el jugador en turno, o
 #'     \code{NA} si no hay jugadas disponibles.}
 #'   \item{nodos}{double. Número total de nodos evaluados durante la búsqueda.}
+#'   \item{nodos_normales}{double. Nodos visitados por minimax hasta el horizonte.}
+#'   \item{nodos_tacticos}{double. Nodos adicionales visitados por la búsqueda
+#'     de quiescencia después del horizonte.}
 #'   \item{variante}{IntegerVector. Secuencia de columnas (1-7) de la variante
 #'     principal extraída de la tabla de transposición.}
 #' }
