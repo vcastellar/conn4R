@@ -352,13 +352,72 @@ struct MMResult {
   int jugada; // col 0-based, -1 si no hay
 };
 
+struct SearchStats {
+  long long normales;
+  long long tacticos;
+};
+
+// Devuelve las jugadas que ganan inmediatamente para un jugador. Además de
+// servir para ordenar, esta información permite no evaluar de forma estática
+// una posición "ruidosa" justo antes de un mate (efecto horizonte).
+static std::vector<int> jugadas_ganadoras(const Board& b, int turno) {
+  std::vector<int> ganadoras;
+  for (int c : available_cols(b)) {
+    Board nuevo = make_move(b, c, turno);
+    if (game_over(nuevo) == turno) ganadoras.push_back(c);
+  }
+  return ganadoras;
+}
+
+// Búsqueda de quiescencia específica de Conecta 4. En el horizonte solo se
+// prolongan las secuencias forzadas: ganar ahora o responder a una amenaza de
+// victoria inmediata. Así una evaluación a profundidad N nunca ignora que el
+// rival da mate en N+1. La recursión siempre añade una ficha y por tanto está
+// acotada por los huecos restantes del tablero.
+static MMResult buscar_tacticas(const Board& b, bool maximizandoIA,
+                                SearchStats& stats) {
+  int turno = maximizandoIA ? 2 : 1;
+  int oponente = maximizandoIA ? 1 : 2;
+
+  std::vector<int> propias = jugadas_ganadoras(b, turno);
+  if (!propias.empty()) {
+    Board victoria = make_move(b, propias[0], turno);
+    stats.tacticos++;
+    return {terminal_score(victoria, turno), propias[0]};
+  }
+
+  std::vector<int> rivales = jugadas_ganadoras(b, oponente);
+  if (rivales.empty()) return {evaluar_posicion_impl(b), -1};
+
+  // Dos casillas ganadoras distintas no pueden bloquearse con una sola ficha.
+  // Se representa también el movimiento inútil del defensor antes del mate
+  // para que terminal_score conserve correctamente la distancia a la derrota.
+  if (rivales.size() > 1) {
+    Board defensa = make_move(b, rivales[0], turno);
+    stats.tacticos++;
+    std::vector<int> restantes = jugadas_ganadoras(defensa, oponente);
+    Board derrota = make_move(defensa, restantes[0], oponente);
+    stats.tacticos++;
+    return {terminal_score(derrota, oponente), -1};
+  }
+
+  // La única jugada no perdedora es ocupar la casilla amenazada. Tras hacerlo
+  // se vuelve a estabilizar la posición porque la ficha puede habilitar una
+  // nueva amenaza en la celda inmediatamente superior.
+  int bloqueo = rivales[0];
+  Board nuevo = make_move(b, bloqueo, turno);
+  stats.tacticos++;
+  MMResult res = buscar_tacticas(nuevo, !maximizandoIA, stats);
+  return {res.puntuacion, bloqueo};
+}
+
 static MMResult minimax_cpp(const Board& b, int prof, bool maximizandoIA,
-                             int alpha, int beta, TT& tt, long long& nodes) {
-  nodes++;
+                             int alpha, int beta, TT& tt, SearchStats& stats) {
+  stats.normales++;
 
   int go = game_over(b);
   if (go != 0) return {terminal_score(b, go), -1};
-  if (prof == 0) return {evaluar_posicion_impl(b), -1};
+  if (prof == 0) return buscar_tacticas(b, maximizandoIA, stats);
 
   std::string key = tt_key(b);
   const TTEntry* hit = tt_lookup(tt, key, prof, alpha, beta);
@@ -390,7 +449,7 @@ static MMResult minimax_cpp(const Board& b, int prof, bool maximizandoIA,
 
   for (const MoveScore& ms : moves) {
     Board nuevo = make_move(b, ms.col, turno);
-    MMResult res = minimax_cpp(nuevo, prof - 1, !maximizandoIA, alpha, beta, tt, nodes);
+    MMResult res = minimax_cpp(nuevo, prof - 1, !maximizandoIA, alpha, beta, tt, stats);
 
     if (maximizandoIA) {
       if (res.puntuacion > mejor_punt) {
@@ -445,7 +504,9 @@ static IntegerVector extract_pv(Board b, const TT& tt, int max_depth) {
 //' Motor minimax con alpha-beta y tabla de transposición (C++)
 //'
 //' @description Implementación C++ del algoritmo minimax con poda alpha-beta y
-//'   tabla de transposición interna. Devuelve además el conteo de nodos
+//'   tabla de transposición interna. En el horizonte aplica una búsqueda de
+//'   quiescencia que prolonga victorias y bloqueos inmediatos hasta alcanzar
+//'   una posición tácticamente estable. Devuelve además el conteo de nodos
 //'   evaluados y la variante
 //'   principal extraída de la tabla de transposición.
 //'
@@ -454,12 +515,15 @@ static IntegerVector extract_pv(Board b, const TT& tt, int max_depth) {
 //' @param maximizandoIA bool. \code{TRUE} si el turno actual es de la IA
 //'   (nodo MAX); \code{FALSE} si es del humano (nodo MIN).
 //'
-//' @return Lista con cuatro elementos:
+//' @return Lista con seis elementos:
 //' \describe{
 //'   \item{puntuacion}{int. Puntuación minimax de la posición raíz.}
 //'   \item{jugada}{int. Columna óptima (1-7) para el jugador en turno, o
 //'     \code{NA} si no hay jugadas disponibles.}
 //'   \item{nodos}{double. Número total de nodos evaluados durante la búsqueda.}
+//'   \item{nodos_normales}{double. Nodos visitados por minimax hasta el horizonte.}
+//'   \item{nodos_tacticos}{double. Nodos adicionales visitados por la búsqueda
+//'     de quiescencia después del horizonte.}
 //'   \item{variante}{IntegerVector. Secuencia de columnas (1-7) de la variante
 //'     principal extraída de la tabla de transposición.}
 //' }
@@ -477,14 +541,17 @@ static IntegerVector extract_pv(Board b, const TT& tt, int max_depth) {
 List minimax(IntegerMatrix tablero, int profundidad, bool maximizandoIA) {
   Board b = from_r(tablero);
   TT tt;
-  long long nodes = 0;
-  MMResult res = minimax_cpp(b, profundidad, maximizandoIA, INT_MIN, INT_MAX, tt, nodes);
+  SearchStats stats = {0, 0};
+  MMResult res = minimax_cpp(b, profundidad, maximizandoIA,
+                             INT_MIN, INT_MAX, tt, stats);
   IntegerVector pv = extract_pv(b, tt, profundidad);
   // Devolver jugada 1-indexada (como el resto del paquete)
   return List::create(
     Named("puntuacion") = res.puntuacion,
     Named("jugada")     = (res.jugada >= 0) ? (res.jugada + 1) : NA_INTEGER,
-    Named("nodos")      = (double)nodes,
+    Named("nodos")      = (double)(stats.normales + stats.tacticos),
+    Named("nodos_normales") = (double)stats.normales,
+    Named("nodos_tacticos") = (double)stats.tacticos,
     Named("variante")   = pv
   );
 }

@@ -48,6 +48,8 @@ iniciar_partida <- function(profundidad = 5, turno = 1,
     list(jugada     = res$jugada,
          puntuacion = res$puntuacion,
          nodos      = res$nodos,
+         nodos_normales = res$nodos_normales,
+         nodos_tacticos = res$nodos_tacticos,
          variante   = res$variante,
          tiempo     = tik[[3]])
   }
@@ -65,6 +67,8 @@ iniciar_partida <- function(profundidad = 5, turno = 1,
     cat(sprintf("jugada realizada: %d\n",     res$jugada))
     cat(sprintf("profundidad:      %d\n",     prof))
     cat(sprintf("nodos evaluados:  %.0f\n",   res$nodos))
+    cat(sprintf("nodos minimax:    %.0f\n",   res$nodos_normales))
+    cat(sprintf("nodos tácticos:   %.0f\n",   res$nodos_tacticos))
     cat(sprintf("nod/s:            %.0f\n",   nods_s))
     cat(sprintf("tiempo:           %.2f s\n", res$tiempo))
     cat(sprintf("variante:         %s\n",     paste(res$variante, collapse = " -> ")))

@@ -15,21 +15,26 @@ minimax(tablero, profundidad, maximizandoIA)
 (nodo MAX); \code{FALSE} si es del humano (nodo MIN).}
 }
 \value{
-Lista con cuatro elementos:
+Lista con seis elementos:
 \describe{
   \item{puntuacion}{int. Puntuación minimax de la posición raíz.}
   \item{jugada}{int. Columna óptima (1-7) para el jugador en turno, o
     \code{NA} si no hay jugadas disponibles.}
   \item{nodos}{double. Número total de nodos evaluados durante la búsqueda.}
+  \item{nodos_normales}{double. Nodos visitados por minimax hasta el horizonte.}
+  \item{nodos_tacticos}{double. Nodos adicionales visitados por la búsqueda
+    de quiescencia después del horizonte.}
   \item{variante}{IntegerVector. Secuencia de columnas (1-7) de la variante
     principal extraída de la tabla de transposición.}
 }
 }
 \description{
 Implementación C++ del algoritmo minimax con poda alpha-beta y
-  tabla de transposición interna. Es la versión de producción del paquete:
-  devuelve el conteo de nodos evaluados y la variante principal extraída
-  de la tabla de transposición.
+  tabla de transposición interna. En el horizonte aplica una búsqueda de
+  quiescencia que prolonga victorias y bloqueos inmediatos hasta alcanzar
+  una posición tácticamente estable. Devuelve además el conteo de nodos
+  evaluados y la variante
+  principal extraída de la tabla de transposición.
 }
 \examples{
 tablero <- crear_posicion_aleatoria(10)
