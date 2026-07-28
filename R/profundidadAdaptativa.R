@@ -13,7 +13,7 @@
 #'   profundidad cuesta menos nodos; esta función aprovecha ese margen para
 #'   aumentar automáticamente la profundidad sin superar el presupuesto original.
 #'
-#' @param tablero Matriz 6×7 con el estado actual del tablero.
+#' @param tablero Matriz de 6 x 7 con el estado actual del tablero.
 #' @param profundidad_base Entero. Profundidad mínima garantizada y referencia
 #'   para calcular el presupuesto de nodos (\code{7^profundidad_base}).
 #'   Por defecto \code{7}.

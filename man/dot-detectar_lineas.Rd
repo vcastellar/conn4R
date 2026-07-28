@@ -7,7 +7,7 @@
 .detectar_lineas(tablero)
 }
 \arguments{
-\item{tablero}{Matriz 6×7 con el estado del tablero.}
+\item{tablero}{Matriz de 6 x 7 con el estado del tablero.}
 }
 \value{
 Data frame con columnas \code{x}, \code{y} y \code{ficha} (valor 3)
@@ -16,7 +16,7 @@ Data frame con columnas \code{x}, \code{y} y \code{ficha} (valor 3)
 \description{
 Recorre todas las posibles líneas de 4 del tablero y devuelve
   las coordenadas de visualización de la primera línea ganadora encontrada
-  (puntuación ≥ 10 000), o \code{NULL} si no existe ninguna. Usada
+  (puntuación mayor o igual que 10 000), o \code{NULL} si no existe ninguna. Usada
   internamente por \code{\link{visualizar_tablero}} para resaltar en rojo
   las fichas ganadoras.
 }

@@ -7,7 +7,7 @@
 visualizar_tablero(tablero, ultima_jugada = NULL)
 }
 \arguments{
-\item{tablero}{Matriz 6×7 con el estado del tablero. Celdas: 0 vacío,
+\item{tablero}{Matriz de 6 x 7 con el estado del tablero. Celdas: 0 vacío,
 1 humano, 2 IA.}
 
 \item{ultima_jugada}{Coordenadas \code{c(fila, columna)} de la última ficha

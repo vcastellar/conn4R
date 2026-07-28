@@ -7,7 +7,7 @@
 visualizar_variante(tablero, turno, variante, lapso = 1)
 }
 \arguments{
-\item{tablero}{Matriz 6×7 con la posición inicial. Celdas: 0 vacío,
+\item{tablero}{Matriz de 6 x 7 con la posición inicial. Celdas: 0 vacío,
 1 humano, 2 IA.}
 
 \item{turno}{Jugador que realiza la primera jugada de \code{variante}:
@@ -19,7 +19,7 @@ visualizar_variante(tablero, turno, variante, lapso = 1)
 Puede usarse \code{0} para reproducir la variante sin espera.}
 }
 \value{
-Invisiblemente, la matriz 6×7 resultante después de reproducir toda
+Invisiblemente, la matriz de 6 x 7 resultante después de reproducir toda
   la variante.
 }
 \description{

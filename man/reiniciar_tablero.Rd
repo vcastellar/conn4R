@@ -7,7 +7,7 @@
 reiniciar_tablero()
 }
 \value{
-Matriz entera 6×7 inicializada a 0.
+Matriz entera de 6 x 7 inicializada a 0.
 }
 \description{
 Inicializa y devuelve un tablero de Conecta 4 vacío: una matriz

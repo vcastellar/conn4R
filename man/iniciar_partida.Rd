@@ -23,7 +23,7 @@ dinámicamente según las columnas disponibles. Por defecto \code{TRUE}.}
 intervención humana. Por defecto \code{FALSE}.}
 }
 \value{
-La matriz 6×7 con el estado final del tablero (invisible).
+La matriz de 6 x 7 con el estado final del tablero (invisible).
 }
 \description{
 Punto de entrada principal del paquete. Inicia una partida de

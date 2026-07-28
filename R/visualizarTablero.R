@@ -2,11 +2,11 @@
 #'
 #' @description Recorre todas las posibles líneas de 4 del tablero y devuelve
 #'   las coordenadas de visualización de la primera línea ganadora encontrada
-#'   (puntuación ≥ 10 000), o \code{NULL} si no existe ninguna. Usada
+#'   (puntuación mayor o igual que 10 000), o \code{NULL} si no existe ninguna. Usada
 #'   internamente por \code{\link{visualizar_tablero}} para resaltar en rojo
 #'   las fichas ganadoras.
 #'
-#' @param tablero Matriz 6×7 con el estado del tablero.
+#' @param tablero Matriz de 6 x 7 con el estado del tablero.
 #'
 #' @return Data frame con columnas \code{x}, \code{y} y \code{ficha} (valor 3)
 #'   para las 4 celdas de la línea ganadora, o \code{NULL} si no hay ganador.
@@ -42,7 +42,7 @@
 #'   rojo. Cuando se proporciona \code{ultima_jugada}, esa ficha se distingue
 #'   con un aro azul.
 #'
-#' @param tablero Matriz 6×7 con el estado del tablero. Celdas: 0 vacío,
+#' @param tablero Matriz de 6 x 7 con el estado del tablero. Celdas: 0 vacío,
 #'   1 humano, 2 IA.
 #' @param ultima_jugada Coordenadas \code{c(fila, columna)} de la última ficha
 #'   colocada, o \code{NULL} para no destacarla.
@@ -166,7 +166,7 @@ visualizar_tablero <- function(tablero, ultima_jugada = NULL) {
 #'   \code{\link{visualizar_tablero}} y, después de cada pausa, muestra la
 #'   posición resultante de la siguiente jugada.
 #'
-#' @param tablero Matriz 6×7 con la posición inicial. Celdas: 0 vacío,
+#' @param tablero Matriz de 6 x 7 con la posición inicial. Celdas: 0 vacío,
 #'   1 humano, 2 IA.
 #' @param turno Jugador que realiza la primera jugada de \code{variante}:
 #'   \code{1} (humano) o \code{2} (IA).
@@ -174,7 +174,7 @@ visualizar_tablero <- function(tablero, ultima_jugada = NULL) {
 #' @param lapso Segundos de espera entre posiciones. Por defecto, 1 segundo.
 #'   Puede usarse \code{0} para reproducir la variante sin espera.
 #'
-#' @return Invisiblemente, la matriz 6×7 resultante después de reproducir toda
+#' @return Invisiblemente, la matriz de 6 x 7 resultante después de reproducir toda
 #'   la variante.
 #'
 #' @examples

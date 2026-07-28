@@ -13,7 +13,7 @@
 #' @param auto Lógico. Si \code{TRUE} la IA juega contra sí misma sin
 #'   intervención humana. Por defecto \code{FALSE}.
 #'
-#' @return La matriz 6×7 con el estado final del tablero (invisible).
+#' @return La matriz de 6 x 7 con el estado final del tablero (invisible).
 #'
 #' @examples
 #' \dontrun{
