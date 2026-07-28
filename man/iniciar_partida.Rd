@@ -31,7 +31,6 @@ Punto de entrada principal del paquete. Inicia una partida de
   la evaluación estática y la detección de fin de partida. La interfaz
   (visualización, entrada del usuario, profundidad adaptativa) se gestiona
   desde R.
-
 }
 \examples{
 \dontrun{

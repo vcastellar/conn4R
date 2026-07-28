@@ -20,19 +20,20 @@ Puede usarse \code{0} para reproducir la variante sin espera.}
 }
 \value{
 Invisiblemente, la matriz 6×7 resultante después de reproducir toda
-la variante.
+  la variante.
 }
 \description{
 Reproduce sobre un tablero una secuencia de jugadas alternando
-los jugadores. Muestra primero la posición inicial mediante
-\code{\link{visualizar_tablero}} y, después de cada pausa, muestra la
-posición resultante de la siguiente jugada.
+  los jugadores. Muestra primero la posición inicial mediante
+  \code{\link{visualizar_tablero}} y, después de cada pausa, muestra la
+  posición resultante de la siguiente jugada.
 }
 \examples{
 \dontrun{
 tablero <- reiniciar_tablero()
 visualizar_variante(tablero, turno = 1, variante = c(4, 4, 3, 5))
 }
+
 }
 \seealso{
 \code{\link{visualizar_tablero}}, \code{\link{realizar_jugada}}

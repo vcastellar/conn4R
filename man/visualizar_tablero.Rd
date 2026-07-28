@@ -8,7 +8,7 @@ visualizar_tablero(tablero, ultima_jugada = NULL)
 }
 \arguments{
 \item{tablero}{Matriz 6×7 con el estado del tablero. Celdas: 0 vacío,
-  1 humano, 2 IA.}
+1 humano, 2 IA.}
 
 \item{ultima_jugada}{Coordenadas \code{c(fila, columna)} de la última ficha
 colocada, o \code{NULL} para no destacarla.}
@@ -21,9 +21,9 @@ Objeto \code{ggplot} listo para imprimir con \code{print()} o
 Genera un gráfico \pkg{ggplot2} del estado actual del tablero.
   Las fichas del jugador 1 (humano) se muestran en color \emph{papayawhip}
   (crema), las del jugador 2 (IA) en gris oscuro y las casillas vacías en
-blanco. Si existe una línea ganadora, sus cuatro celdas se resaltan en
-rojo. Cuando se proporciona \code{ultima_jugada}, esa ficha se distingue
-con un aro azul.
+  blanco. Si existe una línea ganadora, sus cuatro celdas se resaltan en
+  rojo. Cuando se proporciona \code{ultima_jugada}, esa ficha se distingue
+  con un aro azul.
 }
 \examples{
 tablero <- crear_posicion_aleatoria(21)
