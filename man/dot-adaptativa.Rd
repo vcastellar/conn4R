@@ -7,7 +7,7 @@
 .adaptativa(tablero, profundidad_base = 7, profundidad_max = 15)
 }
 \arguments{
-\item{tablero}{Matriz 6×7 con el estado actual del tablero.}
+\item{tablero}{Matriz de 6 x 7 con el estado actual del tablero.}
 
 \item{profundidad_base}{Entero. Profundidad mínima garantizada y referencia
 para calcular el presupuesto de nodos (\code{7^profundidad_base}).

@@ -7,7 +7,7 @@
 jugadas_disponibles(tablero)
 }
 \arguments{
-\item{tablero}{IntegerMatrix 6×7. Estado del tablero.}
+\item{tablero}{IntegerMatrix de 6 x 7. Estado del tablero.}
 }
 \value{
 IntegerVector con los índices de columna disponibles (1-indexados).

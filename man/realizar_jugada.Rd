@@ -7,7 +7,7 @@
 realizar_jugada(tablero, columna, jugador)
 }
 \arguments{
-\item{tablero}{IntegerMatrix 6×7. Estado del tablero.}
+\item{tablero}{IntegerMatrix de 6 x 7. Estado del tablero.}
 
 \item{columna}{int. Columna donde se deposita la ficha (1-7, 1-indexado).}
 
@@ -15,7 +15,7 @@ realizar_jugada(tablero, columna, jugador)
 \code{2} (IA).}
 }
 \value{
-IntegerMatrix 6×7 con la ficha insertada.
+IntegerMatrix de 6 x 7 con la ficha insertada.
 }
 \description{
 Deposita una

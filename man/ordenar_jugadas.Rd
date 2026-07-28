@@ -7,7 +7,7 @@
 ordenar_jugadas(tablero, turno)
 }
 \arguments{
-\item{tablero}{IntegerMatrix 6×7. Estado del tablero.}
+\item{tablero}{IntegerMatrix de 6 x 7. Estado del tablero.}
 
 \item{turno}{int. Jugador en turno: \code{1} (humano) o \code{2} (IA).}
 }

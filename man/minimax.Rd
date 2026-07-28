@@ -7,7 +7,7 @@
 minimax(tablero, profundidad, maximizandoIA)
 }
 \arguments{
-\item{tablero}{IntegerMatrix 6×7. Estado del tablero: 0 vacío, 1 humano, 2 IA.}
+\item{tablero}{IntegerMatrix de 6 x 7. Estado del tablero: 0 vacío, 1 humano, 2 IA.}
 
 \item{profundidad}{int. Profundidad máxima del árbol de búsqueda.}
 

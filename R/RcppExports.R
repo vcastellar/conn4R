@@ -10,7 +10,7 @@
 #'   evaluados y la variante
 #'   principal extraída de la tabla de transposición.
 #'
-#' @param tablero IntegerMatrix 6×7. Estado del tablero: 0 vacío, 1 humano, 2 IA.
+#' @param tablero IntegerMatrix de 6 x 7. Estado del tablero: 0 vacío, 1 humano, 2 IA.
 #' @param profundidad int. Profundidad máxima del árbol de búsqueda.
 #' @param maximizandoIA bool. \code{TRUE} si el turno actual es de la IA
 #'   (nodo MAX); \code{FALSE} si es del humano (nodo MIN).
@@ -37,6 +37,7 @@
 #' res$variante
 #'
 #' @seealso \code{\link{evaluar_posicion}}, \code{\link{iniciar_partida}}
+#' @export
 minimax <- function(tablero, profundidad, maximizandoIA) {
     .Call(`_conn4R_minimax`, tablero, profundidad, maximizandoIA)
 }
@@ -49,7 +50,7 @@ minimax <- function(tablero, profundidad, maximizandoIA) {
 #'   apiladas y conectividad de piezas. El resultado se expresa siempre desde
 #'   la perspectiva de la IA (jugador 2): positivo = ventaja IA.
 #'
-#' @param tablero IntegerMatrix 6×7. Estado del tablero: 0 vacío, 1 humano, 2 IA.
+#' @param tablero IntegerMatrix de 6 x 7. Estado del tablero: 0 vacío, 1 humano, 2 IA.
 #'
 #' @return int. Puntuación estática de la posición.
 #'
@@ -58,6 +59,7 @@ minimax <- function(tablero, profundidad, maximizandoIA) {
 #' evaluar_posicion(tablero)
 #'
 #' @seealso \code{\link{minimax}}
+#' @export
 evaluar_posicion <- function(tablero) {
     .Call(`_conn4R_evaluar_posicion`, tablero)
 }
@@ -67,7 +69,7 @@ evaluar_posicion <- function(tablero) {
 #' @description Comprueba si el tablero es un estado terminal (victoria o
 #'   empate).
 #'
-#' @param tablero IntegerMatrix 6×7. Estado del tablero.
+#' @param tablero IntegerMatrix de 6 x 7. Estado del tablero.
 #'
 #' @return Lista con dos elementos:
 #' \describe{
@@ -81,6 +83,7 @@ evaluar_posicion <- function(tablero) {
 #' tablero <- crear_posicion_aleatoria(10)
 #' juego_terminado(tablero)
 #'
+#' @export
 juego_terminado <- function(tablero) {
     .Call(`_conn4R_juego_terminado`, tablero)
 }
@@ -92,12 +95,12 @@ juego_terminado <- function(tablero) {
 #'   fila libre más baja). Si la columna está llena devuelve el tablero sin
 #'   modificar.
 #'
-#' @param tablero IntegerMatrix 6×7. Estado del tablero.
+#' @param tablero IntegerMatrix de 6 x 7. Estado del tablero.
 #' @param columna int. Columna donde se deposita la ficha (1-7, 1-indexado).
 #' @param jugador int. Identificador del jugador: \code{1} (humano) o
 #'   \code{2} (IA).
 #'
-#' @return IntegerMatrix 6×7 con la ficha insertada.
+#' @return IntegerMatrix de 6 x 7 con la ficha insertada.
 #'
 #' @examples
 #' tablero <- reiniciar_tablero()
@@ -105,6 +108,7 @@ juego_terminado <- function(tablero) {
 #' tablero <- realizar_jugada(tablero, columna = 4L, jugador = 2L)
 #' visualizar_tablero(tablero)
 #'
+#' @export
 realizar_jugada <- function(tablero, columna, jugador) {
     .Call(`_conn4R_realizar_jugada`, tablero, columna, jugador)
 }
@@ -114,7 +118,7 @@ realizar_jugada <- function(tablero, columna, jugador) {
 #' @description Devuelve los
 #'   índices (1-7) de las columnas que no están completamente llenas.
 #'
-#' @param tablero IntegerMatrix 6×7. Estado del tablero.
+#' @param tablero IntegerMatrix de 6 x 7. Estado del tablero.
 #'
 #' @return IntegerVector con los índices de columna disponibles (1-indexados).
 #'
@@ -123,6 +127,7 @@ realizar_jugada <- function(tablero, columna, jugador) {
 #' jugadas_disponibles(tablero)
 #'
 #' @seealso \code{\link{ordenar_jugadas}}
+#' @export
 jugadas_disponibles <- function(tablero) {
     .Call(`_conn4R_jugadas_disponibles`, tablero)
 }
@@ -139,7 +144,7 @@ jugadas_disponibles <- function(tablero) {
 #'       + |eval_oponente| tras el movimiento).
 #'   }
 #'
-#' @param tablero IntegerMatrix 6×7. Estado del tablero.
+#' @param tablero IntegerMatrix de 6 x 7. Estado del tablero.
 #' @param turno int. Jugador en turno: \code{1} (humano) o \code{2} (IA).
 #'
 #' @return Data frame con columnas:
@@ -153,7 +158,7 @@ jugadas_disponibles <- function(tablero) {
 #' ordenar_jugadas(tablero, turno = 2L)
 #'
 #' @seealso \code{\link{minimax}}
+#' @export
 ordenar_jugadas <- function(tablero, turno) {
     .Call(`_conn4R_ordenar_jugadas`, tablero, turno)
 }
-

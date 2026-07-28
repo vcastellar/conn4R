@@ -14,7 +14,7 @@
 #'   parte inferior (las piezas caen por gravedad hasta la primera fila libre
 #'   desde abajo).
 #'
-#' @return Matriz entera 6×7 inicializada a 0.
+#' @return Matriz entera de 6 x 7 inicializada a 0.
 #'
 #' @examples
 #' tablero <- reiniciar_tablero()
