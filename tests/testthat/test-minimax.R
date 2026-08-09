@@ -84,3 +84,10 @@ test_that("la posición aleatoria reproducible conserva el bloqueo en búsquedas
   expect_equal(minimax(tablero, 5L, TRUE)$jugada, 3L)
   expect_equal(minimax(tablero, 10L, TRUE)$jugada, 3L)
 })
+
+test_that("el motor C++ está cargado y sus rutinas están registradas", {
+  simbolo <- getNativeSymbolInfo("_conn4R_minimax", PACKAGE = "conn4R")
+
+  expect_s3_class(simbolo, "NativeSymbolInfo")
+  expect_equal(simbolo$numParameters, 3L)
+})
