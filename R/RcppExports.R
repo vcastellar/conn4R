@@ -38,7 +38,7 @@
 #'
 #' @seealso \code{\link{evaluar_posicion}}, \code{\link{iniciar_partida}}
 minimax <- function(tablero, profundidad, maximizandoIA) {
-    .Call('_conn4R_minimax', PACKAGE = 'conn4R', tablero, profundidad, maximizandoIA)
+    .Call(`_conn4R_minimax`, tablero, profundidad, maximizandoIA)
 }
 
 #' Evaluación estática de una posición (C++)
@@ -59,7 +59,7 @@ minimax <- function(tablero, profundidad, maximizandoIA) {
 #'
 #' @seealso \code{\link{minimax}}
 evaluar_posicion <- function(tablero) {
-    .Call('_conn4R_evaluar_posicion', PACKAGE = 'conn4R', tablero)
+    .Call(`_conn4R_evaluar_posicion`, tablero)
 }
 
 #' Detectar fin de partida (C++)
@@ -82,7 +82,7 @@ evaluar_posicion <- function(tablero) {
 #' juego_terminado(tablero)
 #'
 juego_terminado <- function(tablero) {
-    .Call('_conn4R_juego_terminado', PACKAGE = 'conn4R', tablero)
+    .Call(`_conn4R_juego_terminado`, tablero)
 }
 
 #' Colocar una ficha en el tablero (C++)
@@ -106,7 +106,7 @@ juego_terminado <- function(tablero) {
 #' visualizar_tablero(tablero)
 #'
 realizar_jugada <- function(tablero, columna, jugador) {
-    .Call('_conn4R_realizar_jugada', PACKAGE = 'conn4R', tablero, columna, jugador)
+    .Call(`_conn4R_realizar_jugada`, tablero, columna, jugador)
 }
 
 #' Columnas disponibles (C++)
@@ -124,7 +124,7 @@ realizar_jugada <- function(tablero, columna, jugador) {
 #'
 #' @seealso \code{\link{ordenar_jugadas}}
 jugadas_disponibles <- function(tablero) {
-    .Call('_conn4R_jugadas_disponibles', PACKAGE = 'conn4R', tablero)
+    .Call(`_conn4R_jugadas_disponibles`, tablero)
 }
 
 #' Ordenar jugadas por heurística (C++)
@@ -154,6 +154,6 @@ jugadas_disponibles <- function(tablero) {
 #'
 #' @seealso \code{\link{minimax}}
 ordenar_jugadas <- function(tablero, turno) {
-    .Call('_conn4R_ordenar_jugadas', PACKAGE = 'conn4R', tablero, turno)
+    .Call(`_conn4R_ordenar_jugadas`, tablero, turno)
 }
 
