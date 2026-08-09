@@ -33,9 +33,25 @@
 iniciar_partida <- function(profundidad = 5, turno = 1,
                             profAdaptative = TRUE, auto = FALSE) {
 
+  # RStudio termina de pintar su dispositivo gráfico desde el bucle de eventos.
+  # Si minimax entra inmediatamente en C++, ese repintado queda pendiente y el
+  # panel puede aparecer en blanco durante toda la búsqueda. Forzar el vaciado
+  # y ceder brevemente el control garantiza que el tablero ya sea visible antes
+  # de bloquear la sesión con el cálculo de la IA.
+  mostrar_tablero <- function(tab, ultima_jugada = NULL) {
+    grDevices::dev.hold()
+    dispositivo_retenido <- TRUE
+    on.exit(if (dispositivo_retenido) grDevices::dev.flush(), add = TRUE)
+    print(visualizar_tablero(tab, ultima_jugada))
+    grDevices::dev.flush()
+    dispositivo_retenido <- FALSE
+    flush.console()
+    Sys.sleep(0.01)
+    invisible(NULL)
+  }
+
   tablero  <- reiniciar_tablero()
-  p        <- visualizar_tablero(tablero)
-  print(p)
+  mostrar_tablero(tablero)
   i        <- 1
   j        <- 0
   resultado <- "DRAW"
@@ -58,8 +74,7 @@ iniciar_partida <- function(profundidad = 5, turno = 1,
     res <- ia_mueve(tab, prof, max_ia)
     tab <- realizar_jugada(tab, res$jugada, turno_actual)
     fila <- min(which(tab[, res$jugada] != 0L))
-    p   <- visualizar_tablero(tab, c(fila, res$jugada))
-    print(p)
+    mostrar_tablero(tab, c(fila, res$jugada))
     cat("\n")
     nods_s <- if (res$tiempo > 0) round(res$nodos / res$tiempo) else NA
     cat("-----------------------------------------------------------------\n")
@@ -94,8 +109,7 @@ iniciar_partida <- function(profundidad = 5, turno = 1,
       tablero_anterior <- tablero
       tablero <- turno_humano(tablero)
       ultima_jugada <- which(tablero != tablero_anterior, arr.ind = TRUE)
-      p       <- visualizar_tablero(tablero, ultima_jugada[1, ])
-      print(p)
+      mostrar_tablero(tablero, ultima_jugada[1, ])
       cat(sprintf("valoracion HU: %d\n", evaluar_posicion(tablero)))
 
       fin <- terminado(tablero)
