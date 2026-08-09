@@ -415,6 +415,12 @@ static MMResult minimax_cpp(const Board& b, int prof, bool maximizandoIA,
                              int alpha, int beta, TT& tt, SearchStats& stats) {
   stats.normales++;
 
+  // Una búsqueda profunda puede mantener ocupado el hilo principal durante
+  // varios segundos. Cederlo periódicamente permite que R/RStudio procese el
+  // repintado pendiente del dispositivo gráfico (y hace cancelable minimax)
+  // sin pagar el coste de consultar las interrupciones en cada nodo.
+  if ((stats.normales & 4095LL) == 0) Rcpp::checkUserInterrupt();
+
   int go = game_over(b);
   if (go != 0) return {terminal_score(b, go), -1};
   if (prof == 0) return buscar_tacticas(b, maximizandoIA, stats);

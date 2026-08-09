@@ -36,8 +36,9 @@ iniciar_partida <- function(profundidad = 5, turno = 1,
   # RStudio termina de pintar su dispositivo gráfico desde el bucle de eventos.
   # Si minimax entra inmediatamente en C++, ese repintado queda pendiente y el
   # panel puede aparecer en blanco durante toda la búsqueda. Forzar el vaciado
-  # y ceder brevemente el control garantiza que el tablero ya sea visible antes
-  # de bloquear la sesión con el cálculo de la IA.
+  # y dejar tiempo suficiente al dispositivo para completar el repintado hace
+  # que el tablero quede visible antes de comenzar el cálculo de la IA. Durante
+  # la búsqueda, el motor C++ también atiende periódicamente el bucle de eventos.
   mostrar_tablero <- function(tab, ultima_jugada = NULL) {
     grDevices::dev.hold()
     dispositivo_retenido <- TRUE
@@ -46,7 +47,7 @@ iniciar_partida <- function(profundidad = 5, turno = 1,
     grDevices::dev.flush()
     dispositivo_retenido <- FALSE
     flush.console()
-    Sys.sleep(0.01)
+    Sys.sleep(0.1)
     invisible(NULL)
   }
 
