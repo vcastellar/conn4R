@@ -62,8 +62,6 @@
 #'
 #' @export
 visualizar_tablero <- function(tablero, ultima_jugada = NULL) {
-  library(ggplot2)
-
   if (!is.null(ultima_jugada) &&
       (length(ultima_jugada) != 2L || anyNA(ultima_jugada) ||
        any(!is.finite(ultima_jugada)) ||
