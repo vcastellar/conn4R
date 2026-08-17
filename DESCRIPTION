@@ -1,16 +1,22 @@
 Package: conn4R
 Type: Package
-Title: Conecta 4 con Motor de IA en C++ via Rcpp
-Version: 0.1.3
-Author: Vicente Castellar Sebastiá <vic.sebastia@gmail.com>
-Maintainer: Vicente Castellar Sebastiá <vic.sebastia@gmail.com>
+Title: Conecta 4 con Motor de IA en 'C++' via 'Rcpp'
+Version: 0.2.0
+Authors@R:
+    person("Vicente", "Castellar Sebastiá",
+           email = "vic.sebastia@gmail.com",
+           role = c("aut", "cre"))
 Description: Implementación de Conecta 4 con inteligencia artificial basada en
     el algoritmo minimax con poda alfa-beta, tabla de transposición y evaluación
-    estática de posición. El motor principal está compilado en C++ via Rcpp para
-    máximo rendimiento. Las funciones R proporcionan exclusivamente la interfaz,
-    la visualización y las utilidades de juego.
+    estática de posición. El motor principal está compilado en 'C++' via 'Rcpp'
+    para máximo rendimiento. Las funciones R proporcionan la interfaz de juego,
+    la introducción y el análisis de posiciones, la visualización y las
+    utilidades de partida.
 License: GPL-3
 Encoding: UTF-8
+Language: es
+URL: https://github.com/vcastellar/conn4r
+BugReports: https://github.com/vcastellar/conn4r/issues
 RoxygenNote: 7.3.2
 Imports:
   ggplot2,

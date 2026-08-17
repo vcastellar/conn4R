@@ -1,0 +1,75 @@
+#' Introducir una posición a partir de una secuencia de jugadas
+#'
+#' @description Construye un tablero de Conecta 4 reproduciendo, sobre un
+#'   tablero vacío, una secuencia de jugadas (columnas) que alternan entre los
+#'   dos jugadores. Es la forma recomendada de introducir una posición concreta
+#'   para después analizarla con \code{\link{analizar_posicion}} o continuar la
+#'   partida: al reproducir jugadas legales, la posición resultante siempre es
+#'   alcanzable en una partida real.
+#'
+#' @param jugadas Vector de columnas (enteros entre 1 y 7) que se juegan en
+#'   orden. La primera jugada la realiza \code{turno_inicial}, y a partir de ahí
+#'   los jugadores se van alternando. Por defecto \code{integer()} (tablero
+#'   vacío).
+#' @param turno_inicial Jugador que realiza la primera jugada de \code{jugadas}:
+#'   \code{1} (humano) o \code{2} (IA). Por defecto \code{1}.
+#'
+#' @return Matriz entera de 6 x 7 con la posición resultante. Celdas: 0 vacío,
+#'   1 humano, 2 IA.
+#'
+#' @details La función valida cada jugada antes de aplicarla: la columna debe
+#'   estar entre 1 y 7 y no estar llena, y la partida no puede haber terminado
+#'   antes de completar la secuencia. Si alguna jugada es ilegal se detiene con
+#'   un mensaje indicando la jugada problemática.
+#'
+#' @examples
+#' # Apertura central seguida de respuestas alternas (humano abre)
+#' tablero <- crear_posicion(c(4, 4, 3, 5))
+#' visualizar_tablero(tablero)
+#'
+#' # La IA abre la partida
+#' tablero <- crear_posicion(c(4, 3), turno_inicial = 2)
+#' sum(tablero == 2)  # 1 ficha de la IA
+#'
+#' @seealso \code{\link{analizar_posicion}}, \code{\link{realizar_jugada}},
+#'   \code{\link{reiniciar_tablero}}
+#'
+#' @export
+crear_posicion <- function(jugadas = integer(), turno_inicial = 1) {
+  if (length(turno_inicial) != 1L || is.na(turno_inicial) ||
+      !turno_inicial %in% c(1, 2)) {
+    stop("`turno_inicial` debe ser 1 (humano) o 2 (IA).", call. = FALSE)
+  }
+
+  tablero <- reiniciar_tablero()
+
+  if (length(jugadas) == 0L) {
+    return(tablero)
+  }
+
+  if (!is.numeric(jugadas) || anyNA(jugadas) || any(!is.finite(jugadas)) ||
+      any(jugadas != as.integer(jugadas)) || any(!jugadas %in% 1:7)) {
+    stop("`jugadas` debe contener columnas enteras entre 1 y 7.", call. = FALSE)
+  }
+
+  jugador <- as.integer(turno_inicial)
+
+  for (i in seq_along(jugadas)) {
+    if (juego_terminado(tablero)$finalizado) {
+      stop(sprintf("La partida ya había terminado antes de la jugada %d.", i),
+           call. = FALSE)
+    }
+
+    columna <- as.integer(jugadas[[i]])
+    if (!columna %in% jugadas_disponibles(tablero)) {
+      stop(sprintf(
+        "La jugada %d no es válida: la columna %d está llena.", i, columna),
+        call. = FALSE)
+    }
+
+    tablero <- realizar_jugada(tablero, columna, jugador)
+    jugador <- 3L - jugador
+  }
+
+  tablero
+}

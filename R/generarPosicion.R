@@ -1,12 +1,13 @@
 #' Crear posición aleatoria
 #'
-#' @description crea un tablero aleatorio de cierta profundidad
+#' @description Crea un tablero aleatorio simulando \code{profundidad} jugadas
+#'   legales al azar entre los dos jugadores (el humano abre). Si la secuencia
+#'   produce una victoria antes de completar todas las jugadas, se descarta y se
+#'   vuelve a generar, de modo que el tablero devuelto no es una posición
+#'   terminal (salvo que el tablero se llene por completo).
 #' @param profundidad número de jugadas que se simulan aleatoriamente
-#' @return Una lista con los siguientes elementos
-#' \itemize{
-#'   \item tablero - matriz 6 x 7 que representa el tablero generado
-#'   \item turnoUltimo - turno del jugador que ha realizado la última jugada en el tablero generado
-#' }
+#' @return Matriz entera de 6 x 7 con la posición generada. Celdas: 0 vacío,
+#'   1 humano, 2 IA.
 #' @examples
 #' tablero <- crear_posicion_aleatoria(21)
 #' visualizar_tablero(tablero)

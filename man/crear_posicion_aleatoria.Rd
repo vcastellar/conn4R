@@ -10,14 +10,15 @@ crear_posicion_aleatoria(profundidad = 10)
 \item{profundidad}{número de jugadas que se simulan aleatoriamente}
 }
 \value{
-Una lista con los siguientes elementos
-\itemize{
-  \item tablero - matriz 6 x 7 que representa el tablero generado
-  \item turnoUltimo - turno del jugador que ha realizado la última jugada en el tablero generado
-}
+Matriz entera de 6 x 7 con la posición generada. Celdas: 0 vacío,
+1 humano, 2 IA.
 }
 \description{
-crea un tablero aleatorio de cierta profundidad
+Crea un tablero aleatorio simulando \code{profundidad} jugadas
+  legales al azar entre los dos jugadores (el humano abre). Si la secuencia
+  produce una victoria antes de completar todas las jugadas, se descarta y se
+  vuelve a generar, de modo que el tablero devuelto no es una posición
+  terminal (salvo que el tablero se llene por completo).
 }
 \examples{
 tablero <- crear_posicion_aleatoria(21)
