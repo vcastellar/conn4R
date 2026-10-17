@@ -45,6 +45,11 @@ iniciar_partida(turno = 2)
 iniciar_partida(auto = TRUE)
 ```
 
+En las partidas contra la IA, el humano elige su jugada **pulsando con el ratón
+sobre cualquier celda de la columna** deseada en el tablero dibujado. Si el
+dispositivo gráfico no admite clics (o con `iniciar_partida(raton = FALSE)`),
+la columna se escribe por teclado.
+
 ### 2. Introducir una posición
 
 `crear_posicion()` construye un tablero reproduciendo una secuencia de jugadas

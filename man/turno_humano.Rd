@@ -4,13 +4,19 @@
 \alias{turno_humano}
 \title{solicita una jugada al humano.}
 \usage{
-turno_humano(tablero, jugada = NULL)
+turno_humano(tablero, jugada = NULL, raton = TRUE)
 }
 \arguments{
 \item{tablero}{matriz 6 x 7 que representa la situación del tablero de juego.}
 
 \item{jugada}{un entero del 1 al 7 correspondiente a cada una de las 7 columnas
 si jugada = NULL (valor por defecto), entonces invita al jugador a introducir su jugada}
+
+\item{raton}{Lógico. Si \code{TRUE} (valor por defecto) y el dispositivo
+gráfico activo lo permite, la jugada se elige pulsando con el ratón sobre
+cualquier celda de la columna deseada en el tablero dibujado por
+\code{\link{visualizar_tablero}}. Si \code{FALSE}, o si el dispositivo no
+admite clics, la columna se escribe por teclado.}
 }
 \description{
 la función invita al jugador humano a introducir una jugada
@@ -22,6 +28,10 @@ tablero mediante un 2.
 # Si la jugada es legal representa la jugada del humano en el tablero mediante un 1
 en la casilla que corresponda a la jugada
 Si la jugada introducida es ilegal, vuelve a solicitar una jugada legal
+
+Al jugar con el ratón, pulsar fuera del tablero o sobre una columna llena
+vuelve a solicitar la jugada. Si se cancela la selección (tecla Esc o botón
+derecho, según el dispositivo), la jugada se pide por teclado.
 }
 \examples{
 tablero <- reiniciar_tablero()
@@ -29,6 +39,7 @@ tablero <- turno_humano(tablero, jugada = 4)
 visualizar_tablero(tablero)
 # tambien se puede hacer lo siguiente (no ejecutar):
 # tablero <- reiniciar_tablero()
-# tablero <- turno_humano(tablero)
+# print(visualizar_tablero(tablero))
+# tablero <- turno_humano(tablero)  # pulsar sobre una columna del tablero
 # visualizar_tablero(tablero)
 }
