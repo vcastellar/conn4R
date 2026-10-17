@@ -10,38 +10,22 @@ export(turno_humano)
 export(visualizar_tablero)
 export(visualizar_variante)
 importFrom(Rcpp,evalCpp)
-<<<<<<< HEAD
-importFrom(ggplot2,aes)
-importFrom(ggplot2,coord_fixed)
-importFrom(ggplot2,element_rect)
-importFrom(ggplot2,element_text)
-importFrom(ggplot2,geom_polygon)
-importFrom(ggplot2,geom_segment)
-importFrom(ggplot2,geom_text)
-importFrom(ggplot2,ggplot)
-importFrom(ggplot2,guide_legend)
-importFrom(ggplot2,guides)
-importFrom(ggplot2,labs)
-importFrom(ggplot2,margin)
-importFrom(ggplot2,scale_alpha_identity)
-importFrom(ggplot2,scale_fill_manual)
-importFrom(ggplot2,theme)
-importFrom(ggplot2,theme_void)
-=======
 importFrom(ggplot2,
   aes,
   coord_fixed,
+  element_rect,
   element_text,
-  geom_point,
+  geom_polygon,
   geom_segment,
   geom_text,
   ggplot,
+  guide_legend,
+  guides,
   labs,
+  margin,
+  scale_alpha_identity,
   scale_fill_manual,
-  scale_x_continuous,
-  scale_y_continuous,
   theme,
   theme_void
 )
->>>>>>> b6ce800 (documentacion)
 useDynLib(conn4R, .registration = TRUE)
