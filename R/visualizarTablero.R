@@ -20,6 +20,10 @@
   radio_ganadora = 0.085
 )
 
+# Límites de los ejes del gráfico del tablero (unidades de celda). Se comparten
+# con turno_humano() para traducir un clic del ratón a una columna.
+.limites_tablero <- list(x = c(0.3, 7.7), y = c(0.25, 7.2))
+
 #' Detectar y devolver las coordenadas de la línea ganadora
 #'
 #' @description Recorre todas las posibles líneas de 4 del tablero y devuelve
@@ -243,7 +247,8 @@ visualizar_tablero <- function(tablero, ultima_jugada = NULL) {
       override.aes = list(shape = 21, size = 6, stroke = 0.6,
                         colour = est$ficha_borde, alpha = 1)
     )) +
-    coord_fixed(xlim = c(0.3, 7.7), ylim = c(0.25, 7.2), expand = FALSE) +
+    coord_fixed(xlim = .limites_tablero$x, ylim = .limites_tablero$y,
+                expand = FALSE) +
     labs(title = "Conecta 4", subtitle = estado) +
     theme_void(base_size = 12) +
     theme(

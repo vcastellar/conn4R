@@ -12,6 +12,10 @@
 #'   dinámicamente según las columnas disponibles. Por defecto \code{TRUE}.
 #' @param auto Lógico. Si \code{TRUE} la IA juega contra sí misma sin
 #'   intervención humana. Por defecto \code{FALSE}.
+#' @param raton Lógico. Si \code{TRUE} el jugador humano elige su jugada
+#'   pulsando con el ratón sobre la columna deseada del tablero (si el
+#'   dispositivo gráfico lo permite); si \code{FALSE} la escribe por teclado.
+#'   Por defecto \code{TRUE}. Véase \code{\link{turno_humano}}.
 #'
 #' @return La matriz de 6 x 7 con el estado final del tablero (invisible).
 #'
@@ -31,7 +35,8 @@
 #'
 #' @export
 iniciar_partida <- function(profundidad = 5, turno = 1,
-                            profAdaptative = TRUE, auto = FALSE) {
+                            profAdaptative = TRUE, auto = FALSE,
+                            raton = TRUE) {
 
   # RStudio termina de pintar su dispositivo gráfico desde el bucle de eventos.
   # Si minimax entra inmediatamente en C++, ese repintado queda pendiente y el
@@ -108,7 +113,7 @@ iniciar_partida <- function(profundidad = 5, turno = 1,
 
     while (i <= (42 - j)) {
       tablero_anterior <- tablero
-      tablero <- turno_humano(tablero)
+      tablero <- turno_humano(tablero, raton = raton)
       ultima_jugada <- which(tablero != tablero_anterior, arr.ind = TRUE)
       mostrar_tablero(tablero, ultima_jugada[1, ])
       cat(sprintf("valoracion HU: %d\n", evaluar_posicion(tablero)))

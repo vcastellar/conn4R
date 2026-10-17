@@ -1,3 +1,11 @@
+# conn4R (versión de desarrollo)
+
+* El jugador humano introduce ahora sus jugadas pulsando con el ratón sobre
+  cualquier celda de la columna deseada del tablero (`turno_humano()` e
+  `iniciar_partida()` ganan el argumento `raton = TRUE`). Si el dispositivo
+  gráfico no admite clics, o se usa `raton = FALSE`, la columna se sigue
+  escribiendo por teclado.
+
 # conn4R 0.2.0
 
 ## Nuevas funciones

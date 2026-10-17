@@ -8,7 +8,8 @@ iniciar_partida(
   profundidad = 5,
   turno = 1,
   profAdaptative = TRUE,
-  auto = FALSE
+  auto = FALSE,
+  raton = TRUE
 )
 }
 \arguments{
@@ -21,6 +22,11 @@ dinámicamente según las columnas disponibles. Por defecto \code{TRUE}.}
 
 \item{auto}{Lógico. Si \code{TRUE} la IA juega contra sí misma sin
 intervención humana. Por defecto \code{FALSE}.}
+
+\item{raton}{Lógico. Si \code{TRUE} el jugador humano elige su jugada
+pulsando con el ratón sobre la columna deseada del tablero (si el
+dispositivo gráfico lo permite); si \code{FALSE} la escribe por teclado.
+Por defecto \code{TRUE}. Véase \code{\link{turno_humano}}.}
 }
 \value{
 La matriz de 6 x 7 con el estado final del tablero (invisible).
