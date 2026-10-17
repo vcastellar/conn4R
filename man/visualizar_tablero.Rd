@@ -18,12 +18,18 @@ Objeto \code{ggplot} listo para imprimir con \code{print()} o
   \code{plot()}.
 }
 \description{
-Genera un gráfico \pkg{ggplot2} del estado actual del tablero.
-  Las fichas del jugador 1 (humano) se muestran en color \emph{papayawhip}
-  (crema), las del jugador 2 (IA) en gris oscuro y las casillas vacías en
-  blanco. Si existe una línea ganadora, sus cuatro celdas se resaltan en
-  rojo. Cuando se proporciona \code{ultima_jugada}, esa ficha se distingue
-  con un aro azul.
+Genera un gráfico \pkg{ggplot2} del estado actual del tablero
+  con un estilo plano y moderno: un panel azul con esquinas redondeadas y
+  sombra, huecos claros para las casillas vacías, fichas ámbar para el
+  jugador 1 (humano) y coral para el jugador 2 (IA). Las fichas se dibujan
+  en coordenadas de datos, por lo que el tablero se adapta al tamaño del
+  dispositivo gráfico.
+
+  El subtítulo resume el estado de la partida (número de jugadas, victoria o
+  empate). Si existe una línea ganadora, se traza una línea blanca sobre sus
+  cuatro fichas y se atenúan las demás. Cuando se proporciona
+  \code{ultima_jugada}, esa ficha se rodea con un aro blanco y su número de
+  columna se destaca.
 }
 \examples{
 tablero <- crear_posicion_aleatoria(21)
