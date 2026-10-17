@@ -4,18 +4,13 @@ S3method(print,analisis_conn4R)
 export(analizar_posicion)
 export(crear_posicion)
 export(crear_posicion_aleatoria)
-export(evaluar_posicion)
 export(iniciar_partida)
-export(juego_terminado)
-export(jugadas_disponibles)
-export(minimax)
-export(ordenar_jugadas)
-export(realizar_jugada)
 export(reiniciar_tablero)
 export(turno_humano)
 export(visualizar_tablero)
 export(visualizar_variante)
 importFrom(Rcpp,evalCpp)
+<<<<<<< HEAD
 importFrom(ggplot2,aes)
 importFrom(ggplot2,coord_fixed)
 importFrom(ggplot2,element_rect)
@@ -32,4 +27,21 @@ importFrom(ggplot2,scale_alpha_identity)
 importFrom(ggplot2,scale_fill_manual)
 importFrom(ggplot2,theme)
 importFrom(ggplot2,theme_void)
+=======
+importFrom(ggplot2,
+  aes,
+  coord_fixed,
+  element_text,
+  geom_point,
+  geom_segment,
+  geom_text,
+  ggplot,
+  labs,
+  scale_fill_manual,
+  scale_x_continuous,
+  scale_y_continuous,
+  theme,
+  theme_void
+)
+>>>>>>> b6ce800 (documentacion)
 useDynLib(conn4R, .registration = TRUE)

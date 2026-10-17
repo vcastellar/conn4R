@@ -17,7 +17,6 @@ Encoding: UTF-8
 Language: es
 URL: https://github.com/vcastellar/conn4r
 BugReports: https://github.com/vcastellar/conn4r/issues
-RoxygenNote: 7.3.2
 Imports:
   ggplot2,
   Rcpp
@@ -26,3 +25,4 @@ LinkingTo:
 Suggests:
   testthat (>= 3.0.0)
 Config/testthat/edition: 3
+Config/roxygen2/version: 8.1.1

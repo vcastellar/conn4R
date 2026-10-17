@@ -41,8 +41,15 @@ Useful links:
   \item \url{https://github.com/vcastellar/conn4r}
   \item Report bugs at \url{https://github.com/vcastellar/conn4r/issues}
 }
+
 }
 \author{
 \strong{Maintainer}: Vicente Castellar Sebastiá \email{vic.sebastia@gmail.com}
+
+Authors:
+\itemize{
+  \item Vicente Castellar Sebastiá \email{vic.sebastia@gmail.com}
+}
+
 }
 \keyword{internal}

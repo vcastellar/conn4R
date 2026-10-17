@@ -5,8 +5,13 @@
 \alias{print.analisis_conn4R}
 \title{Analizar una posición con el motor minimax}
 \usage{
-analizar_posicion(tablero, turno = NULL, profundidad = 7, mostrar = FALSE,
-  lapso = 1)
+analizar_posicion(
+  tablero,
+  turno = NULL,
+  profundidad = 7,
+  mostrar = FALSE,
+  lapso = 1
+)
 
 \method{print}{analisis_conn4R}(x, ...)
 }
@@ -57,7 +62,7 @@ Interfaz de alto nivel sobre \code{\link{minimax}} pensada para
   A diferencia de \code{minimax}, no hay que traducir manualmente el turno a
   \code{maximizandoIA}: basta indicar quién mueve (o dejar que se infiera).
 
-  \code{print.analisis_conn4R} muestra un resumen legible del
+\code{print.analisis_conn4R} muestra un resumen legible del
   análisis de una posición.
 }
 \examples{

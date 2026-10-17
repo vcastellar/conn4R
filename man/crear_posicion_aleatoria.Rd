@@ -11,7 +11,7 @@ crear_posicion_aleatoria(profundidad = 10)
 }
 \value{
 Matriz entera de 6 x 7 con la posición generada. Celdas: 0 vacío,
-1 humano, 2 IA.
+  1 humano, 2 IA.
 }
 \description{
 Crea un tablero aleatorio simulando \code{profundidad} jugadas

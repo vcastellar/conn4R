@@ -17,7 +17,7 @@ vacío).}
 }
 \value{
 Matriz entera de 6 x 7 con la posición resultante. Celdas: 0 vacío,
-1 humano, 2 IA.
+  1 humano, 2 IA.
 }
 \description{
 Construye un tablero de Conecta 4 reproduciendo, sobre un
