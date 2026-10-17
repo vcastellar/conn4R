@@ -30,9 +30,10 @@
 "_PACKAGE"
 
 ## usethis namespace: start
-#' @importFrom ggplot2 aes coord_fixed element_text geom_point geom_segment
-#' @importFrom ggplot2 geom_text ggplot labs scale_fill_manual
-#' @importFrom ggplot2 scale_x_continuous scale_y_continuous theme theme_void
+#' @importFrom ggplot2 aes coord_fixed element_rect element_text geom_polygon
+#' @importFrom ggplot2 geom_segment geom_text ggplot guide_legend guides labs
+#' @importFrom ggplot2 margin scale_alpha_identity scale_fill_manual theme
+#' @importFrom ggplot2 theme_void
 #' @importFrom Rcpp evalCpp
 #' @useDynLib conn4R, .registration = TRUE
 ## usethis namespace: end
@@ -41,6 +42,5 @@ NULL
 # Variables usadas dentro de aes() en visualizar_tablero(); se declaran para
 # evitar las notas de "no visible binding for global variable" en R CMD check.
 utils::globalVariables(c(
-  "x", "y", "xini", "yini", "xend", "yend",
-  "x_centro", "y_centro", "ficha", "alpha", "label", "labels"
+  "x", "y", "xend", "yend", "grupo", "jugador", "alpha", "etiqueta"
 ))

@@ -1,15 +1,38 @@
+# Paleta y medidas compartidas por las funciones de visualización. Los radios
+# están expresados en unidades de celda (cada casilla mide 1 x 1).
+.estilo_tablero <- list(
+  fondo         = "#F4F6FA",
+  tablero       = "#2155CD",
+  tablero_borde = "#173E9C",
+  sombra        = "#0B1B3F",
+  hueco         = "#E8EDF5",
+  hueco_borde   = "#163A8F",
+  humano        = "#FFC93C",
+  ia            = "#E84855",
+  ficha_borde   = "#00000038",
+  resalte       = "#FFFFFF",
+  texto         = "#0F172A",
+  texto_suave   = "#64748B",
+  radio_hueco   = 0.42,
+  radio_ficha   = 0.39,
+  radio_interior = 0.27,
+  radio_ultima  = 0.465,
+  radio_ganadora = 0.085
+)
+
 #' Detectar y devolver las coordenadas de la línea ganadora
 #'
 #' @description Recorre todas las posibles líneas de 4 del tablero y devuelve
 #'   las coordenadas de visualización de la primera línea ganadora encontrada
 #'   (puntuación mayor o igual que 10 000), o \code{NULL} si no existe ninguna. Usada
-#'   internamente por \code{\link{visualizar_tablero}} para resaltar en rojo
-#'   las fichas ganadoras.
+#'   internamente por \code{\link{visualizar_tablero}} para resaltar las
+#'   fichas ganadoras.
 #'
 #' @param tablero Matriz de 6 x 7 con el estado del tablero.
 #'
-#' @return Data frame con columnas \code{x}, \code{y} y \code{ficha} (valor 3)
-#'   para las 4 celdas de la línea ganadora, o \code{NULL} si no hay ganador.
+#' @return Data frame con columnas \code{x} (altura, 1 en la fila inferior),
+#'   \code{y} (columna) y \code{ficha} (valor 3) para las 4 celdas de la línea
+#'   ganadora, ordenadas de un extremo a otro, o \code{NULL} si no hay ganador.
 .detectar_lineas <- function(tablero) {
   direcciones <- rbind(c(0L, 1L), c(1L, 0L), c(1L, 1L), c(1L, -1L))
 
@@ -33,14 +56,54 @@
   NULL
 }
 
+# Vértices de un círculo por cada centro (cx, cy). Se dibujan como polígonos
+# para que su tamaño dependa de los ejes y no del dispositivo gráfico. Las
+# columnas pasadas en `...` se replican en todos los vértices de su círculo.
+.circulos <- function(cx, cy, r, ..., n = 64L) {
+  angulo <- seq(0, 2 * pi, length.out = n + 1L)[-1L]
+  id <- rep(seq_along(cx), each = n)
+  df <- data.frame(
+    x     = cx[id] + r * cos(angulo),
+    y     = cy[id] + r * sin(angulo),
+    grupo = id,
+    cx    = cx[id],
+    cy    = cy[id]
+  )
+  for (nombre in names(list(...))) {
+    v <- list(...)[[nombre]]
+    df[[nombre]] <- if (length(v) == 1L) rep(v, nrow(df)) else v[id]
+  }
+  df
+}
+
+# Contorno de un rectángulo con las esquinas redondeadas de radio `r`.
+.rectangulo_redondeado <- function(xmin, xmax, ymin, ymax, r, n = 16L) {
+  esquina <- function(cx, cy, desde) {
+    angulo <- seq(desde, desde + pi / 2, length.out = n)
+    data.frame(x = cx + r * cos(angulo), y = cy + r * sin(angulo))
+  }
+  rbind(
+    esquina(xmax - r, ymax - r, 0),
+    esquina(xmin + r, ymax - r, pi / 2),
+    esquina(xmin + r, ymin + r, pi),
+    esquina(xmax - r, ymin + r, 3 * pi / 2)
+  )
+}
+
 #' Visualizar el tablero de Conecta 4
 #'
-#' @description Genera un gráfico \pkg{ggplot2} del estado actual del tablero.
-#'   Las fichas del jugador 1 (humano) se muestran en color \emph{papayawhip}
-#'   (crema), las del jugador 2 (IA) en gris oscuro y las casillas vacías en
-#'   blanco. Si existe una línea ganadora, sus cuatro celdas se resaltan en
-#'   rojo. Cuando se proporciona \code{ultima_jugada}, esa ficha se distingue
-#'   con un aro azul.
+#' @description Genera un gráfico \pkg{ggplot2} del estado actual del tablero
+#'   con un estilo plano y moderno: un panel azul con esquinas redondeadas y
+#'   sombra, huecos claros para las casillas vacías, fichas ámbar para el
+#'   jugador 1 (humano) y coral para el jugador 2 (IA). Las fichas se dibujan
+#'   en coordenadas de datos, por lo que el tablero se adapta al tamaño del
+#'   dispositivo gráfico.
+#'
+#'   El subtítulo resume el estado de la partida (número de jugadas, victoria o
+#'   empate). Si existe una línea ganadora, se traza una línea blanca sobre sus
+#'   cuatro fichas y se atenúan las demás. Cuando se proporciona
+#'   \code{ultima_jugada}, esa ficha se rodea con un aro blanco y su número de
+#'   columna se destaca.
 #'
 #' @param tablero Matriz de 6 x 7 con el estado del tablero. Celdas: 0 vacío,
 #'   1 humano, 2 IA.
@@ -72,89 +135,133 @@ visualizar_tablero <- function(tablero, ultima_jugada = NULL) {
          call. = FALSE)
   }
 
-  df_fichas <- data.frame(
-    x     = rev(rep(1:7, each = 6)),
-    y     = rep(1:6, times = 7),
-    ficha = factor(rev(as.vector(tablero)), levels = c(0, 1, 2, 3))
-  )
+  est <- .estilo_tablero
 
-  df_lineas_h <- data.frame(
-    xini = rep(1, 7) - .5,
-    xend = rep(7, 7) + .5,
-    yini = (1:7) - .5,
-    yend = (1:7) - .5
+  # Casillas en coordenadas de dibujo: x = columna, y = altura (1 abajo).
+  celdas <- data.frame(
+    cx    = rep(1:7, each = 6),
+    cy    = rep(6:1, times = 7),
+    ficha = as.vector(tablero)
   )
-
-  df_lineas_v <- data.frame(
-    yini = rep(1, 8) - .5,
-    yend = rep(7, 8) - .5,
-    xini = (1:8) - .5,
-    xend = (1:8) - .5
-  )
-
-  df_columnas_labels <- data.frame(
-    x      = 1:7,
-    y      = 7,
-    labels = paste0("col.", 1:7)
-  )
-
-  df_fichas <- transform(df_fichas,
-                         x_centro = x,
-                         y_centro = y,
-                         alpha    = ifelse(ficha == 0, 0, 1))
+  ocupadas <- celdas[celdas$ficha != 0L, ]
 
   linea <- .detectar_lineas(tablero)
-
+  ganadora <- rep(FALSE, nrow(ocupadas))
   if (!is.null(linea)) {
-    for (k in 1:4) {
-      r <- which(df_fichas$x == linea[k, ]$y & df_fichas$y == linea[k, ]$x)
-      df_fichas$ficha[r] <- 3
-      df_fichas$alpha[r] <- 1
-    }
+    ganadora <- paste(ocupadas$cx, ocupadas$cy) %in% paste(linea$y, linea$x)
+  }
+  # Con una línea ganadora, el resto de fichas se atenúa para destacarla.
+  opacidad <- if (is.null(linea)) rep(1, nrow(ocupadas)) else ifelse(ganadora, 1, 0.4)
+
+  df_marco <- .rectangulo_redondeado(0.38, 7.62, 0.38, 6.62, r = 0.32)
+  df_sombra <- transform(df_marco, x = x + 0.05, y = y - 0.10)
+  df_huecos <- .circulos(celdas$cx, celdas$cy, est$radio_hueco)
+  df_fichas <- .circulos(
+    ocupadas$cx, ocupadas$cy, est$radio_ficha,
+    jugador = factor(ocupadas$ficha, levels = 1:2, labels = c("Humano", "IA")),
+    alpha   = opacidad
+  )
+  df_interior <- .circulos(ocupadas$cx, ocupadas$cy, est$radio_interior,
+                           alpha = opacidad)
+
+  df_columnas <- data.frame(x = 1:7, y = 6.98, etiqueta = as.character(1:7))
+
+  # Estado de la partida para el subtítulo.
+  n_jugadas <- sum(tablero != 0L)
+  if (!is.null(linea)) {
+    ganador <- tablero[7L - linea$x[[1]], linea$y[[1]]]
+    estado <- if (ganador == 1L) "Victoria del humano" else "Victoria de la IA"
+  } else if (n_jugadas == 42L) {
+    estado <- "Empate: tablero completo"
+  } else {
+    estado <- sprintf("%d %s", n_jugadas, if (n_jugadas == 1L) "jugada" else "jugadas")
+  }
+  if (!is.null(ultima_jugada)) {
+    estado <- sprintf("%s  ·  Última jugada: columna %d",
+                      estado, as.integer(ultima_jugada[[2]]))
   }
 
   p <- ggplot() +
-    geom_point(data = df_fichas,
-               aes(x = x_centro, y = y_centro, fill = ficha, alpha = alpha),
-               shape = 21, size = 23) +
-    scale_fill_manual(
-      values = c("0" = "white", "1" = "papayawhip", "2" = "grey15", "3" = "red"),
-      name   = "ficha"
-    )
+    geom_polygon(data = df_sombra, aes(x = x, y = y),
+                 fill = est$sombra, alpha = 0.18) +
+    geom_polygon(data = df_marco, aes(x = x, y = y),
+                 fill = est$tablero, colour = est$tablero_borde, linewidth = 0.6) +
+    geom_polygon(data = df_huecos, aes(x = x, y = y, group = grupo),
+                 fill = est$hueco, colour = est$hueco_borde, linewidth = 0.4)
+
+  # La capa de fichas se añade aunque no haya ninguna para que la leyenda
+  # aparezca siempre y el tablero no cambie de tamaño durante la partida.
+  p <- p +
+    geom_polygon(data = df_fichas,
+                 aes(x = x, y = y, group = grupo, fill = jugador, alpha = alpha),
+                 colour = est$ficha_borde, linewidth = 0.5, key_glyph = "point") +
+    geom_polygon(data = df_interior,
+                 aes(x = x, y = y, group = grupo, alpha = alpha * 0.08),
+                 fill = "black", colour = NA)
 
   if (!is.null(ultima_jugada)) {
-    df_ultima <- data.frame(
-      x = as.integer(ultima_jugada[[2]]),
-      y = 7L - as.integer(ultima_jugada[[1]])
+    df_ultima <- .circulos(
+      as.integer(ultima_jugada[[2]]), 7L - as.integer(ultima_jugada[[1]]),
+      est$radio_ultima, elemento = "ultima_jugada"
     )
-    p <- p + geom_point(
-      data = df_ultima,
-      aes(x = x, y = y),
-      shape = 21, size = 23, fill = NA, color = "deepskyblue3",
-      stroke = 2.5
-    )
+    p <- p + geom_polygon(data = df_ultima, aes(x = x, y = y, group = grupo),
+                          fill = NA, colour = est$resalte, linewidth = 1.3)
+  }
+
+  if (!is.null(linea)) {
+    df_linea <- data.frame(x = linea$y[[1]], y = linea$x[[1]],
+                           xend = linea$y[[4]], yend = linea$x[[4]])
+    df_puntos <- .circulos(linea$y, linea$x, est$radio_ganadora,
+                           elemento = "linea_ganadora")
+    p <- p +
+      geom_segment(data = df_linea, aes(x = x, y = y, xend = xend, yend = yend),
+                   colour = est$resalte, alpha = 0.9, linewidth = 2.2,
+                   lineend = "round") +
+      geom_polygon(data = df_puntos, aes(x = x, y = y, group = grupo),
+                   fill = est$resalte, colour = NA)
   }
 
   p <- p +
-    geom_segment(data = df_lineas_h,
-                 aes(x = xini, y = yini, xend = xend, yend = yend),
-                 linewidth = 0.5, color = "black") +
-    geom_segment(data = df_lineas_v,
-                 aes(x = xini, y = yini, xend = xend, yend = yend),
-                 linewidth = 0.5, color = "black") +
-    geom_text(data = df_columnas_labels,
-              aes(x = x, y = y, label = labels)) +
-    coord_fixed() +
-    scale_x_continuous(breaks = 1:7) +
-    scale_y_continuous(breaks = 1:6) +
-    theme_void() +
-    labs(title = "Tablero de Conecta 4") +
-    theme(
-      plot.title    = element_text(hjust = 0.5),
-      legend.position = "none"
-    )
+    geom_text(data = df_columnas, aes(x = x, y = y, label = etiqueta),
+              colour = est$texto_suave, size = 3.6)
 
-  return(p)
+  if (!is.null(ultima_jugada)) {
+    p <- p + geom_text(data = df_columnas[ultima_jugada[[2]], ],
+                       aes(x = x, y = y, label = etiqueta),
+                       colour = est$tablero, size = 4.2, fontface = "bold")
+  }
+
+  p +
+    scale_fill_manual(
+      values = c(Humano = est$humano, IA = est$ia),
+      limits = c("Humano", "IA"),
+      drop   = FALSE,
+      name   = NULL
+    ) +
+    scale_alpha_identity() +
+    guides(fill = guide_legend(
+      override.aes = list(shape = 21, size = 6, stroke = 0.6,
+                        colour = est$ficha_borde, alpha = 1)
+    )) +
+    coord_fixed(xlim = c(0.3, 7.7), ylim = c(0.25, 7.2), expand = FALSE) +
+    labs(title = "Conecta 4", subtitle = estado) +
+    theme_void(base_size = 12) +
+    theme(
+      plot.background   = element_rect(fill = est$fondo, colour = NA),
+      panel.background  = element_rect(fill = est$fondo, colour = NA),
+      plot.title        = element_text(hjust = 0.5, face = "bold", size = 18,
+                                       colour = est$texto,
+                                       margin = margin(b = 4)),
+      plot.subtitle     = element_text(hjust = 0.5, size = 11,
+                                       colour = est$texto_suave,
+                                       margin = margin(b = 6)),
+      legend.position   = "bottom",
+      legend.text       = element_text(colour = est$texto, size = 11,
+                                       margin = margin(r = 14, l = 2)),
+      legend.key        = element_rect(fill = NA, colour = NA),
+      legend.margin     = margin(t = 2),
+      plot.margin       = margin(14, 14, 10, 14)
+    )
 }
 
 #' Visualizar una variante jugada paso a paso
