@@ -11,22 +11,22 @@
 using namespace Rcpp;
 
 // ============================================================
-// Constantes
+// Constants
 // ============================================================
 
-static const int PUNT1 = 1;
-static const int PUNT2 = 10;
-static const int PUNT3 = 1000;
-static const int PUNT4 = 100000;
+static const int SCORE1 = 1;
+static const int SCORE2 = 10;
+static const int SCORE3 = 1000;
+static const int SCORE4 = 100000;
 
-static const int BONUS_PARIDAD = 300;
-static const int BONUS_APILADA = 8000;
-static const int BONUS_CONEXION = 3;
+static const int BONUS_PARITY = 300;
+static const int BONUS_STACKED = 8000;
+static const int BONUS_CONNECTION = 3;
 static const int MATE_SCORE = 1000000000;
 static const double WIN_SCORE  = 1e9;
 static const double BLOCK_SCORE = 1e8;
 
-// Bitboard posicional (fila-mayor, igual que R: fila 1 = arriba, fila 6 = abajo)
+// Positional bitboard (row-major, as in R: row 1 = top, row 6 = bottom)
 static const int BITBOARD[6][7] = {
   {0, 1, 2, 3, 2, 1, 0},
   {1, 2, 3, 4, 3, 2, 1},
@@ -37,7 +37,7 @@ static const int BITBOARD[6][7] = {
 };
 
 // ============================================================
-// Representación del tablero como array plano [fila*7+col], 0-based
+// Board representation as a flat array [row*7+col], 0-based
 // ============================================================
 
 typedef std::array<int, 42> Board;
@@ -59,13 +59,13 @@ inline IntegerMatrix to_r(const Board& b) {
 }
 
 // ============================================================
-// Líneas precalculadas: 69 líneas x 4 celdas (índices planos 0-based)
+// Precomputed lines: 69 lines x 4 cells (0-based flat indices)
 // ============================================================
 
 struct Lines {
   int idx[69][4];
-  int row[69][4]; // fila 0-based de cada celda
-  int col[69][4]; // col 0-based de cada celda
+  int row[69][4]; // 0-based row of each cell
+  int col[69][4]; // 0-based column of each cell
   int n;
 
   Lines() {
@@ -78,10 +78,10 @@ struct Lines {
       }
       n++;
     };
-    // Horizontales
+    // Horizontal
     for (int r = 0; r < 6; r++)
       for (int c = 0; c <= 3; c++) add(r, c, 0, 1);
-    // Verticales
+    // Vertical
     for (int c = 0; c < 7; c++)
       for (int r = 0; r <= 2; r++) add(r, c, 1, 0);
     // Diagonal ↘
@@ -96,14 +96,14 @@ struct Lines {
 static const Lines LINES;
 
 // ============================================================
-// Funciones básicas del tablero
+// Basic board functions
 // ============================================================
 
 inline bool col_available(const Board& b, int c) {
-  return b[c] == 0; // fila 0 = arriba
+  return b[c] == 0; // row 0 = top
 }
 
-inline Board make_move(Board b, int col, int player) {
+inline Board drop_piece(Board b, int col, int player) {
   for (int r = 5; r >= 0; r--) {
     if (b[r * 7 + col] == 0) {
       b[r * 7 + col] = player;
@@ -121,144 +121,144 @@ std::vector<int> available_cols(const Board& b) {
 }
 
 // ============================================================
-// Evaluación estática
+// Static evaluation
 // ============================================================
 
-// Evalúa líneas abiertas de un jugador (sin piezas del oponente)
-static int evaluar_turno(const Board& b, int turno) {
-  int oponente = (turno == 1) ? 2 : 1;
+// Evaluates a player's open lines (lines without opponent pieces)
+static int evaluate_turn(const Board& b, int turn) {
+  int opponent = (turn == 1) ? 2 : 1;
   int total = 0;
   for (int l = 0; l < LINES.n; l++) {
-    int n = 0, v = 0, blk = 0;
+    int n = 0, empty = 0, blk = 0;
     for (int i = 0; i < 4; i++) {
       int val = b[LINES.idx[l][i]];
-      if (val == turno) n++;
-      else if (val == 0) v++;
+      if (val == turn) n++;
+      else if (val == 0) empty++;
       else blk++;
     }
-    if (blk > 0) continue; // línea bloqueada
-    if      (n == 4)              total += PUNT4;
-    else if (n == 3 && v == 1)    total += PUNT3;
-    else if (n == 2 && v == 2)    total += PUNT2;
-    else if (n == 1 && v == 3)    total += PUNT1;
+    if (blk > 0) continue; // blocked line
+    if      (n == 4)                 total += SCORE4;
+    else if (n == 3 && empty == 1)   total += SCORE3;
+    else if (n == 2 && empty == 2)   total += SCORE2;
+    else if (n == 1 && empty == 3)   total += SCORE1;
   }
   return total;
 }
 
-// Detecta si el juego terminó y quién ganó
-// Devuelve: 0=continúa, 1=gana jugador1, 2=gana jugador2, 3=empate
-static int game_over(const Board& b) {
-  if (evaluar_turno(b, 1) >= 50000) return 1;
-  if (evaluar_turno(b, 2) >= 50000) return 2;
+// Detects whether the game is over and who won
+// Returns: 0 = ongoing, 1 = player 1 wins, 2 = player 2 wins, 3 = draw
+static int game_status(const Board& b) {
+  if (evaluate_turn(b, 1) >= 50000) return 1;
+  if (evaluate_turn(b, 2) >= 50000) return 2;
   if (available_cols(b).empty())    return 3;
   return 0;
 }
 
-// Los estados terminales deben dominar siempre a la evaluación heurística.
-// Se usa el número de huecos para preferir victorias rápidas y retrasar derrotas;
-// al depender solo del tablero, la puntuación sigue siendo segura para la TT.
-static int terminal_score(const Board& b, int resultado) {
-  if (resultado == 3) return 0;
-  int huecos = 0;
+// Terminal states must always dominate the heuristic evaluation.
+// The number of empty cells is used to prefer quick wins and delay losses;
+// since it depends only on the board, the score is still safe for the TT.
+static int terminal_score(const Board& b, int result) {
+  if (result == 3) return 0;
+  int empty_cells = 0;
   for (int i = 0; i < 42; i++)
-    if (b[i] == 0) huecos++;
-  return (resultado == 2) ? MATE_SCORE + huecos : -MATE_SCORE - huecos;
+    if (b[i] == 0) empty_cells++;
+  return (result == 2) ? MATE_SCORE + empty_cells : -MATE_SCORE - empty_cells;
 }
 
 struct ThreatDetail {
-  int count, pares, impares, apiladas;
+  int count, even, odd, stacked;
 };
 
-static ThreatDetail contar_amenazas(const Board& b, int turno) {
+static ThreatDetail count_threats(const Board& b, int turn) {
   ThreatDetail d = {0, 0, 0, 0};
-  int cols_amenaza[42];
+  int threat_cols[42];
   int nc = 0;
 
   for (int l = 0; l < LINES.n; l++) {
-    int n = 0, v = 0, empty_pos = -1;
+    int n = 0, empty = 0, empty_pos = -1;
     for (int i = 0; i < 4; i++) {
       int val = b[LINES.idx[l][i]];
-      if (val == turno) n++;
-      else if (val == 0) { v++; empty_pos = i; }
+      if (val == turn) n++;
+      else if (val == 0) { empty++; empty_pos = i; }
     }
-    if (n != 3 || v != 1) continue;
+    if (n != 3 || empty != 1) continue;
 
-    int fila_mat = LINES.row[l][empty_pos]; // 0-based
-    int col_mat  = LINES.col[l][empty_pos]; // 0-based
-    // Celda accesible: fila más baja (r==5) o celda de abajo ocupada
-    bool accesible = (fila_mat == 5) || (b[(fila_mat + 1) * 7 + col_mat] != 0);
-    if (!accesible) continue;
+    int mate_row = LINES.row[l][empty_pos]; // 0-based
+    int mate_col = LINES.col[l][empty_pos]; // 0-based
+    // Accessible cell: lowest row (r==5) or the cell below is occupied
+    bool accessible = (mate_row == 5) || (b[(mate_row + 1) * 7 + mate_col] != 0);
+    if (!accessible) continue;
 
     d.count++;
-    cols_amenaza[nc++] = col_mat;
-    // fila_desde_abajo = 5 - fila_mat (0-based desde abajo, 0..5)
-    // pero en R era 7 - fila_mat (1-based), ahora: (6 - fila_mat) en 1-based = 5-fila_mat+1
-    int fila_desde_abajo = 6 - fila_mat; // 1..6
-    if (fila_desde_abajo % 2 == 0) d.pares++;
-    else                            d.impares++;
+    threat_cols[nc++] = mate_col;
+    // row_from_bottom = 5 - mate_row (0-based from the bottom, 0..5)
+    // but in R it was 7 - mate_row (1-based); now: (6 - mate_row) 1-based = 5-mate_row+1
+    int row_from_bottom = 6 - mate_row; // 1..6
+    if (row_from_bottom % 2 == 0) d.even++;
+    else                          d.odd++;
   }
 
-  // Amenazas apiladas: 2+ amenazas en la misma columna
+  // Stacked threats: 2+ threats in the same column
   if (nc > 1) {
     int freq[7] = {0};
-    for (int i = 0; i < nc; i++) freq[cols_amenaza[i]]++;
-    for (int c = 0; c < 7; c++) if (freq[c] >= 2) d.apiladas++;
+    for (int i = 0; i < nc; i++) freq[threat_cols[i]]++;
+    for (int c = 0; c < 7; c++) if (freq[c] >= 2) d.stacked++;
   }
   return d;
 }
 
-static int bonus_conectividad(const Board& b, int turno) {
+static int connectivity_bonus(const Board& b, int turn) {
   static const int DR[] = {0, 1, 1,  1};
   static const int DC[] = {1, 0, 1, -1};
   int total = 0;
   for (int r = 0; r < 6; r++) {
     for (int c = 0; c < 7; c++) {
-      if (b[r * 7 + c] != turno) continue;
+      if (b[r * 7 + c] != turn) continue;
       for (int d = 0; d < 4; d++) {
         int nr = r + DR[d], nc = c + DC[d];
-        if (nr >= 0 && nr < 6 && nc >= 0 && nc < 7 && b[nr * 7 + nc] == turno)
-          total += BONUS_CONEXION;
+        if (nr >= 0 && nr < 6 && nc >= 0 && nc < 7 && b[nr * 7 + nc] == turn)
+          total += BONUS_CONNECTION;
       }
     }
   }
   return total;
 }
 
-static int evaluar_posicion_impl(const Board& b) {
-  // Bitboard posicional
-  int puntBit = 0;
+static int evaluate_position_impl(const Board& b) {
+  // Positional bitboard
+  int bitScore = 0;
   for (int r = 0; r < 6; r++)
     for (int c = 0; c < 7; c++) {
       int v = b[r * 7 + c];
-      if      (v == 2) puntBit += BITBOARD[r][c];
-      else if (v == 1) puntBit -= BITBOARD[r][c];
+      if      (v == 2) bitScore += BITBOARD[r][c];
+      else if (v == 1) bitScore -= BITBOARD[r][c];
     }
 
-  int eval_diff = evaluar_turno(b, 2) - evaluar_turno(b, 1);
+  int eval_diff = evaluate_turn(b, 2) - evaluate_turn(b, 1);
 
-  ThreatDetail am_ia  = contar_amenazas(b, 2);
-  ThreatDetail am_hum = contar_amenazas(b, 1);
+  ThreatDetail thr_ai  = count_threats(b, 2);
+  ThreatDetail thr_hum = count_threats(b, 1);
 
-  int bonus_doble   = (am_ia.count  >= 2) ? PUNT3 * 10 : 0;
-  int penalty_doble = (am_hum.count >= 2) ? PUNT3 * 10 : 0;
+  int double_bonus   = (thr_ai.count  >= 2) ? SCORE3 * 10 : 0;
+  int double_penalty = (thr_hum.count >= 2) ? SCORE3 * 10 : 0;
 
-  int bonus_paridad = (am_ia.pares  - am_ia.impares)  * BONUS_PARIDAD
-                    - (am_hum.pares - am_hum.impares)  * BONUS_PARIDAD;
+  int parity_bonus = (thr_ai.even  - thr_ai.odd)  * BONUS_PARITY
+                   - (thr_hum.even - thr_hum.odd) * BONUS_PARITY;
 
-  int bonus_apilada   = am_ia.apiladas  * BONUS_APILADA;
-  int penalty_apilada = am_hum.apiladas * BONUS_APILADA;
+  int stacked_bonus   = thr_ai.stacked  * BONUS_STACKED;
+  int stacked_penalty = thr_hum.stacked * BONUS_STACKED;
 
-  int conex = bonus_conectividad(b, 2) - bonus_conectividad(b, 1);
+  int connectivity = connectivity_bonus(b, 2) - connectivity_bonus(b, 1);
 
-  return eval_diff + puntBit
-       + bonus_doble - penalty_doble
-       + bonus_paridad
-       + bonus_apilada - penalty_apilada
-       + conex;
+  return eval_diff + bitScore
+       + double_bonus - double_penalty
+       + parity_bonus
+       + stacked_bonus - stacked_penalty
+       + connectivity;
 }
 
 // ============================================================
-// Ordenación de jugadas
+// Move ordering
 // ============================================================
 
 struct MoveScore {
@@ -266,24 +266,24 @@ struct MoveScore {
   double score;
 };
 
-static std::vector<MoveScore> ordenar_jugadas_impl(const Board& b, int turno) {
+static std::vector<MoveScore> order_moves_impl(const Board& b, int turn) {
   std::vector<int> cols = available_cols(b);
-  int oponente = (turno == 1) ? 2 : 1;
+  int opponent = (turn == 1) ? 2 : 1;
   std::vector<MoveScore> ms;
 
   for (int c : cols) {
     double score;
-    Board bj = make_move(b, c, turno);
-    int go_j = game_over(bj);
-    if (go_j == turno) {
+    Board bp = drop_piece(b, c, turn);
+    int go_p = game_status(bp);
+    if (go_p == turn) {
       score = WIN_SCORE;
     } else {
-      Board bo = make_move(b, c, oponente);
-      int go_o = game_over(bo);
-      if (go_o == oponente) {
+      Board bo = drop_piece(b, c, opponent);
+      int go_o = game_status(bo);
+      if (go_o == opponent) {
         score = BLOCK_SCORE;
       } else {
-        score = std::abs((double)evaluar_posicion_impl(bj)) + std::abs((double)evaluar_posicion_impl(bo));
+        score = std::abs((double)evaluate_position_impl(bp)) + std::abs((double)evaluate_position_impl(bo));
       }
     }
     ms.push_back({c, score});
@@ -296,7 +296,7 @@ static std::vector<MoveScore> ordenar_jugadas_impl(const Board& b, int turno) {
 }
 
 // ============================================================
-// Tabla de transposición
+// Transposition table
 // ============================================================
 
 static const int TT_EXACT = 0;
@@ -304,10 +304,10 @@ static const int TT_LOWER = 1;
 static const int TT_UPPER = 2;
 
 struct TTEntry {
-  int prof;
-  int punt;
+  int depth;
+  int score;
   int flag;
-  int jugada; // col 0-based, -1 si desconocida
+  int move; // 0-based column, -1 if unknown
 };
 
 typedef std::unordered_map<std::string, TTEntry> TT;
@@ -319,128 +319,128 @@ static std::string tt_key(const Board& b) {
 }
 
 static const TTEntry* tt_lookup(const TT& tt, const std::string& key,
-                                 int prof, int alpha, int beta) {
+                                 int depth, int alpha, int beta) {
   auto it = tt.find(key);
   if (it == tt.end()) return nullptr;
   const TTEntry& e = it->second;
-  if (e.prof < prof) return nullptr;
+  if (e.depth < depth) return nullptr;
   if (e.flag == TT_EXACT) return &e;
-  if (e.flag == TT_LOWER && e.punt >= beta)  return &e;
-  if (e.flag == TT_UPPER && e.punt <= alpha) return &e;
+  if (e.flag == TT_LOWER && e.score >= beta)  return &e;
+  if (e.flag == TT_UPPER && e.score <= alpha) return &e;
   return nullptr;
 }
 
 static void tt_store(TT& tt, const std::string& key,
-                     int prof, int punt, int alpha_orig, int beta_orig, int jugada) {
+                     int depth, int score, int alpha_orig, int beta_orig, int move) {
   int flag;
-  if      (punt >= beta_orig)  flag = TT_LOWER;
-  else if (punt <= alpha_orig) flag = TT_UPPER;
-  else                         flag = TT_EXACT;
+  if      (score >= beta_orig)  flag = TT_LOWER;
+  else if (score <= alpha_orig) flag = TT_UPPER;
+  else                          flag = TT_EXACT;
 
   auto it = tt.find(key);
-  if (it == tt.end() || it->second.prof <= prof) {
-    tt[key] = {prof, punt, flag, jugada};
+  if (it == tt.end() || it->second.depth <= depth) {
+    tt[key] = {depth, score, flag, move};
   }
 }
 
 // ============================================================
-// Minimax con alpha-beta y tabla de transposición
+// Minimax with alpha-beta and transposition table
 // ============================================================
 
 struct MMResult {
-  int puntuacion;
-  int jugada; // col 0-based, -1 si no hay
+  int score;
+  int move; // 0-based column, -1 if there is none
 };
 
 struct SearchStats {
-  long long normales;
-  long long tacticos;
+  long long normal;
+  long long tactical;
 };
 
-// Devuelve las jugadas que ganan inmediatamente para un jugador. Además de
-// servir para ordenar, esta información permite no evaluar de forma estática
-// una posición "ruidosa" justo antes de un mate (efecto horizonte).
-static std::vector<int> jugadas_ganadoras(const Board& b, int turno) {
-  std::vector<int> ganadoras;
+// Returns the moves that win immediately for a player. Besides being
+// useful for move ordering, this information makes it possible to avoid
+// statically evaluating a "noisy" position right before a mate (horizon effect).
+static std::vector<int> winning_moves(const Board& b, int turn) {
+  std::vector<int> winning;
   for (int c : available_cols(b)) {
-    Board nuevo = make_move(b, c, turno);
-    if (game_over(nuevo) == turno) ganadoras.push_back(c);
+    Board child = drop_piece(b, c, turn);
+    if (game_status(child) == turn) winning.push_back(c);
   }
-  return ganadoras;
+  return winning;
 }
 
-// Búsqueda de quiescencia específica de Conecta 4. En el horizonte solo se
-// prolongan las secuencias forzadas: ganar ahora o responder a una amenaza de
-// victoria inmediata. Así una evaluación a profundidad N nunca ignora que el
-// rival da mate en N+1. La recursión siempre añade una ficha y por tanto está
-// acotada por los huecos restantes del tablero.
-static MMResult buscar_tacticas(const Board& b, bool maximizandoIA,
-                                SearchStats& stats) {
-  int turno = maximizandoIA ? 2 : 1;
-  int oponente = maximizandoIA ? 1 : 2;
+// Connect 4-specific quiescence search. At the horizon only forced
+// sequences are extended: winning now or answering an immediate win
+// threat. This way an evaluation at depth N never overlooks that the
+// opponent mates at N+1. The recursion always adds a piece and is therefore
+// bounded by the number of empty cells left on the board.
+static MMResult search_tactics(const Board& b, bool maximizingAI,
+                               SearchStats& stats) {
+  int turn = maximizingAI ? 2 : 1;
+  int opponent = maximizingAI ? 1 : 2;
 
-  std::vector<int> propias = jugadas_ganadoras(b, turno);
-  if (!propias.empty()) {
-    Board victoria = make_move(b, propias[0], turno);
-    stats.tacticos++;
-    return {terminal_score(victoria, turno), propias[0]};
+  std::vector<int> own_wins = winning_moves(b, turn);
+  if (!own_wins.empty()) {
+    Board win = drop_piece(b, own_wins[0], turn);
+    stats.tactical++;
+    return {terminal_score(win, turn), own_wins[0]};
   }
 
-  std::vector<int> rivales = jugadas_ganadoras(b, oponente);
-  if (rivales.empty()) return {evaluar_posicion_impl(b), -1};
+  std::vector<int> rival_wins = winning_moves(b, opponent);
+  if (rival_wins.empty()) return {evaluate_position_impl(b), -1};
 
-  // Dos casillas ganadoras distintas no pueden bloquearse con una sola ficha.
-  // Se representa también el movimiento inútil del defensor antes del mate
-  // para que terminal_score conserve correctamente la distancia a la derrota.
-  if (rivales.size() > 1) {
-    Board defensa = make_move(b, rivales[0], turno);
-    stats.tacticos++;
-    std::vector<int> restantes = jugadas_ganadoras(defensa, oponente);
-    Board derrota = make_move(defensa, restantes[0], oponente);
-    stats.tacticos++;
-    return {terminal_score(derrota, oponente), -1};
+  // Two different winning cells cannot be blocked with a single piece.
+  // The defender's useless move before the mate is also played out so
+  // that terminal_score correctly keeps the distance to the defeat.
+  if (rival_wins.size() > 1) {
+    Board defense = drop_piece(b, rival_wins[0], turn);
+    stats.tactical++;
+    std::vector<int> remaining = winning_moves(defense, opponent);
+    Board defeat = drop_piece(defense, remaining[0], opponent);
+    stats.tactical++;
+    return {terminal_score(defeat, opponent), -1};
   }
 
-  // La única jugada no perdedora es ocupar la casilla amenazada. Tras hacerlo
-  // se vuelve a estabilizar la posición porque la ficha puede habilitar una
-  // nueva amenaza en la celda inmediatamente superior.
-  int bloqueo = rivales[0];
-  Board nuevo = make_move(b, bloqueo, turno);
-  stats.tacticos++;
-  MMResult res = buscar_tacticas(nuevo, !maximizandoIA, stats);
-  return {res.puntuacion, bloqueo};
+  // The only non-losing move is to occupy the threatened cell. After doing
+  // so the position is stabilized again, because the piece may enable a
+  // new threat in the cell immediately above.
+  int block = rival_wins[0];
+  Board child = drop_piece(b, block, turn);
+  stats.tactical++;
+  MMResult res = search_tactics(child, !maximizingAI, stats);
+  return {res.score, block};
 }
 
-static MMResult minimax_cpp(const Board& b, int prof, bool maximizandoIA,
-                             int alpha, int beta, TT& tt, SearchStats& stats) {
-  stats.normales++;
+static MMResult minimax_cpp(const Board& b, int depth, bool maximizingAI,
+                            int alpha, int beta, TT& tt, SearchStats& stats) {
+  stats.normal++;
 
-  // Una búsqueda profunda puede mantener ocupado el hilo principal durante
-  // varios segundos. Cederlo periódicamente permite que R/RStudio procese el
-  // repintado pendiente del dispositivo gráfico (y hace cancelable minimax)
-  // sin pagar el coste de consultar las interrupciones en cada nodo.
-  if ((stats.normales & 4095LL) == 0) Rcpp::checkUserInterrupt();
+  // A deep search can keep the main thread busy for several seconds.
+  // Yielding it periodically lets R/RStudio process the pending repaint
+  // of the graphics device (and makes minimax interruptible) without
+  // paying the cost of checking for interrupts at every node.
+  if ((stats.normal & 4095LL) == 0) Rcpp::checkUserInterrupt();
 
-  int go = game_over(b);
+  int go = game_status(b);
   if (go != 0) return {terminal_score(b, go), -1};
-  if (prof == 0) return buscar_tacticas(b, maximizandoIA, stats);
+  if (depth == 0) return search_tactics(b, maximizingAI, stats);
 
   std::string key = tt_key(b);
-  const TTEntry* hit = tt_lookup(tt, key, prof, alpha, beta);
+  const TTEntry* hit = tt_lookup(tt, key, depth, alpha, beta);
   if (hit != nullptr) {
-    return {hit->punt, hit->jugada};
+    return {hit->score, hit->move};
   }
 
   int alpha_orig = alpha;
   int beta_orig  = beta;
 
-  int turno = maximizandoIA ? 2 : 1;
-  std::vector<MoveScore> moves = ordenar_jugadas_impl(b, turno);
+  int turn = maximizingAI ? 2 : 1;
+  std::vector<MoveScore> moves = order_moves_impl(b, turn);
 
-  // Si la TT tiene mejor jugada, moverla al frente
+  // If the TT has a best move, bring it to the front
   auto it_tt = tt.find(key);
-  if (it_tt != tt.end() && it_tt->second.jugada >= 0) {
-    int best_col = it_tt->second.jugada;
+  if (it_tt != tt.end() && it_tt->second.move >= 0) {
+    int best_col = it_tt->second.move;
     auto it_m = std::find_if(moves.begin(), moves.end(),
                              [best_col](const MoveScore& m){ return m.col == best_col; });
     if (it_m != moves.end() && it_m != moves.begin()) {
@@ -450,259 +450,259 @@ static MMResult minimax_cpp(const Board& b, int prof, bool maximizandoIA,
     }
   }
 
-  int mejor_punt = maximizandoIA ? INT_MIN : INT_MAX;
-  int mejor_col  = moves.empty() ? -1 : moves[0].col;
+  int best_score = maximizingAI ? INT_MIN : INT_MAX;
+  int best_col   = moves.empty() ? -1 : moves[0].col;
 
   for (const MoveScore& ms : moves) {
-    Board nuevo = make_move(b, ms.col, turno);
-    MMResult res = minimax_cpp(nuevo, prof - 1, !maximizandoIA, alpha, beta, tt, stats);
+    Board child = drop_piece(b, ms.col, turn);
+    MMResult res = minimax_cpp(child, depth - 1, !maximizingAI, alpha, beta, tt, stats);
 
-    if (maximizandoIA) {
-      if (res.puntuacion > mejor_punt) {
-        mejor_punt = res.puntuacion;
-        mejor_col  = ms.col;
+    if (maximizingAI) {
+      if (res.score > best_score) {
+        best_score = res.score;
+        best_col   = ms.col;
       }
-      alpha = std::max(alpha, mejor_punt);
+      alpha = std::max(alpha, best_score);
     } else {
-      if (res.puntuacion < mejor_punt) {
-        mejor_punt = res.puntuacion;
-        mejor_col  = ms.col;
+      if (res.score < best_score) {
+        best_score = res.score;
+        best_col   = ms.col;
       }
-      beta = std::min(beta, mejor_punt);
+      beta = std::min(beta, best_score);
     }
 
     if (beta <= alpha) break;
   }
 
-  tt_store(tt, key, prof, mejor_punt, alpha_orig, beta_orig, mejor_col);
-  return {mejor_punt, mejor_col};
+  tt_store(tt, key, depth, best_score, alpha_orig, beta_orig, best_col);
+  return {best_score, best_col};
 }
 
 // ============================================================
-// Extracción de variante principal (PV) desde la TT
+// Principal variation (PV) extraction from the TT
 // ============================================================
 
 static IntegerVector extract_pv(Board b, const TT& tt, int max_depth) {
   std::vector<int> pv;
   for (int d = 0; d < max_depth; d++) {
-    if (game_over(b) != 0) break;
+    if (game_status(b) != 0) break;
     std::string key = tt_key(b);
     auto it = tt.find(key);
-    if (it == tt.end() || it->second.jugada < 0) break;
-    int col = it->second.jugada;
+    if (it == tt.end() || it->second.move < 0) break;
+    int col = it->second.move;
     pv.push_back(col + 1); // 1-indexed
-    // Inferir turno: jugador con menos piezas mueve
+    // Infer the turn: the player with fewer pieces moves
     int p1 = 0, p2 = 0;
     for (int i = 0; i < 42; i++) {
       if (b[i] == 1) p1++;
       else if (b[i] == 2) p2++;
     }
     int player = (p1 <= p2) ? 1 : 2;
-    b = make_move(b, col, player);
+    b = drop_piece(b, col, player);
   }
   return wrap(pv);
 }
 
 // ============================================================
-// Funciones exportadas a R
+// Functions exported to R
 // ============================================================
 
-//' Motor minimax con alpha-beta y tabla de transposición (C++)
+//' Minimax engine with alpha-beta pruning and transposition table (C++)
 //'
-//' @description Implementación C++ del algoritmo minimax con poda alpha-beta y
-//'   tabla de transposición interna. En el horizonte aplica una búsqueda de
-//'   quiescencia que prolonga victorias y bloqueos inmediatos hasta alcanzar
-//'   una posición tácticamente estable. Devuelve además el conteo de nodos
-//'   evaluados y la variante
-//'   principal extraída de la tabla de transposición.
+//' @description C++ implementation of the minimax algorithm with alpha-beta
+//'   pruning and an internal transposition table. At the horizon it applies a
+//'   quiescence search that extends immediate wins and blocks until a
+//'   tactically stable position is reached. It also returns the number of
+//'   evaluated nodes and the principal
+//'   variation extracted from the transposition table.
 //'
-//' @param tablero IntegerMatrix 6×7. Estado del tablero: 0 vacío, 1 humano, 2 IA.
-//' @param profundidad int. Profundidad máxima del árbol de búsqueda.
-//' @param maximizandoIA bool. \code{TRUE} si el turno actual es de la IA
-//'   (nodo MAX); \code{FALSE} si es del humano (nodo MIN).
+//' @param board IntegerMatrix 6 x 7. Board state: 0 empty, 1 human, 2 AI.
+//' @param depth int. Maximum depth of the search tree.
+//' @param maximizingAI bool. \code{TRUE} if it is the AI's turn
+//'   (MAX node); \code{FALSE} if it is the human's turn (MIN node).
 //'
-//' @return Lista con seis elementos:
+//' @return List with six elements:
 //' \describe{
-//'   \item{puntuacion}{int. Puntuación minimax de la posición raíz.}
-//'   \item{jugada}{int. Columna óptima (1-7) para el jugador en turno, o
-//'     \code{NA} si no hay jugadas disponibles.}
-//'   \item{nodos}{double. Número total de nodos evaluados durante la búsqueda.}
-//'   \item{nodos_normales}{double. Nodos visitados por minimax hasta el horizonte.}
-//'   \item{nodos_tacticos}{double. Nodos adicionales visitados por la búsqueda
-//'     de quiescencia después del horizonte.}
-//'   \item{variante}{IntegerVector. Secuencia de columnas (1-7) de la variante
-//'     principal extraída de la tabla de transposición.}
+//'   \item{score}{int. Minimax score of the root position.}
+//'   \item{move}{int. Best column (1-7) for the player to move, or
+//'     \code{NA} if there are no moves available.}
+//'   \item{nodes}{double. Total number of nodes evaluated during the search.}
+//'   \item{normal_nodes}{double. Nodes visited by minimax up to the horizon.}
+//'   \item{tactical_nodes}{double. Additional nodes visited by the quiescence
+//'     search beyond the horizon.}
+//'   \item{variation}{IntegerVector. Sequence of columns (1-7) of the principal
+//'     variation extracted from the transposition table.}
 //' }
 //'
 //' @examples
-//' tablero <- crear_posicion_aleatoria(10)
-//' system.time(res <- minimax(tablero, profundidad = 7L, maximizandoIA = TRUE))
-//' res$puntuacion
-//' res$jugada
-//' res$nodos
-//' res$variante
+//' board <- create_random_position(10)
+//' system.time(res <- minimax(board, depth = 7L, maximizingAI = TRUE))
+//' res$score
+//' res$move
+//' res$nodes
+//' res$variation
 //'
-//' @seealso \code{\link{evaluar_posicion}}, \code{\link{iniciar_partida}}
+//' @seealso \code{\link{evaluate_position}}, \code{\link{start_game}}
 // [[Rcpp::export]]
-List minimax(IntegerMatrix tablero, int profundidad, bool maximizandoIA) {
-  Board b = from_r(tablero);
+List minimax(IntegerMatrix board, int depth, bool maximizingAI) {
+  Board b = from_r(board);
   TT tt;
   SearchStats stats = {0, 0};
-  MMResult res = minimax_cpp(b, profundidad, maximizandoIA,
+  MMResult res = minimax_cpp(b, depth, maximizingAI,
                              INT_MIN, INT_MAX, tt, stats);
-  IntegerVector pv = extract_pv(b, tt, profundidad);
-  // Devolver jugada 1-indexada (como el resto del paquete)
+  IntegerVector pv = extract_pv(b, tt, depth);
+  // Return a 1-indexed move (like the rest of the package)
   return List::create(
-    Named("puntuacion") = res.puntuacion,
-    Named("jugada")     = (res.jugada >= 0) ? (res.jugada + 1) : NA_INTEGER,
-    Named("nodos")      = (double)(stats.normales + stats.tacticos),
-    Named("nodos_normales") = (double)stats.normales,
-    Named("nodos_tacticos") = (double)stats.tacticos,
-    Named("variante")   = pv
+    Named("score")          = res.score,
+    Named("move")           = (res.move >= 0) ? (res.move + 1) : NA_INTEGER,
+    Named("nodes")          = (double)(stats.normal + stats.tactical),
+    Named("normal_nodes")   = (double)stats.normal,
+    Named("tactical_nodes") = (double)stats.tactical,
+    Named("variation")      = pv
   );
 }
 
-//' Evaluación estática de una posición (C++)
+//' Static evaluation of a position (C++)
 //'
-//' @description Evalúa el
-//'   tablero combinando seis componentes: líneas abiertas, control de centro
-//'   (bitboard posicional), amenazas dobles, paridad de amenazas, amenazas
-//'   apiladas y conectividad de piezas. El resultado se expresa siempre desde
-//'   la perspectiva de la IA (jugador 2): positivo = ventaja IA.
+//' @description Evaluates the
+//'   board by combining six components: open lines, center control
+//'   (positional bitboard), double threats, threat parity, stacked
+//'   threats and piece connectivity. The result is always expressed from
+//'   the AI's perspective (player 2): positive = AI advantage.
 //'
-//' @param tablero IntegerMatrix 6×7. Estado del tablero: 0 vacío, 1 humano, 2 IA.
+//' @param board IntegerMatrix 6 x 7. Board state: 0 empty, 1 human, 2 AI.
 //'
-//' @return int. Puntuación estática de la posición.
+//' @return int. Static score of the position.
 //'
 //' @examples
-//' tablero <- crear_posicion_aleatoria(12)
-//' evaluar_posicion(tablero)
+//' board <- create_random_position(12)
+//' evaluate_position(board)
 //'
 //' @seealso \code{\link{minimax}}
 // [[Rcpp::export]]
-int evaluar_posicion(IntegerMatrix tablero) {
-  return evaluar_posicion_impl(from_r(tablero));
+int evaluate_position(IntegerMatrix board) {
+  return evaluate_position_impl(from_r(board));
 }
 
-//' Detectar fin de partida (C++)
+//' Detect the end of the game (C++)
 //'
-//' @description Comprueba si el tablero es un estado terminal (victoria o
-//'   empate).
+//' @description Checks whether the board is a terminal state (win or
+//'   draw).
 //'
-//' @param tablero IntegerMatrix 6×7. Estado del tablero.
+//' @param board IntegerMatrix 6 x 7. Board state.
 //'
-//' @return Lista con dos elementos:
+//' @return List with two elements:
 //' \describe{
-//'   \item{finalizado}{logical. \code{TRUE} si la partida ha concluido.}
-//'   \item{resultado}{int o \code{NA}. Si \code{finalizado}: \code{1} gana
-//'     el humano, \code{2} gana la IA, \code{0} empate. Si no ha terminado,
+//'   \item{finished}{logical. \code{TRUE} if the game is over.}
+//'   \item{result}{int or \code{NA}. If \code{finished}: \code{1} the human
+//'     wins, \code{2} the AI wins, \code{0} draw. If the game is not over,
 //'     \code{NA}.}
 //' }
 //'
 //' @examples
-//' tablero <- crear_posicion_aleatoria(10)
-//' juego_terminado(tablero)
+//' board <- create_random_position(10)
+//' game_over(board)
 //'
 // [[Rcpp::export]]
-List juego_terminado(IntegerMatrix tablero) {
-  Board b = from_r(tablero);
-  int go = game_over(b);
-  bool finalizado = (go != 0);
-  int resultado = (go == 3) ? 0 : go; // 0=empate, 1=j1, 2=j2, si no finalizado go=0
+List game_over(IntegerMatrix board) {
+  Board b = from_r(board);
+  int go = game_status(b);
+  bool finished = (go != 0);
+  int result = (go == 3) ? 0 : go; // 0 = draw, 1 = p1, 2 = p2; if not finished, go = 0
   return List::create(
-    Named("finalizado") = finalizado,
-    Named("resultado")  = finalizado ? resultado : NA_INTEGER
+    Named("finished") = finished,
+    Named("result")   = finished ? result : NA_INTEGER
   );
 }
 
-//' Colocar una ficha en el tablero (C++)
+//' Place a piece on the board (C++)
 //'
-//' @description Deposita una
-//'   ficha en la columna indicada, respetando la gravedad (la pieza cae a la
-//'   fila libre más baja). Si la columna está llena devuelve el tablero sin
-//'   modificar.
+//' @description Drops a
+//'   piece in the given column, respecting gravity (the piece falls to the
+//'   lowest free row). If the column is full, the board is returned
+//'   unchanged.
 //'
-//' @param tablero IntegerMatrix 6×7. Estado del tablero.
-//' @param columna int. Columna donde se deposita la ficha (1-7, 1-indexado).
-//' @param jugador int. Identificador del jugador: \code{1} (humano) o
-//'   \code{2} (IA).
+//' @param board IntegerMatrix 6 x 7. Board state.
+//' @param column int. Column where the piece is dropped (1-7, 1-indexed).
+//' @param player int. Player identifier: \code{1} (human) or
+//'   \code{2} (AI).
 //'
-//' @return IntegerMatrix 6×7 con la ficha insertada.
+//' @return IntegerMatrix 6 x 7 with the piece inserted.
 //'
 //' @examples
-//' tablero <- reiniciar_tablero()
-//' tablero <- realizar_jugada(tablero, columna = 4L, jugador = 1L)
-//' tablero <- realizar_jugada(tablero, columna = 4L, jugador = 2L)
-//' visualizar_tablero(tablero)
+//' board <- reset_board()
+//' board <- make_move(board, column = 4L, player = 1L)
+//' board <- make_move(board, column = 4L, player = 2L)
+//' visualize_board(board)
 //'
 // [[Rcpp::export]]
-IntegerMatrix realizar_jugada(IntegerMatrix tablero, int columna, int jugador) {
-  Board b = from_r(tablero);
-  Board nb = make_move(b, columna - 1, jugador); // 1-indexed a 0-indexed
+IntegerMatrix make_move(IntegerMatrix board, int column, int player) {
+  Board b = from_r(board);
+  Board nb = drop_piece(b, column - 1, player); // 1-indexed to 0-indexed
   return to_r(nb);
 }
 
-//' Columnas disponibles (C++)
+//' Available columns (C++)
 //'
-//' @description Devuelve los
-//'   índices (1-7) de las columnas que no están completamente llenas.
+//' @description Returns the
+//'   indices (1-7) of the columns that are not completely full.
 //'
-//' @param tablero IntegerMatrix 6×7. Estado del tablero.
+//' @param board IntegerMatrix 6 x 7. Board state.
 //'
-//' @return IntegerVector con los índices de columna disponibles (1-indexados).
+//' @return IntegerVector with the available column indices (1-indexed).
 //'
 //' @examples
-//' tablero <- crear_posicion_aleatoria(20)
-//' jugadas_disponibles(tablero)
+//' board <- create_random_position(20)
+//' available_moves(board)
 //'
-//' @seealso \code{\link{ordenar_jugadas}}
+//' @seealso \code{\link{order_moves}}
 // [[Rcpp::export]]
-IntegerVector jugadas_disponibles(IntegerMatrix tablero) {
-  Board b = from_r(tablero);
+IntegerVector available_moves(IntegerMatrix board) {
+  Board b = from_r(board);
   std::vector<int> cols = available_cols(b);
   IntegerVector out(cols.size());
   for (int i = 0; i < (int)cols.size(); i++) out[i] = cols[i] + 1; // 1-indexed
   return out;
 }
 
-//' Ordenar jugadas por heurística (C++)
+//' Order moves by heuristic (C++)
 //'
-//' @description Devuelve las
-//'   columnas disponibles ordenadas de mejor a peor candidata para maximizar
-//'   la eficacia de la poda alpha-beta:
+//' @description Returns the
+//'   available columns ordered from best to worst candidate in order to
+//'   maximize the effectiveness of alpha-beta pruning:
 //'   \enumerate{
-//'     \item Victorias inmediatas del jugador en turno (puntuación = 1e9).
-//'     \item Bloqueos de victoria inmediata del oponente (1e8).
-//'     \item Resto ordenado por evaluación estática combinada (|eval_propia|
-//'       + |eval_oponente| tras el movimiento).
+//'     \item Immediate wins for the player to move (score = 1e9).
+//'     \item Blocks of an immediate win by the opponent (1e8).
+//'     \item The rest, ordered by combined static evaluation (|own_eval|
+//'       + |opponent_eval| after the move).
 //'   }
 //'
-//' @param tablero IntegerMatrix 6×7. Estado del tablero.
-//' @param turno int. Jugador en turno: \code{1} (humano) o \code{2} (IA).
+//' @param board IntegerMatrix 6 x 7. Board state.
+//' @param turn int. Player to move: \code{1} (human) or \code{2} (AI).
 //'
-//' @return Data frame con columnas:
+//' @return Data frame with columns:
 //' \describe{
-//'   \item{jugadas}{int. Índice de columna (1-7).}
-//'   \item{puntuacion}{double. Puntuación heurística de ordenación (mayor = mejor).}
+//'   \item{moves}{int. Column index (1-7).}
+//'   \item{score}{double. Heuristic ordering score (higher = better).}
 //' }
 //'
 //' @examples
-//' tablero <- crear_posicion_aleatoria(11)
-//' ordenar_jugadas(tablero, turno = 2L)
+//' board <- create_random_position(11)
+//' order_moves(board, turn = 2L)
 //'
 //' @seealso \code{\link{minimax}}
 // [[Rcpp::export]]
-DataFrame ordenar_jugadas(IntegerMatrix tablero, int turno) {
-  Board b = from_r(tablero);
-  std::vector<MoveScore> ms = ordenar_jugadas_impl(b, turno);
-  IntegerVector jugadas(ms.size());
-  NumericVector puntuaciones(ms.size());
+DataFrame order_moves(IntegerMatrix board, int turn) {
+  Board b = from_r(board);
+  std::vector<MoveScore> ms = order_moves_impl(b, turn);
+  IntegerVector moves(ms.size());
+  NumericVector scores(ms.size());
   for (int i = 0; i < (int)ms.size(); i++) {
-    jugadas[i]     = ms[i].col + 1;
-    puntuaciones[i] = ms[i].score;
+    moves[i]  = ms[i].col + 1;
+    scores[i] = ms[i].score;
   }
   return DataFrame::create(
-    Named("jugadas")    = jugadas,
-    Named("puntuacion") = puntuaciones
+    Named("moves") = moves,
+    Named("score") = scores
   );
 }

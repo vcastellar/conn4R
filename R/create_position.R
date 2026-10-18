@@ -1,75 +1,75 @@
-#' Introducir una posición a partir de una secuencia de jugadas
+#' Enter a position from a sequence of moves
 #'
-#' @description Construye un tablero de Conecta 4 reproduciendo, sobre un
-#'   tablero vacío, una secuencia de jugadas (columnas) que alternan entre los
-#'   dos jugadores. Es la forma recomendada de introducir una posición concreta
-#'   para después analizarla con \code{\link{analizar_posicion}} o continuar la
-#'   partida: al reproducir jugadas legales, la posición resultante siempre es
-#'   alcanzable en una partida real.
+#' @description Builds a Connect 4 board by replaying, on an empty board, a
+#'   sequence of moves (columns) that alternate between the two players. It is
+#'   the recommended way to enter a specific position in order to analyze it
+#'   afterwards with \code{\link{analyze_position}} or to continue the game:
+#'   since legal moves are replayed, the resulting position is always
+#'   reachable in a real game.
 #'
-#' @param jugadas Vector de columnas (enteros entre 1 y 7) que se juegan en
-#'   orden. La primera jugada la realiza \code{turno_inicial}, y a partir de ahí
-#'   los jugadores se van alternando. Por defecto \code{integer()} (tablero
-#'   vacío).
-#' @param turno_inicial Jugador que realiza la primera jugada de \code{jugadas}:
-#'   \code{1} (humano) o \code{2} (IA). Por defecto \code{1}.
+#' @param moves Vector of columns (integers between 1 and 7) played in
+#'   order. The first move is made by \code{first_player}, and from then on
+#'   the players alternate. Defaults to \code{integer()} (empty
+#'   board).
+#' @param first_player Player who makes the first move of \code{moves}:
+#'   \code{1} (human) or \code{2} (AI). Defaults to \code{1}.
 #'
-#' @return Matriz entera de 6 x 7 con la posición resultante. Celdas: 0 vacío,
-#'   1 humano, 2 IA.
+#' @return Integer 6 x 7 matrix with the resulting position. Cells: 0 empty,
+#'   1 human, 2 AI.
 #'
-#' @details La función valida cada jugada antes de aplicarla: la columna debe
-#'   estar entre 1 y 7 y no estar llena, y la partida no puede haber terminado
-#'   antes de completar la secuencia. Si alguna jugada es ilegal se detiene con
-#'   un mensaje indicando la jugada problemática.
+#' @details The function validates each move before applying it: the column
+#'   must be between 1 and 7 and must not be full, and the game cannot be over
+#'   before the sequence is complete. If any move is illegal, it stops with
+#'   a message indicating the offending move.
 #'
 #' @examples
-#' # Apertura central seguida de respuestas alternas (humano abre)
-#' tablero <- crear_posicion(c(4, 4, 3, 5))
-#' visualizar_tablero(tablero)
+#' # Central opening followed by alternating replies (the human opens)
+#' board <- create_position(c(4, 4, 3, 5))
+#' visualize_board(board)
 #'
-#' # La IA abre la partida
-#' tablero <- crear_posicion(c(4, 3), turno_inicial = 2)
-#' sum(tablero == 2)  # 1 ficha de la IA
+#' # The AI opens the game
+#' board <- create_position(c(4, 3), first_player = 2)
+#' sum(board == 2)  # 1 AI piece
 #'
-#' @seealso \code{\link{analizar_posicion}}, \code{\link{realizar_jugada}},
-#'   \code{\link{reiniciar_tablero}}
+#' @seealso \code{\link{analyze_position}}, \code{\link{make_move}},
+#'   \code{\link{reset_board}}
 #'
 #' @export
-crear_posicion <- function(jugadas = integer(), turno_inicial = 1) {
-  if (length(turno_inicial) != 1L || is.na(turno_inicial) ||
-      !turno_inicial %in% c(1, 2)) {
-    stop("`turno_inicial` debe ser 1 (humano) o 2 (IA).", call. = FALSE)
+create_position <- function(moves = integer(), first_player = 1) {
+  if (length(first_player) != 1L || is.na(first_player) ||
+      !first_player %in% c(1, 2)) {
+    stop("`first_player` must be 1 (human) or 2 (AI).", call. = FALSE)
   }
 
-  tablero <- reiniciar_tablero()
+  board <- reset_board()
 
-  if (length(jugadas) == 0L) {
-    return(tablero)
+  if (length(moves) == 0L) {
+    return(board)
   }
 
-  if (!is.numeric(jugadas) || anyNA(jugadas) || any(!is.finite(jugadas)) ||
-      any(jugadas != as.integer(jugadas)) || any(!jugadas %in% 1:7)) {
-    stop("`jugadas` debe contener columnas enteras entre 1 y 7.", call. = FALSE)
+  if (!is.numeric(moves) || anyNA(moves) || any(!is.finite(moves)) ||
+      any(moves != as.integer(moves)) || any(!moves %in% 1:7)) {
+    stop("`moves` must contain integer columns between 1 and 7.", call. = FALSE)
   }
 
-  jugador <- as.integer(turno_inicial)
+  player <- as.integer(first_player)
 
-  for (i in seq_along(jugadas)) {
-    if (juego_terminado(tablero)$finalizado) {
-      stop(sprintf("La partida ya había terminado antes de la jugada %d.", i),
+  for (i in seq_along(moves)) {
+    if (game_over(board)$finished) {
+      stop(sprintf("The game was already over before move %d.", i),
            call. = FALSE)
     }
 
-    columna <- as.integer(jugadas[[i]])
-    if (!columna %in% jugadas_disponibles(tablero)) {
+    column <- as.integer(moves[[i]])
+    if (!column %in% available_moves(board)) {
       stop(sprintf(
-        "La jugada %d no es válida: la columna %d está llena.", i, columna),
+        "Move %d is not valid: column %d is full.", i, column),
         call. = FALSE)
     }
 
-    tablero <- realizar_jugada(tablero, columna, jugador)
-    jugador <- 3L - jugador
+    board <- make_move(board, column, player)
+    player <- 3L - player
   }
 
-  tablero
+  board
 }

@@ -1,50 +1,50 @@
-#' Crear posición aleatoria
+#' Create a random position
 #'
-#' @description Crea un tablero aleatorio simulando \code{profundidad} jugadas
-#'   legales al azar entre los dos jugadores (el humano abre). Si la secuencia
-#'   produce una victoria antes de completar todas las jugadas, se descarta y se
-#'   vuelve a generar, de modo que el tablero devuelto no es una posición
-#'   terminal (salvo que el tablero se llene por completo).
-#' @param profundidad número de jugadas que se simulan aleatoriamente
-#' @return Matriz entera de 6 x 7 con la posición generada. Celdas: 0 vacío,
-#'   1 humano, 2 IA.
+#' @description Creates a random board by simulating \code{depth} random
+#'   legal moves between the two players (the human opens). If the sequence
+#'   produces a win before all the moves have been made, it is discarded and
+#'   generated again, so the returned board is not a terminal
+#'   position (unless the board fills up completely).
+#' @param depth number of moves simulated at random
+#' @return Integer 6 x 7 matrix with the generated position. Cells: 0 empty,
+#'   1 human, 2 AI.
 #' @examples
-#' tablero <- crear_posicion_aleatoria(21)
-#' visualizar_tablero(tablero)
-#' sum(tablero == 1)
-#' sum(tablero == 2)
+#' board <- create_random_position(21)
+#' visualize_board(board)
+#' sum(board == 1)
+#' sum(board == 2)
 #' @export
-crear_posicion_aleatoria <- function(profundidad = 10) {
+create_random_position <- function(depth = 10) {
 
-  reiniciar <- TRUE
+  restart <- TRUE
 
-  while (reiniciar) {
-    reiniciar <- FALSE
+  while (restart) {
+    restart <- FALSE
 
-    turno <- 1
-    tablero <- reiniciar_tablero()
+    turn <- 1
+    board <- reset_board()
 
-    for (i in 1:profundidad) {
+    for (i in 1:depth) {
 
-      # se elige una jugada al azar
-      jugadas_posibles <- jugadas_disponibles(tablero)
+      # pick a move at random
+      possible_moves <- available_moves(board)
 
-      jugada <- unlist(sample(as.list(jugadas_posibles), size = 1))
-      tablero <- realizar_jugada(tablero, jugada, turno)
+      move <- unlist(sample(as.list(possible_moves), size = 1))
+      board <- make_move(board, move, turn)
 
-      # validar que el juego ha terminado. Si es así, se reinicia el tablero
-      if (juego_terminado(tablero)$finalizado & i < 42) {
-        reiniciar <- TRUE
+      # check whether the game is over. If so, the board is reset
+      if (game_over(board)$finished & i < 42) {
+        restart <- TRUE
         break
 
       }
 
-      turno <- (turno %% 2) + 1
+      turn <- (turn %% 2) + 1
 
     }
 
   }
 
-  return(tablero)
+  return(board)
 
 }

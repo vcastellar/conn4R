@@ -1,28 +1,28 @@
-#' Crear un tablero vacío
+#' Create an empty board
 #'
-#' @description Inicializa y devuelve un tablero de Conecta 4 vacío: una matriz
-#'   de 6 filas y 7 columnas rellena con ceros.
+#' @description Initializes and returns an empty Connect 4 board: a matrix
+#'   with 6 rows and 7 columns filled with zeros.
 #'
-#'   Convenio de valores de celda:
+#'   Cell value convention:
 #'   \describe{
-#'     \item{0}{Casilla vacía.}
-#'     \item{1}{Ficha del jugador 1 (humano).}
-#'     \item{2}{Ficha del jugador 2 (IA).}
+#'     \item{0}{Empty cell.}
+#'     \item{1}{Piece of player 1 (human).}
+#'     \item{2}{Piece of player 2 (AI).}
 #'   }
 #'
-#'   La fila 1 corresponde a la parte superior del tablero y la fila 6 a la
-#'   parte inferior (las piezas caen por gravedad hasta la primera fila libre
-#'   desde abajo).
+#'   Row 1 is the top of the board and row 6 the
+#'   bottom (pieces fall by gravity to the first free row
+#'   from the bottom).
 #'
-#' @return Matriz entera de 6 x 7 inicializada a 0.
+#' @return Integer 6 x 7 matrix initialized to 0.
 #'
 #' @examples
-#' tablero <- reiniciar_tablero()
-#' dim(tablero)   # 6 7
-#' all(tablero == 0)
+#' board <- reset_board()
+#' dim(board)   # 6 7
+#' all(board == 0)
 #'
 #' @export
-reiniciar_tablero <- function() {
-  tablero <- matrix(0L, nrow = 6, ncol = 7)
-  return(tablero)
+reset_board <- function() {
+  board <- matrix(0L, nrow = 6, ncol = 7)
+  return(board)
 }

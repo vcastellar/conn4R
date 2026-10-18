@@ -1,36 +1,36 @@
-test_that(".columna_desde_npc traduce un clic en la columna pulsada", {
-  lim <- conn4R:::.limites_tablero
-  a_npc <- function(valor, rango) (valor - rango[[1]]) / diff(rango)
+test_that(".column_from_npc translates a click into the clicked column", {
+  lim <- conn4R:::.board_limits
+  to_npc <- function(value, limits) (value - limits[[1]]) / diff(limits)
 
-  for (columna in 1:7) {
-    for (desplazamiento in c(-0.45, 0, 0.45)) {
-      x <- a_npc(columna + desplazamiento, lim$x)
-      expect_equal(conn4R:::.columna_desde_npc(x, a_npc(1, lim$y)), columna)
-      expect_equal(conn4R:::.columna_desde_npc(x, a_npc(6.9, lim$y)), columna)
+  for (column in 1:7) {
+    for (offset in c(-0.45, 0, 0.45)) {
+      x <- to_npc(column + offset, lim$x)
+      expect_equal(conn4R:::.column_from_npc(x, to_npc(1, lim$y)), column)
+      expect_equal(conn4R:::.column_from_npc(x, to_npc(6.9, lim$y)), column)
     }
   }
 })
 
-test_that(".columna_desde_npc devuelve NA fuera del tablero", {
-  lim <- conn4R:::.limites_tablero
-  a_npc <- function(valor, rango) (valor - rango[[1]]) / diff(rango)
+test_that(".column_from_npc returns NA outside the board", {
+  lim <- conn4R:::.board_limits
+  to_npc <- function(value, limits) (value - limits[[1]]) / diff(limits)
 
-  expect_true(is.na(conn4R:::.columna_desde_npc(0, 0.5)))
-  expect_true(is.na(conn4R:::.columna_desde_npc(1, 0.5)))
-  expect_true(is.na(conn4R:::.columna_desde_npc(a_npc(4, lim$x), 0)))
+  expect_true(is.na(conn4R:::.column_from_npc(0, 0.5)))
+  expect_true(is.na(conn4R:::.column_from_npc(1, 0.5)))
+  expect_true(is.na(conn4R:::.column_from_npc(to_npc(4, lim$x), 0)))
 })
 
-test_that("turno_humano aplica la jugada indicada sin pedir clics", {
-  tablero <- turno_humano(reiniciar_tablero(), jugada = 4)
-  expect_equal(tablero[6, 4], 1L)
-  expect_equal(sum(tablero != 0L), 1L)
+test_that("human_turn applies the given move without asking for clicks", {
+  board <- human_turn(reset_board(), move = 4)
+  expect_equal(board[6, 4], 1L)
+  expect_equal(sum(board != 0L), 1L)
 })
 
-test_that(".nombres_viewports encuentra el panel del tablero dibujado", {
+test_that(".viewport_names finds the panel of the drawn board", {
   grDevices::pdf(NULL)
   on.exit(grDevices::dev.off(), add = TRUE)
-  print(visualizar_tablero(reiniciar_tablero()))
+  print(visualize_board(reset_board()))
 
-  nombres <- conn4R:::.nombres_viewports(grid::current.vpTree())
-  expect_true(any(grepl("^panel\\.", nombres)))
+  vp_names <- conn4R:::.viewport_names(grid::current.vpTree())
+  expect_true(any(grepl("^panel\\.", vp_names)))
 })

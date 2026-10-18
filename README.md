@@ -3,99 +3,101 @@
 <!-- badges: start -->
 <!-- badges: end -->
 
-**conn4R** es un paquete de R para jugar y analizar partidas de **Conecta 4**
-contra una inteligencia artificial. El motor de búsqueda está escrito en C++
-(via [Rcpp](https://www.rcpp.org/)) e implementa **minimax con poda alfa-beta**,
-tabla de transposición, búsqueda de quiescencia y una evaluación estática de
-posición. La capa R aporta la interfaz de juego, la introducción y el análisis
-de posiciones y la visualización con `ggplot2`.
+**conn4R** is an R package for playing and analyzing games of **Connect 4**
+against an artificial intelligence. The search engine is written in C++
+(via [Rcpp](https://www.rcpp.org/)) and implements **minimax with alpha-beta
+pruning**, a transposition table, quiescence search and a static position
+evaluation. The R layer provides the game interface, position entry and
+analysis, and visualization with `ggplot2`.
 
-## Instalación
+## Installation
 
 ```r
 # install.packages("remotes")
 remotes::install_github("vcastellar/conn4r")
 ```
 
-El paquete necesita un compilador de C++ (incluido en Rtools en Windows o en
-las herramientas de desarrollo del sistema en macOS/Linux).
+The package needs a C++ compiler (included in Rtools on Windows or in the
+system development tools on macOS/Linux).
 
-## Convenio del tablero
+## Board convention
 
-El tablero es una matriz entera de 6 filas por 7 columnas. Cada celda vale
-`0` (vacía), `1` (ficha del humano) o `2` (ficha de la IA). Las fichas caen por
-gravedad hasta la fila libre más baja de la columna.
+The board is an integer matrix with 6 rows and 7 columns. Each cell is
+`0` (empty), `1` (human piece) or `2` (AI piece). Pieces fall by gravity to
+the lowest free row of the column.
 
-## Uso
+## Usage
 
-Las tres tareas principales tienen una función de acceso directo.
+Each of the three main tasks has a shortcut function.
 
-### 1. Jugar una partida
+### 1. Play a game
 
 ```r
 library(conn4R)
 
-# Humano contra IA (el humano empieza, profundidad 6)
-iniciar_partida(profundidad = 6)
+# Human vs AI (the human starts, depth 6)
+start_game(depth = 6)
 
-# La IA abre la partida
-iniciar_partida(turno = 2)
+# The AI opens the game
+start_game(turn = 2)
 
-# La IA juega contra sí misma
-iniciar_partida(auto = TRUE)
+# The AI plays against itself
+start_game(auto = TRUE)
 ```
 
-En las partidas contra la IA, el humano elige su jugada **pulsando con el ratón
-sobre cualquier celda de la columna** deseada en el tablero dibujado. Si el
-dispositivo gráfico no admite clics (o con `iniciar_partida(raton = FALSE)`),
-la columna se escribe por teclado.
+In games against the AI, the human chooses their move by **clicking with the
+mouse on any cell of the desired column** of the plotted board. If the
+graphics device does not support clicks (or with `start_game(mouse = FALSE)`),
+the column is typed on the keyboard.
 
-### 2. Introducir una posición
+### 2. Enter a position
 
-`crear_posicion()` construye un tablero reproduciendo una secuencia de jugadas
-(columnas) que alternan entre los jugadores, validando que todas sean legales.
+`create_position()` builds a board by replaying a sequence of moves
+(columns) that alternate between the players, checking that all of them are
+legal.
 
 ```r
-# Apertura central y respuestas alternas (el humano abre)
-tablero <- crear_posicion(c(4, 4, 3, 5, 3))
-visualizar_tablero(tablero)
+# Central opening and alternating replies (the human opens)
+board <- create_position(c(4, 4, 3, 5, 3))
+visualize_board(board)
 ```
 
-### 3. Analizar la posición con el minimax
+### 3. Analyze the position with minimax
 
-`analizar_posicion()` calcula la jugada recomendada, la puntuación, la variante
-principal y un veredicto legible. El turno puede indicarse o inferirse.
+`analyze_position()` computes the recommended move, the score, the principal
+variation and a readable verdict. The player to move can be given or
+inferred.
 
 ```r
-analisis <- analizar_posicion(tablero, profundidad = 8)
-analisis
-#> Análisis de la posición (motor minimax C++)
+analysis <- analyze_position(board, depth = 8)
+analysis
+#> Position analysis (C++ minimax engine)
 #> ---------------------------------------------------------
-#> Turno de:            IA (jugador 2)
-#> Profundidad:         8
-#> Jugada recomendada:  columna 4
+#> To move:             AI (player 2)
+#> Depth:               8
+#> Recommended move:    column 3
 #> ...
 
-analisis$jugada     # columna recomendada
-analisis$variante   # variante principal
+analysis$move        # recommended column
+analysis$variation   # principal variation
 
-# Reproducir la variante principal sobre el tablero
-analizar_posicion(tablero, profundidad = 8, mostrar = TRUE)
+# Replay the principal variation on the board
+analyze_position(board, depth = 8, show = TRUE)
 ```
 
-## Funciones principales
+## Main functions
 
-| Función | Descripción |
+| Function | Description |
 |---|---|
-| `iniciar_partida()` | Jugar una partida completa (humano vs IA o IA vs IA). |
-| `crear_posicion()` | Introducir una posición a partir de una secuencia de jugadas. |
-| `analizar_posicion()` | Analizar una posición con el motor minimax. |
-| `minimax()` | Motor de búsqueda de bajo nivel (C++). |
-| `evaluar_posicion()` | Evaluación estática de una posición (C++). |
-| `visualizar_tablero()` / `visualizar_variante()` | Dibujar posiciones y variantes. |
-| `reiniciar_tablero()` | Crear un tablero vacío. |
-| `crear_posicion_aleatoria()` | Generar una posición aleatoria legal. |
+| `start_game()` | Play a full game (human vs AI or AI vs AI). |
+| `create_position()` | Enter a position from a sequence of moves. |
+| `analyze_position()` | Analyze a position with the minimax engine. |
+| `minimax()` | Low-level search engine (C++). |
+| `evaluate_position()` | Static evaluation of a position (C++). |
+| `visualize_board()` / `visualize_variation()` | Draw positions and variations. |
+| `reset_board()` | Create an empty board. |
+| `create_random_position()` | Generate a random legal position. |
 
-## Licencia
+## License
 
 GPL-3.

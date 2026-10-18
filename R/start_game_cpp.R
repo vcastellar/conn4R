@@ -1,159 +1,159 @@
-#' Iniciar una partida de Conecta 4
+#' Start a game of Connect 4
 #'
-#' @description Punto de entrada principal del paquete. Inicia una partida de
-#'   Conecta 4 usando el motor C++ compilado via Rcpp para el cálculo minimax,
-#'   la evaluación estática y la detección de fin de partida. La interfaz
-#'   (visualización, entrada del usuario, profundidad adaptativa) se gestiona
-#'   desde R.
+#' @description Main entry point of the package. Starts a game of
+#'   Connect 4 using the C++ engine compiled via Rcpp for the minimax
+#'   computation, the static evaluation and the detection of the end of the
+#'   game. The interface (visualization, user input, adaptive depth) is
+#'   handled from R.
 #'
-#' @param profundidad Profundidad de búsqueda del algoritmo minimax. Por defecto 5.
-#' @param turno Jugador que comienza: 1 para humano, 2 para IA. Por defecto 1.
-#' @param profAdaptative Lógico. Si \code{TRUE} ajusta la profundidad
-#'   dinámicamente según las columnas disponibles. Por defecto \code{TRUE}.
-#' @param auto Lógico. Si \code{TRUE} la IA juega contra sí misma sin
-#'   intervención humana. Por defecto \code{FALSE}.
-#' @param raton Lógico. Si \code{TRUE} el jugador humano elige su jugada
-#'   pulsando con el ratón sobre la columna deseada del tablero (si el
-#'   dispositivo gráfico lo permite); si \code{FALSE} la escribe por teclado.
-#'   Por defecto \code{TRUE}. Véase \code{\link{turno_humano}}.
+#' @param depth Search depth of the minimax algorithm. Defaults to 5.
+#' @param turn Player who starts: 1 for human, 2 for AI. Defaults to 1.
+#' @param adaptiveDepth Logical. If \code{TRUE}, the depth is adjusted
+#'   dynamically according to the available columns. Defaults to \code{TRUE}.
+#' @param auto Logical. If \code{TRUE}, the AI plays against itself without
+#'   human intervention. Defaults to \code{FALSE}.
+#' @param mouse Logical. If \code{TRUE}, the human player chooses their move
+#'   by clicking with the mouse on the desired column of the board (if the
+#'   graphics device allows it); if \code{FALSE}, the move is typed on the
+#'   keyboard. Defaults to \code{TRUE}. See \code{\link{human_turn}}.
 #'
-#' @return La matriz de 6 x 7 con el estado final del tablero (invisible).
+#' @return The 6 x 7 matrix with the final state of the board (invisibly).
 #'
 #' @examples
 #' \dontrun{
-#' # Partida humano vs IA (humano primero, profundidad 6)
-#' iniciar_partida(profundidad = 6)
+#' # Human vs AI game (human first, depth 6)
+#' start_game(depth = 6)
 #'
-#' # La IA abre la partida
-#' iniciar_partida(turno = 2)
+#' # The AI opens the game
+#' start_game(turn = 2)
 #'
-#' # IA contra sí misma
-#' iniciar_partida(auto = TRUE, profundidad = 5)
+#' # AI against itself
+#' start_game(auto = TRUE, depth = 5)
 #' }
 #'
-#' @seealso \code{\link{minimax}}, \code{\link{evaluar_posicion}}
+#' @seealso \code{\link{minimax}}, \code{\link{evaluate_position}}
 #'
 #' @export
-iniciar_partida <- function(profundidad = 5, turno = 1,
-                            profAdaptative = TRUE, auto = FALSE,
-                            raton = TRUE) {
+start_game <- function(depth = 5, turn = 1,
+                       adaptiveDepth = TRUE, auto = FALSE,
+                       mouse = TRUE) {
 
-  # RStudio termina de pintar su dispositivo gráfico desde el bucle de eventos.
-  # Si minimax entra inmediatamente en C++, ese repintado queda pendiente y el
-  # panel puede aparecer en blanco durante toda la búsqueda. Forzar el vaciado
-  # y dejar tiempo suficiente al dispositivo para completar el repintado hace
-  # que el tablero quede visible antes de comenzar el cálculo de la IA. Durante
-  # la búsqueda, el motor C++ también atiende periódicamente el bucle de eventos.
-  mostrar_tablero <- function(tab, ultima_jugada = NULL) {
+  # RStudio finishes painting its graphics device from the event loop.
+  # If minimax enters C++ immediately, that repaint is left pending and the
+  # panel may stay blank during the whole search. Forcing the flush
+  # and giving the device enough time to complete the repaint makes
+  # the board visible before the AI starts computing. During
+  # the search, the C++ engine also services the event loop periodically.
+  show_board <- function(tab, last_move = NULL) {
     grDevices::dev.hold()
-    dispositivo_retenido <- TRUE
-    on.exit(if (dispositivo_retenido) grDevices::dev.flush(), add = TRUE)
-    print(visualizar_tablero(tab, ultima_jugada))
+    device_held <- TRUE
+    on.exit(if (device_held) grDevices::dev.flush(), add = TRUE)
+    print(visualize_board(tab, last_move))
     grDevices::dev.flush()
-    dispositivo_retenido <- FALSE
+    device_held <- FALSE
     flush.console()
     Sys.sleep(0.1)
     invisible(NULL)
   }
 
-  tablero  <- reiniciar_tablero()
-  mostrar_tablero(tablero)
-  i        <- 1
-  j        <- 0
-  resultado <- "DRAW"
+  board  <- reset_board()
+  show_board(board)
+  i      <- 1
+  j      <- 0
+  result <- "DRAW"
 
-  # Helpers internos que llaman al motor C++
-  ia_mueve <- function(tab, prof, maximizandoIA) {
+  # Internal helpers that call the C++ engine
+  ai_move <- function(tab, search_depth, maximizingAI) {
     tik <- system.time({
-      res <- minimax(tab, prof, maximizandoIA)
+      res <- minimax(tab, search_depth, maximizingAI)
     })
-    list(jugada     = res$jugada,
-         puntuacion = res$puntuacion,
-         nodos      = res$nodos,
-         nodos_normales = res$nodos_normales,
-         nodos_tacticos = res$nodos_tacticos,
-         variante   = res$variante,
-         tiempo     = tik[[3]])
+    list(move           = res$move,
+         score          = res$score,
+         nodes          = res$nodes,
+         normal_nodes   = res$normal_nodes,
+         tactical_nodes = res$tactical_nodes,
+         variation      = res$variation,
+         time           = tik[[3]])
   }
 
-  fin_turno <- function(tab, turno_actual, prof, max_ia) {
-    res <- ia_mueve(tab, prof, max_ia)
-    tab <- realizar_jugada(tab, res$jugada, turno_actual)
-    fila <- min(which(tab[, res$jugada] != 0L))
-    mostrar_tablero(tab, c(fila, res$jugada))
+  end_turn <- function(tab, current_turn, search_depth, max_ai) {
+    res <- ai_move(tab, search_depth, max_ai)
+    tab <- make_move(tab, res$move, current_turn)
+    row <- min(which(tab[, res$move] != 0L))
+    show_board(tab, c(row, res$move))
     cat("\n")
-    nods_s <- if (res$tiempo > 0) round(res$nodos / res$tiempo) else NA
+    nodes_s <- if (res$time > 0) round(res$nodes / res$time) else NA
     cat("-----------------------------------------------------------------\n")
-    cat(sprintf("valoracion:       %d\n",     res$puntuacion))
-    cat(sprintf("jugada realizada: %d\n",     res$jugada))
-    cat(sprintf("profundidad:      %d\n",     prof))
-    cat(sprintf("nodos evaluados:  %.0f\n",   res$nodos))
-    cat(sprintf("nodos minimax:    %.0f\n",   res$nodos_normales))
-    cat(sprintf("nodos tácticos:   %.0f\n",   res$nodos_tacticos))
-    cat(sprintf("nod/s:            %.0f\n",   nods_s))
-    cat(sprintf("tiempo:           %.2f s\n", res$tiempo))
-    cat(sprintf("variante:         %s\n",     paste(res$variante, collapse = " -> ")))
+    cat(sprintf("evaluation:       %d\n",     res$score))
+    cat(sprintf("move played:      %d\n",     res$move))
+    cat(sprintf("depth:            %d\n",     search_depth))
+    cat(sprintf("nodes evaluated:  %.0f\n",   res$nodes))
+    cat(sprintf("minimax nodes:    %.0f\n",   res$normal_nodes))
+    cat(sprintf("tactical nodes:   %.0f\n",   res$tactical_nodes))
+    cat(sprintf("nodes/s:          %.0f\n",   nodes_s))
+    cat(sprintf("time:             %.2f s\n", res$time))
+    cat(sprintf("variation:        %s\n",     paste(res$variation, collapse = " -> ")))
     cat("-----------------------------------------------------------------\n\n")
     tab
   }
 
-  terminado <- function(tab) {
-    juego_terminado(tab)
+  finished <- function(tab) {
+    game_over(tab)
   }
 
-  # Modo humano vs IA
+  # Human vs AI mode
   if (!auto) {
-    if (turno == 2) {
-      prof    <- if (profAdaptative) .adaptativa(tablero, profundidad) else profundidad
-      tablero <- fin_turno(tablero, 2L, prof, TRUE)
-      fin     <- terminado(tablero)
-      if (fin$finalizado) { cat("gana IA\n"); return(invisible(tablero)) }
+    if (turn == 2) {
+      search_depth <- if (adaptiveDepth) .adaptive_depth(board, depth) else depth
+      board        <- end_turn(board, 2L, search_depth, TRUE)
+      outcome      <- finished(board)
+      if (outcome$finished) { cat("AI wins\n"); return(invisible(board)) }
       i <- i + 1; j <- 1
     }
 
     while (i <= (42 - j)) {
-      tablero_anterior <- tablero
-      tablero <- turno_humano(tablero, raton = raton)
-      ultima_jugada <- which(tablero != tablero_anterior, arr.ind = TRUE)
-      mostrar_tablero(tablero, ultima_jugada[1, ])
-      cat(sprintf("valoracion HU: %d\n", evaluar_posicion(tablero)))
+      previous_board <- board
+      board <- human_turn(board, mouse = mouse)
+      last_move <- which(board != previous_board, arr.ind = TRUE)
+      show_board(board, last_move[1, ])
+      cat(sprintf("evaluation (human): %d\n", evaluate_position(board)))
 
-      fin <- terminado(tablero)
-      if (fin$finalizado) { resultado <- fin$resultado; break }
+      outcome <- finished(board)
+      if (outcome$finished) { result <- outcome$result; break }
       i <- i + 1
 
-      prof    <- if (profAdaptative) .adaptativa(tablero, profundidad) else profundidad
-      tablero <- fin_turno(tablero, 2L, prof, TRUE)
+      search_depth <- if (adaptiveDepth) .adaptive_depth(board, depth) else depth
+      board        <- end_turn(board, 2L, search_depth, TRUE)
 
-      fin <- terminado(tablero)
-      if (fin$finalizado) { resultado <- fin$resultado; break }
+      outcome <- finished(board)
+      if (outcome$finished) { result <- outcome$result; break }
       i <- i + 1
     }
 
-    cat(sprintf("Resultado: %s\n", resultado))
+    cat(sprintf("Result: %s\n", result))
   }
 
-  # Modo automático (IA vs IA)
+  # Automatic mode (AI vs AI)
   if (auto) {
     while (i <= 42) {
-      turno_actual <- ((i - 1) %% 2) + 1
-      max_ia       <- (turno_actual == 2)
-      prof         <- if (profAdaptative) .adaptativa(tablero, profundidad) else profundidad
+      current_turn <- ((i - 1) %% 2) + 1
+      max_ai       <- (current_turn == 2)
+      search_depth <- if (adaptiveDepth) .adaptive_depth(board, depth) else depth
 
-      tablero <- fin_turno(tablero, turno_actual, prof, max_ia)
+      board <- end_turn(board, current_turn, search_depth, max_ai)
 
-      fin <- terminado(tablero)
-      if (fin$finalizado) {
-        resultado <- switch(as.character(fin$resultado),
-                            "1" = "GANA HUMANO (jugador 1)",
-                            "2" = "GANA IA (jugador 2)",
-                            "0" = "EMPATE")
-        cat(sprintf("Resultado: %s\n", resultado))
+      outcome <- finished(board)
+      if (outcome$finished) {
+        result <- switch(as.character(outcome$result),
+                         "1" = "HUMAN WINS (player 1)",
+                         "2" = "AI WINS (player 2)",
+                         "0" = "DRAW")
+        cat(sprintf("Result: %s\n", result))
         break
       }
       i <- i + 1
     }
   }
 
-  invisible(tablero)
+  invisible(board)
 }

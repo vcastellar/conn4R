@@ -4,34 +4,34 @@
 \name{conn4R-package}
 \alias{conn4R}
 \alias{conn4R-package}
-\title{conn4R: Conecta 4 con motor de IA en C++}
+\title{conn4R: Connect 4 with an AI engine in C++}
 \description{
-El paquete \pkg{conn4R} implementa el juego de Conecta 4 con una
-inteligencia artificial basada en el algoritmo minimax con poda alfa-beta,
-tabla de transposición y búsqueda de quiescencia. El motor de búsqueda está
-escrito en C++ (via \pkg{Rcpp}) para máximo rendimiento, mientras que la
-capa R aporta la interfaz de juego, la introducción y el análisis de
-posiciones y la visualización.
+The \pkg{conn4R} package implements the game of Connect 4 with an
+artificial intelligence based on the minimax algorithm with alpha-beta
+pruning, a transposition table and quiescence search. The search engine is
+written in C++ (via \pkg{Rcpp}) for maximum performance, while the
+R layer provides the game interface, position entry and analysis, and
+visualization.
 }
-\section{Convenio del tablero}{
+\section{Board convention}{
 
-El tablero se representa como una matriz entera de 6 filas y 7 columnas.
-Cada celda toma uno de tres valores: \code{0} (vacía), \code{1} (ficha del
-jugador humano) o \code{2} (ficha de la IA). Las fichas caen por gravedad
-hasta la fila libre más baja de la columna elegida.
+The board is represented as an integer matrix with 6 rows and 7 columns.
+Each cell takes one of three values: \code{0} (empty), \code{1} (piece of
+the human player) or \code{2} (piece of the AI). Pieces fall by gravity
+to the lowest free row of the chosen column.
 }
 
-\section{Funciones principales}{
+\section{Main functions}{
 
 \describe{
-  \item{\code{\link{iniciar_partida}}}{Jugar una partida completa
-    (humano contra IA o IA contra sí misma).}
-  \item{\code{\link{crear_posicion}}}{Introducir una posición a partir de
-    una secuencia de jugadas.}
-  \item{\code{\link{analizar_posicion}}}{Analizar una posición con el motor
-    minimax y obtener la jugada recomendada y la variante principal.}
-  \item{\code{\link{visualizar_tablero}}, \code{\link{visualizar_variante}}}{Visualizar
-    posiciones y variantes con \pkg{ggplot2}.}
+  \item{\code{\link{start_game}}}{Play a full game
+    (human against AI or AI against itself).}
+  \item{\code{\link{create_position}}}{Enter a position from
+    a sequence of moves.}
+  \item{\code{\link{analyze_position}}}{Analyze a position with the minimax
+    engine and get the recommended move and the principal variation.}
+  \item{\code{\link{visualize_board}}, \code{\link{visualize_variation}}}{Visualize
+    positions and variations with \pkg{ggplot2}.}
 }
 }
 

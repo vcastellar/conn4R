@@ -1,57 +1,58 @@
-# Paleta y medidas compartidas por las funciones de visualización. Los radios
-# están expresados en unidades de celda (cada casilla mide 1 x 1).
-.estilo_tablero <- list(
-  fondo         = "#F4F6FA",
-  tablero       = "#2155CD",
-  tablero_borde = "#173E9C",
-  sombra        = "#0B1B3F",
-  hueco         = "#E8EDF5",
-  hueco_borde   = "#163A8F",
-  humano        = "#FFC93C",
-  ia            = "#E84855",
-  ficha_borde   = "#00000038",
-  resalte       = "#FFFFFF",
-  texto         = "#0F172A",
-  texto_suave   = "#64748B",
-  radio_hueco   = 0.42,
-  radio_ficha   = 0.39,
-  radio_interior = 0.27,
-  radio_ultima  = 0.465,
-  radio_ganadora = 0.085
+# Palette and measurements shared by the visualization functions. The radii
+# are expressed in cell units (each cell is 1 x 1).
+.board_style <- list(
+  background       = "#F4F6FA",
+  board            = "#2155CD",
+  board_border     = "#173E9C",
+  shadow           = "#0B1B3F",
+  hole             = "#E8EDF5",
+  hole_border      = "#163A8F",
+  human            = "#FFC93C",
+  ai               = "#E84855",
+  piece_border     = "#00000038",
+  highlight        = "#FFFFFF",
+  text             = "#0F172A",
+  text_soft        = "#64748B",
+  hole_radius      = 0.42,
+  piece_radius     = 0.39,
+  inner_radius     = 0.27,
+  last_move_radius = 0.465,
+  winning_radius   = 0.085
 )
 
-# Límites de los ejes del gráfico del tablero (unidades de celda). Se comparten
-# con turno_humano() para traducir un clic del ratón a una columna.
-.limites_tablero <- list(x = c(0.3, 7.7), y = c(0.25, 7.2))
+# Axis limits of the board plot (cell units). They are shared
+# with human_turn() to translate a mouse click into a column.
+.board_limits <- list(x = c(0.3, 7.7), y = c(0.25, 7.2))
 
-#' Detectar y devolver las coordenadas de la línea ganadora
+#' Detect and return the coordinates of the winning line
 #'
-#' @description Recorre todas las posibles líneas de 4 del tablero y devuelve
-#'   las coordenadas de visualización de la primera línea ganadora encontrada
-#'   (puntuación mayor o igual que 10 000), o \code{NULL} si no existe ninguna. Usada
-#'   internamente por \code{\link{visualizar_tablero}} para resaltar las
-#'   fichas ganadoras.
+#' @description Scans all the possible lines of 4 on the board and returns
+#'   the plotting coordinates of the first winning line found
+#'   (score greater than or equal to 10,000), or \code{NULL} if there is none.
+#'   Used internally by \code{\link{visualize_board}} to highlight the
+#'   winning pieces.
 #'
-#' @param tablero Matriz de 6 x 7 con el estado del tablero.
+#' @param board 6 x 7 matrix with the state of the board.
 #'
-#' @return Data frame con columnas \code{x} (altura, 1 en la fila inferior),
-#'   \code{y} (columna) y \code{ficha} (valor 3) para las 4 celdas de la línea
-#'   ganadora, ordenadas de un extremo a otro, o \code{NULL} si no hay ganador.
-.detectar_lineas <- function(tablero) {
-  direcciones <- rbind(c(0L, 1L), c(1L, 0L), c(1L, 1L), c(1L, -1L))
+#' @return Data frame with columns \code{x} (height, 1 for the bottom row),
+#'   \code{y} (column) and \code{piece} (value 3) for the 4 cells of the
+#'   winning line, ordered from one end to the other, or \code{NULL} if there
+#'   is no winner.
+.detect_lines <- function(board) {
+  directions <- rbind(c(0L, 1L), c(1L, 0L), c(1L, 1L), c(1L, -1L))
 
-  for (fila in seq_len(6L)) {
-    for (columna in seq_len(7L)) {
-      jugador <- tablero[fila, columna]
-      if (jugador == 0L) next
+  for (row in seq_len(6L)) {
+    for (column in seq_len(7L)) {
+      player <- board[row, column]
+      if (player == 0L) next
 
-      for (i in seq_len(nrow(direcciones))) {
-        filas <- fila + (0:3) * direcciones[i, 1]
-        columnas <- columna + (0:3) * direcciones[i, 2]
-        if (any(filas < 1L | filas > 6L | columnas < 1L | columnas > 7L)) next
+      for (i in seq_len(nrow(directions))) {
+        rows <- row + (0:3) * directions[i, 1]
+        columns <- column + (0:3) * directions[i, 2]
+        if (any(rows < 1L | rows > 6L | columns < 1L | columns > 7L)) next
 
-        if (all(tablero[cbind(filas, columnas)] == jugador)) {
-          return(data.frame(x = 7L - filas, y = columnas, ficha = 3L))
+        if (all(board[cbind(rows, columns)] == player)) {
+          return(data.frame(x = 7L - rows, y = columns, piece = 3L))
         }
       }
     }
@@ -60,208 +61,208 @@
   NULL
 }
 
-# Vértices de un círculo por cada centro (cx, cy). Se dibujan como polígonos
-# para que su tamaño dependa de los ejes y no del dispositivo gráfico. Las
-# columnas pasadas en `...` se replican en todos los vértices de su círculo.
-.circulos <- function(cx, cy, r, ..., n = 64L) {
-  angulo <- seq(0, 2 * pi, length.out = n + 1L)[-1L]
+# Vertices of a circle for each center (cx, cy). They are drawn as polygons
+# so that their size depends on the axes and not on the graphics device. The
+# columns passed in `...` are replicated across all the vertices of their circle.
+.circles <- function(cx, cy, r, ..., n = 64L) {
+  angle <- seq(0, 2 * pi, length.out = n + 1L)[-1L]
   id <- rep(seq_along(cx), each = n)
   df <- data.frame(
-    x     = cx[id] + r * cos(angulo),
-    y     = cy[id] + r * sin(angulo),
-    grupo = id,
+    x     = cx[id] + r * cos(angle),
+    y     = cy[id] + r * sin(angle),
+    group = id,
     cx    = cx[id],
     cy    = cy[id]
   )
-  for (nombre in names(list(...))) {
-    v <- list(...)[[nombre]]
-    df[[nombre]] <- if (length(v) == 1L) rep(v, nrow(df)) else v[id]
+  for (name in names(list(...))) {
+    v <- list(...)[[name]]
+    df[[name]] <- if (length(v) == 1L) rep(v, nrow(df)) else v[id]
   }
   df
 }
 
-# Contorno de un rectángulo con las esquinas redondeadas de radio `r`.
-.rectangulo_redondeado <- function(xmin, xmax, ymin, ymax, r, n = 16L) {
-  esquina <- function(cx, cy, desde) {
-    angulo <- seq(desde, desde + pi / 2, length.out = n)
-    data.frame(x = cx + r * cos(angulo), y = cy + r * sin(angulo))
+# Outline of a rectangle with corners rounded with radius `r`.
+.rounded_rectangle <- function(xmin, xmax, ymin, ymax, r, n = 16L) {
+  corner <- function(cx, cy, from) {
+    angle <- seq(from, from + pi / 2, length.out = n)
+    data.frame(x = cx + r * cos(angle), y = cy + r * sin(angle))
   }
   rbind(
-    esquina(xmax - r, ymax - r, 0),
-    esquina(xmin + r, ymax - r, pi / 2),
-    esquina(xmin + r, ymin + r, pi),
-    esquina(xmax - r, ymin + r, 3 * pi / 2)
+    corner(xmax - r, ymax - r, 0),
+    corner(xmin + r, ymax - r, pi / 2),
+    corner(xmin + r, ymin + r, pi),
+    corner(xmax - r, ymin + r, 3 * pi / 2)
   )
 }
 
-#' Visualizar el tablero de Conecta 4
+#' Visualize the Connect 4 board
 #'
-#' @description Genera un gráfico \pkg{ggplot2} del estado actual del tablero
-#'   con un estilo plano y moderno: un panel azul con esquinas redondeadas y
-#'   sombra, huecos claros para las casillas vacías, fichas ámbar para el
-#'   jugador 1 (humano) y coral para el jugador 2 (IA). Las fichas se dibujan
-#'   en coordenadas de datos, por lo que el tablero se adapta al tamaño del
-#'   dispositivo gráfico.
+#' @description Generates a \pkg{ggplot2} plot of the current state of the
+#'   board in a flat, modern style: a blue panel with rounded corners and a
+#'   shadow, light holes for the empty cells, amber pieces for
+#'   player 1 (human) and coral pieces for player 2 (AI). The pieces are drawn
+#'   in data coordinates, so the board adapts to the size of the
+#'   graphics device.
 #'
-#'   El subtítulo resume el estado de la partida (número de jugadas, victoria o
-#'   empate). Si existe una línea ganadora, se traza una línea blanca sobre sus
-#'   cuatro fichas y se atenúan las demás. Cuando se proporciona
-#'   \code{ultima_jugada}, esa ficha se rodea con un aro blanco y su número de
-#'   columna se destaca.
+#'   The subtitle summarizes the state of the game (number of moves, win or
+#'   draw). If there is a winning line, a white line is drawn over its
+#'   four pieces and the other pieces are dimmed. When \code{last_move} is
+#'   given, that piece is surrounded by a white ring and its column
+#'   number is highlighted.
 #'
-#' @param tablero Matriz de 6 x 7 con el estado del tablero. Celdas: 0 vacío,
-#'   1 humano, 2 IA.
-#' @param ultima_jugada Coordenadas \code{c(fila, columna)} de la última ficha
-#'   colocada, o \code{NULL} para no destacarla.
+#' @param board 6 x 7 matrix with the state of the board. Cells: 0 empty,
+#'   1 human, 2 AI.
+#' @param last_move Coordinates \code{c(row, column)} of the last piece
+#'   placed, or \code{NULL} so as not to highlight it.
 #'
-#' @return Objeto \code{ggplot} listo para imprimir con \code{print()} o
+#' @return A \code{ggplot} object ready to be printed with \code{print()} or
 #'   \code{plot()}.
 #'
 #' @examples
-#' tablero <- crear_posicion_aleatoria(21)
-#' p <- visualizar_tablero(tablero)
+#' board <- create_random_position(21)
+#' p <- visualize_board(board)
 #' print(p)
 #'
-#' # Tablero vacío
-#' print(visualizar_tablero(reiniciar_tablero()))
+#' # Empty board
+#' print(visualize_board(reset_board()))
 #'
-#' @seealso \code{\link{crear_posicion_aleatoria}}, \code{\link{reiniciar_tablero}}
+#' @seealso \code{\link{create_random_position}}, \code{\link{reset_board}}
 #'
 #' @export
-visualizar_tablero <- function(tablero, ultima_jugada = NULL) {
-  if (!is.null(ultima_jugada) &&
-      (length(ultima_jugada) != 2L || anyNA(ultima_jugada) ||
-       any(!is.finite(ultima_jugada)) ||
-       any(ultima_jugada != as.integer(ultima_jugada)) ||
-       !ultima_jugada[[1]] %in% 1:6 || !ultima_jugada[[2]] %in% 1:7 ||
-       tablero[ultima_jugada[[1]], ultima_jugada[[2]]] == 0L)) {
-    stop("`ultima_jugada` debe señalar una ficha del tablero mediante c(fila, columna).",
+visualize_board <- function(board, last_move = NULL) {
+  if (!is.null(last_move) &&
+      (length(last_move) != 2L || anyNA(last_move) ||
+       any(!is.finite(last_move)) ||
+       any(last_move != as.integer(last_move)) ||
+       !last_move[[1]] %in% 1:6 || !last_move[[2]] %in% 1:7 ||
+       board[last_move[[1]], last_move[[2]]] == 0L)) {
+    stop("`last_move` must point to a piece on the board as c(row, column).",
          call. = FALSE)
   }
 
-  est <- .estilo_tablero
+  style <- .board_style
 
-  # Casillas en coordenadas de dibujo: x = columna, y = altura (1 abajo).
-  celdas <- data.frame(
+  # Cells in plotting coordinates: x = column, y = height (1 at the bottom).
+  cells <- data.frame(
     cx    = rep(1:7, each = 6),
     cy    = rep(6:1, times = 7),
-    ficha = as.vector(tablero)
+    piece = as.vector(board)
   )
-  ocupadas <- celdas[celdas$ficha != 0L, ]
+  occupied <- cells[cells$piece != 0L, ]
 
-  linea <- .detectar_lineas(tablero)
-  ganadora <- rep(FALSE, nrow(ocupadas))
-  if (!is.null(linea)) {
-    ganadora <- paste(ocupadas$cx, ocupadas$cy) %in% paste(linea$y, linea$x)
+  line <- .detect_lines(board)
+  winning <- rep(FALSE, nrow(occupied))
+  if (!is.null(line)) {
+    winning <- paste(occupied$cx, occupied$cy) %in% paste(line$y, line$x)
   }
-  # Con una línea ganadora, el resto de fichas se atenúa para destacarla.
-  opacidad <- if (is.null(linea)) rep(1, nrow(ocupadas)) else ifelse(ganadora, 1, 0.4)
+  # With a winning line, the rest of the pieces are dimmed to highlight it.
+  opacity <- if (is.null(line)) rep(1, nrow(occupied)) else ifelse(winning, 1, 0.4)
 
-  df_marco <- .rectangulo_redondeado(0.38, 7.62, 0.38, 6.62, r = 0.32)
-  df_sombra <- transform(df_marco, x = x + 0.05, y = y - 0.10)
-  df_huecos <- .circulos(celdas$cx, celdas$cy, est$radio_hueco)
-  df_fichas <- .circulos(
-    ocupadas$cx, ocupadas$cy, est$radio_ficha,
-    jugador = factor(ocupadas$ficha, levels = 1:2, labels = c("Humano", "IA")),
-    alpha   = opacidad
+  df_frame <- .rounded_rectangle(0.38, 7.62, 0.38, 6.62, r = 0.32)
+  df_shadow <- transform(df_frame, x = x + 0.05, y = y - 0.10)
+  df_holes <- .circles(cells$cx, cells$cy, style$hole_radius)
+  df_pieces <- .circles(
+    occupied$cx, occupied$cy, style$piece_radius,
+    player = factor(occupied$piece, levels = 1:2, labels = c("Human", "AI")),
+    alpha  = opacity
   )
-  df_interior <- .circulos(ocupadas$cx, ocupadas$cy, est$radio_interior,
-                           alpha = opacidad)
+  df_inner <- .circles(occupied$cx, occupied$cy, style$inner_radius,
+                       alpha = opacity)
 
-  df_columnas <- data.frame(x = 1:7, y = 6.98, etiqueta = as.character(1:7))
+  df_columns <- data.frame(x = 1:7, y = 6.98, label = as.character(1:7))
 
-  # Estado de la partida para el subtítulo.
-  n_jugadas <- sum(tablero != 0L)
-  if (!is.null(linea)) {
-    ganador <- tablero[7L - linea$x[[1]], linea$y[[1]]]
-    estado <- if (ganador == 1L) "Victoria del humano" else "Victoria de la IA"
-  } else if (n_jugadas == 42L) {
-    estado <- "Empate: tablero completo"
+  # State of the game for the subtitle.
+  n_moves <- sum(board != 0L)
+  if (!is.null(line)) {
+    winner <- board[7L - line$x[[1]], line$y[[1]]]
+    status <- if (winner == 1L) "Human wins" else "AI wins"
+  } else if (n_moves == 42L) {
+    status <- "Draw: board full"
   } else {
-    estado <- sprintf("%d %s", n_jugadas, if (n_jugadas == 1L) "jugada" else "jugadas")
+    status <- sprintf("%d %s", n_moves, if (n_moves == 1L) "move" else "moves")
   }
-  if (!is.null(ultima_jugada)) {
-    estado <- sprintf("%s  ·  Última jugada: columna %d",
-                      estado, as.integer(ultima_jugada[[2]]))
+  if (!is.null(last_move)) {
+    status <- sprintf("%s  \u00b7  Last move: column %d",
+                      status, as.integer(last_move[[2]]))
   }
 
   p <- ggplot() +
-    geom_polygon(data = df_sombra, aes(x = x, y = y),
-                 fill = est$sombra, alpha = 0.18) +
-    geom_polygon(data = df_marco, aes(x = x, y = y),
-                 fill = est$tablero, colour = est$tablero_borde, linewidth = 0.6) +
-    geom_polygon(data = df_huecos, aes(x = x, y = y, group = grupo),
-                 fill = est$hueco, colour = est$hueco_borde, linewidth = 0.4)
+    geom_polygon(data = df_shadow, aes(x = x, y = y),
+                 fill = style$shadow, alpha = 0.18) +
+    geom_polygon(data = df_frame, aes(x = x, y = y),
+                 fill = style$board, colour = style$board_border, linewidth = 0.6) +
+    geom_polygon(data = df_holes, aes(x = x, y = y, group = group),
+                 fill = style$hole, colour = style$hole_border, linewidth = 0.4)
 
-  # La capa de fichas se añade aunque no haya ninguna para que la leyenda
-  # aparezca siempre y el tablero no cambie de tamaño durante la partida.
+  # The pieces layer is added even when there are none so that the legend
+  # always appears and the board does not change size during the game.
   p <- p +
-    geom_polygon(data = df_fichas,
-                 aes(x = x, y = y, group = grupo, fill = jugador, alpha = alpha),
-                 colour = est$ficha_borde, linewidth = 0.5, key_glyph = "point") +
-    geom_polygon(data = df_interior,
-                 aes(x = x, y = y, group = grupo, alpha = alpha * 0.08),
+    geom_polygon(data = df_pieces,
+                 aes(x = x, y = y, group = group, fill = player, alpha = alpha),
+                 colour = style$piece_border, linewidth = 0.5, key_glyph = "point") +
+    geom_polygon(data = df_inner,
+                 aes(x = x, y = y, group = group, alpha = alpha * 0.08),
                  fill = "black", colour = NA)
 
-  if (!is.null(ultima_jugada)) {
-    df_ultima <- .circulos(
-      as.integer(ultima_jugada[[2]]), 7L - as.integer(ultima_jugada[[1]]),
-      est$radio_ultima, elemento = "ultima_jugada"
+  if (!is.null(last_move)) {
+    df_last <- .circles(
+      as.integer(last_move[[2]]), 7L - as.integer(last_move[[1]]),
+      style$last_move_radius, element = "last_move"
     )
-    p <- p + geom_polygon(data = df_ultima, aes(x = x, y = y, group = grupo),
-                          fill = NA, colour = est$resalte, linewidth = 1.3)
+    p <- p + geom_polygon(data = df_last, aes(x = x, y = y, group = group),
+                          fill = NA, colour = style$highlight, linewidth = 1.3)
   }
 
-  if (!is.null(linea)) {
-    df_linea <- data.frame(x = linea$y[[1]], y = linea$x[[1]],
-                           xend = linea$y[[4]], yend = linea$x[[4]])
-    df_puntos <- .circulos(linea$y, linea$x, est$radio_ganadora,
-                           elemento = "linea_ganadora")
+  if (!is.null(line)) {
+    df_line <- data.frame(x = line$y[[1]], y = line$x[[1]],
+                          xend = line$y[[4]], yend = line$x[[4]])
+    df_dots <- .circles(line$y, line$x, style$winning_radius,
+                        element = "winning_line")
     p <- p +
-      geom_segment(data = df_linea, aes(x = x, y = y, xend = xend, yend = yend),
-                   colour = est$resalte, alpha = 0.9, linewidth = 2.2,
+      geom_segment(data = df_line, aes(x = x, y = y, xend = xend, yend = yend),
+                   colour = style$highlight, alpha = 0.9, linewidth = 2.2,
                    lineend = "round") +
-      geom_polygon(data = df_puntos, aes(x = x, y = y, group = grupo),
-                   fill = est$resalte, colour = NA)
+      geom_polygon(data = df_dots, aes(x = x, y = y, group = group),
+                   fill = style$highlight, colour = NA)
   }
 
   p <- p +
-    geom_text(data = df_columnas, aes(x = x, y = y, label = etiqueta),
-              colour = est$texto_suave, size = 3.6)
+    geom_text(data = df_columns, aes(x = x, y = y, label = label),
+              colour = style$text_soft, size = 3.6)
 
-  if (!is.null(ultima_jugada)) {
-    p <- p + geom_text(data = df_columnas[ultima_jugada[[2]], ],
-                       aes(x = x, y = y, label = etiqueta),
-                       colour = est$tablero, size = 4.2, fontface = "bold")
+  if (!is.null(last_move)) {
+    p <- p + geom_text(data = df_columns[last_move[[2]], ],
+                       aes(x = x, y = y, label = label),
+                       colour = style$board, size = 4.2, fontface = "bold")
   }
 
   p +
     scale_fill_manual(
-      values = c(Humano = est$humano, IA = est$ia),
-      limits = c("Humano", "IA"),
+      values = c(Human = style$human, AI = style$ai),
+      limits = c("Human", "AI"),
       drop   = FALSE,
       name   = NULL
     ) +
     scale_alpha_identity() +
     guides(fill = guide_legend(
       override.aes = list(shape = 21, size = 6, stroke = 0.6,
-                        colour = est$ficha_borde, alpha = 1)
+                        colour = style$piece_border, alpha = 1)
     )) +
-    coord_fixed(xlim = .limites_tablero$x, ylim = .limites_tablero$y,
+    coord_fixed(xlim = .board_limits$x, ylim = .board_limits$y,
                 expand = FALSE) +
-    labs(title = "Conecta 4", subtitle = estado) +
+    labs(title = "Connect 4", subtitle = status) +
     theme_void(base_size = 12) +
     theme(
-      plot.background   = element_rect(fill = est$fondo, colour = NA),
-      panel.background  = element_rect(fill = est$fondo, colour = NA),
+      plot.background   = element_rect(fill = style$background, colour = NA),
+      panel.background  = element_rect(fill = style$background, colour = NA),
       plot.title        = element_text(hjust = 0.5, face = "bold", size = 18,
-                                       colour = est$texto,
+                                       colour = style$text,
                                        margin = margin(b = 4)),
       plot.subtitle     = element_text(hjust = 0.5, size = 11,
-                                       colour = est$texto_suave,
+                                       colour = style$text_soft,
                                        margin = margin(b = 6)),
       legend.position   = "bottom",
-      legend.text       = element_text(colour = est$texto, size = 11,
+      legend.text       = element_text(colour = style$text, size = 11,
                                        margin = margin(r = 14, l = 2)),
       legend.key        = element_rect(fill = NA, colour = NA),
       legend.margin     = margin(t = 2),
@@ -269,71 +270,71 @@ visualizar_tablero <- function(tablero, ultima_jugada = NULL) {
     )
 }
 
-#' Visualizar una variante jugada paso a paso
+#' Visualize a variation played step by step
 #'
-#' @description Reproduce sobre un tablero una secuencia de jugadas alternando
-#'   los jugadores. Muestra primero la posición inicial mediante
-#'   \code{\link{visualizar_tablero}} y, después de cada pausa, muestra la
-#'   posición resultante de la siguiente jugada.
+#' @description Replays a sequence of moves on a board, alternating the
+#'   players. It first shows the initial position using
+#'   \code{\link{visualize_board}} and then, after each pause, shows the
+#'   position resulting from the next move.
 #'
-#' @param tablero Matriz de 6 x 7 con la posición inicial. Celdas: 0 vacío,
-#'   1 humano, 2 IA.
-#' @param turno Jugador que realiza la primera jugada de \code{variante}:
-#'   \code{1} (humano) o \code{2} (IA).
-#' @param variante Vector de columnas (1-7) que se reproducirán en orden.
-#' @param lapso Segundos de espera entre posiciones. Por defecto, 1 segundo.
-#'   Puede usarse \code{0} para reproducir la variante sin espera.
+#' @param board 6 x 7 matrix with the initial position. Cells: 0 empty,
+#'   1 human, 2 AI.
+#' @param turn Player who makes the first move of \code{variation}:
+#'   \code{1} (human) or \code{2} (AI).
+#' @param variation Vector of columns (1-7) that will be replayed in order.
+#' @param delay Seconds to wait between positions. Defaults to 1 second.
+#'   \code{0} can be used to replay the variation without waiting.
 #'
-#' @return Invisiblemente, la matriz de 6 x 7 resultante después de reproducir toda
-#'   la variante.
+#' @return Invisibly, the resulting 6 x 7 matrix after replaying the whole
+#'   variation.
 #'
 #' @examples
 #' \dontrun{
-#' tablero <- reiniciar_tablero()
-#' visualizar_variante(tablero, turno = 1, variante = c(4, 4, 3, 5))
+#' board <- reset_board()
+#' visualize_variation(board, turn = 1, variation = c(4, 4, 3, 5))
 #' }
 #'
-#' @seealso \code{\link{visualizar_tablero}}, \code{\link{realizar_jugada}}
+#' @seealso \code{\link{visualize_board}}, \code{\link{make_move}}
 #'
 #' @export
-visualizar_variante <- function(tablero, turno, variante, lapso = 1) {
-  if (!is.matrix(tablero) || !identical(dim(tablero), c(6L, 7L)) ||
-      anyNA(tablero) || any(!tablero %in% 0:2)) {
-    stop("`tablero` debe ser una matriz 6x7 con valores 0, 1 o 2.",
+visualize_variation <- function(board, turn, variation, delay = 1) {
+  if (!is.matrix(board) || !identical(dim(board), c(6L, 7L)) ||
+      anyNA(board) || any(!board %in% 0:2)) {
+    stop("`board` must be a 6x7 matrix with values 0, 1 or 2.",
          call. = FALSE)
   }
-  if (length(turno) != 1L || is.na(turno) || !turno %in% c(1, 2)) {
-    stop("`turno` debe ser 1 o 2.", call. = FALSE)
+  if (length(turn) != 1L || is.na(turn) || !turn %in% c(1, 2)) {
+    stop("`turn` must be 1 or 2.", call. = FALSE)
   }
-  if (!is.numeric(variante) || anyNA(variante) ||
-      any(!is.finite(variante)) || any(variante != as.integer(variante)) ||
-      any(!variante %in% 1:7)) {
-    stop("`variante` debe contener columnas enteras entre 1 y 7.",
+  if (!is.numeric(variation) || anyNA(variation) ||
+      any(!is.finite(variation)) || any(variation != as.integer(variation)) ||
+      any(!variation %in% 1:7)) {
+    stop("`variation` must contain integer columns between 1 and 7.",
          call. = FALSE)
   }
-  if (length(lapso) != 1L || !is.numeric(lapso) || is.na(lapso) ||
-      !is.finite(lapso) || lapso < 0) {
-    stop("`lapso` debe ser un número finito mayor o igual que 0.",
+  if (length(delay) != 1L || !is.numeric(delay) || is.na(delay) ||
+      !is.finite(delay) || delay < 0) {
+    stop("`delay` must be a finite number greater than or equal to 0.",
          call. = FALSE)
   }
 
-  tablero_actual <- matrix(as.integer(tablero), nrow = 6L, ncol = 7L)
-  jugador <- as.integer(turno)
-  print(visualizar_tablero(tablero_actual))
+  current_board <- matrix(as.integer(board), nrow = 6L, ncol = 7L)
+  player <- as.integer(turn)
+  print(visualize_board(current_board))
 
-  for (i in seq_along(variante)) {
-    columna <- as.integer(variante[[i]])
-    if (!columna %in% jugadas_disponibles(tablero_actual)) {
-      stop(sprintf("La jugada %d no es válida: la columna %d está llena.",
-                   i, columna), call. = FALSE)
+  for (i in seq_along(variation)) {
+    column <- as.integer(variation[[i]])
+    if (!column %in% available_moves(current_board)) {
+      stop(sprintf("Move %d is not valid: column %d is full.",
+                   i, column), call. = FALSE)
     }
 
-    Sys.sleep(lapso)
-    tablero_actual <- realizar_jugada(tablero_actual, columna, jugador)
-    fila <- min(which(tablero_actual[, columna] != 0L))
-    print(visualizar_tablero(tablero_actual, c(fila, columna)))
-    jugador <- 3L - jugador
+    Sys.sleep(delay)
+    current_board <- make_move(current_board, column, player)
+    row <- min(which(current_board[, column] != 0L))
+    print(visualize_board(current_board, c(row, column)))
+    player <- 3L - player
   }
 
-  invisible(tablero_actual)
+  invisible(current_board)
 }

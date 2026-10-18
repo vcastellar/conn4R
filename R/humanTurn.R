@@ -1,137 +1,138 @@
-#' solicita una jugada al humano.
+#' Ask the human for a move.
 #'
-#' @description la función invita al jugador humano a introducir una jugada
-#' Si la jugada es legal representeala jugada del humano en el tablero mediante
-#' un 1 en la casilla que corresponda. La jugada de la IA será representada en el
-#' tablero mediante un 2.
-#' @param tablero matriz 6 x 7 que representa la situación del tablero de juego.
-#' @param jugada un entero del 1 al 7 correspondiente a cada una de las 7 columnas
-#' si jugada = NULL (valor por defecto), entonces invita al jugador a introducir su jugada
-#' @param raton Lógico. Si \code{TRUE} (valor por defecto) y el dispositivo
-#'   gráfico activo lo permite, la jugada se elige pulsando con el ratón sobre
-#'   cualquier celda de la columna deseada en el tablero dibujado por
-#'   \code{\link{visualizar_tablero}}. Si \code{FALSE}, o si el dispositivo no
-#'   admite clics, la columna se escribe por teclado.
+#' @description The function prompts the human player to enter a move.
+#' If the move is legal, the human's move is shown on the board as
+#' a 1 in the corresponding cell. The AI's moves are shown on the
+#' board as a 2.
+#' @param board 6 x 7 matrix representing the state of the game board.
+#' @param move an integer from 1 to 7, one for each of the 7 columns.
+#' If move = NULL (the default), the player is prompted to enter their move.
+#' @param mouse Logical. If \code{TRUE} (the default) and the active graphics
+#'   device allows it, the move is chosen by clicking with the mouse on
+#'   any cell of the desired column of the board drawn by
+#'   \code{\link{visualize_board}}. If \code{FALSE}, or if the device does not
+#'   support clicks, the column is typed on the keyboard.
 #' @details
-#'# Si la jugada es legal representa la jugada del humano en el tablero mediante un 1
-#' en la casilla que corresponda a la jugada
-#' Si la jugada introducida es ilegal, vuelve a solicitar una jugada legal
+#' If the move is legal, the human's move is shown on the board as a 1
+#' in the cell that corresponds to the move.
+#' If the move entered is illegal, a legal move is requested again.
 #'
-#' Al jugar con el ratón, pulsar fuera del tablero o sobre una columna llena
-#' vuelve a solicitar la jugada. Si se cancela la selección (tecla Esc o botón
-#' derecho, según el dispositivo), la jugada se pide por teclado.
+#' When playing with the mouse, clicking outside the board or on a full column
+#' asks for the move again. If the selection is canceled (Esc key or right
+#' mouse button, depending on the device), the move is requested from the
+#' keyboard.
 #'
 #'
 #' @examples
-#' tablero <- reiniciar_tablero()
-#' tablero <- turno_humano(tablero, jugada = 4)
-#' visualizar_tablero(tablero)
-#' # tambien se puede hacer lo siguiente (no ejecutar):
-#' # tablero <- reiniciar_tablero()
-#' # print(visualizar_tablero(tablero))
-#' # tablero <- turno_humano(tablero)  # pulsar sobre una columna del tablero
-#' # visualizar_tablero(tablero)
+#' board <- reset_board()
+#' board <- human_turn(board, move = 4)
+#' visualize_board(board)
+#' # the following can also be done (not run):
+#' # board <- reset_board()
+#' # print(visualize_board(board))
+#' # board <- human_turn(board)  # click on a column of the board
+#' # visualize_board(board)
 
 
 
 #' @export
-turno_humano <- function(tablero, jugada = NULL, raton = TRUE) {
+human_turn <- function(board, move = NULL, mouse = TRUE) {
 
-  jugadas_posibles <- jugadas_disponibles(tablero)
+  possible_moves <- available_moves(board)
 
-  if (length(jugadas_posibles) == 0) {
-    return(tablero) # No hay jugadas disponibles
+  if (length(possible_moves) == 0) {
+    return(board) # No moves available
   }
 
-  usar_raton <- is.null(jugada) && isTRUE(raton) && .admite_clics()
+  use_mouse <- is.null(move) && isTRUE(mouse) && .supports_clicks()
 
   repeat {
 
-    if (!is.null(jugada)) {
-      jugada_humano <- jugada
-    } else if (usar_raton) {
-      cat("Tu turno. Pulsa sobre una columna del tablero.\n")
+    if (!is.null(move)) {
+      human_move <- move
+    } else if (use_mouse) {
+      cat("Your turn. Click on a column of the board.\n")
       flush.console()
-      jugada_humano <- .leer_jugada_raton()
-      if (is.null(jugada_humano)) {
-        # Selección cancelada o el clic no pudo leerse: seguir por teclado.
-        usar_raton <- FALSE
+      human_move <- .read_mouse_move()
+      if (is.null(human_move)) {
+        # Selection canceled or the click could not be read: use the keyboard.
+        use_mouse <- FALSE
         next
       }
     } else {
-      cat("Tu turno. Elige una columna (1-7): ")
-      entrada <- readLines(con = stdin(), n = 1)
-      if (length(entrada) == 0L) {
-        stop("No se pudo leer la jugada: la entrada estándar está cerrada.",
+      cat("Your turn. Choose a column (1-7): ")
+      input <- readLines(con = stdin(), n = 1)
+      if (length(input) == 0L) {
+        stop("Could not read the move: standard input is closed.",
              call. = FALSE)
       }
-      jugada_humano <- suppressWarnings(as.integer(entrada))
-      # jugada_humano <- as.integer(readline())
+      human_move <- suppressWarnings(as.integer(input))
+      # human_move <- as.integer(readline())
     }
 
-    if (length(jugada_humano) == 1L && jugada_humano %in% jugadas_posibles) {
-      return(realizar_jugada(tablero, jugada_humano, 1L))
+    if (length(human_move) == 1L && human_move %in% possible_moves) {
+      return(make_move(board, human_move, 1L))
     } else {
-      cat("Jugada no válida. Intenta de nuevo.\n")
+      cat("Invalid move. Try again.\n")
     }
   }
 }
 
-# Indica si el dispositivo gráfico activo puede devolver la posición de un clic.
-.admite_clics <- function() {
+# Tells whether the active graphics device can return the position of a click.
+.supports_clicks <- function() {
   if (!interactive() || grDevices::dev.cur() == 1L) {
     return(FALSE)
   }
-  capacidad <- tryCatch(
+  capability <- tryCatch(
     grDevices::dev.capabilities("locator")$locator,
     error = function(e) NA
   )
-  # Algunos dispositivos (por ejemplo el de RStudio) no informan de esta
-  # capacidad aunque la tengan; solo se descarta si la niegan expresamente.
-  !isFALSE(capacidad)
+  # Some devices (for example RStudio's) do not report this capability
+  # even though they have it; it is only ruled out if they explicitly deny it.
+  !isFALSE(capability)
 }
 
-# Espera un clic sobre el tablero dibujado y devuelve la columna pulsada
-# (NA si el clic cae fuera del tablero) o NULL si se cancela la selección.
-.leer_jugada_raton <- function() {
-  panel <- grep("^panel\\.", .nombres_viewports(grid::current.vpTree()),
+# Waits for a click on the plotted board and returns the clicked column
+# (NA if the click falls outside the board) or NULL if the selection is canceled.
+.read_mouse_move <- function() {
+  panel <- grep("^panel\\.", .viewport_names(grid::current.vpTree()),
                 value = TRUE)
   if (length(panel) == 0L) {
-    return(NULL) # No hay ningún tablero dibujado en el dispositivo.
+    return(NULL) # There is no board drawn on the device.
   }
 
   grid::seekViewport(panel[[1]])
   on.exit(grid::upViewport(0), add = TRUE)
 
-  clic <- tryCatch(grid::grid.locator(unit = "npc"), error = function(e) NULL)
-  if (is.null(clic)) {
+  click <- tryCatch(grid::grid.locator(unit = "npc"), error = function(e) NULL)
+  if (is.null(click)) {
     return(NULL)
   }
 
-  .columna_desde_npc(as.numeric(clic$x), as.numeric(clic$y))
+  .column_from_npc(as.numeric(click$x), as.numeric(click$y))
 }
 
-# Nombres de todos los viewports de un árbol de grid (el gráfico de ggplot2
-# dibuja su panel en un viewport llamado "panel.<fila>-<col>-...").
-.nombres_viewports <- function(arbol) {
-  if (inherits(arbol, "vpTree")) {
-    c(arbol$parent$name, .nombres_viewports(arbol$children))
-  } else if (inherits(arbol, c("vpList", "vpStack"))) {
-    unlist(lapply(arbol, .nombres_viewports), use.names = FALSE)
+# Names of all the viewports in a grid tree (the ggplot2 plot draws
+# its panel in a viewport called "panel.<row>-<col>-...").
+.viewport_names <- function(tree) {
+  if (inherits(tree, "vpTree")) {
+    c(tree$parent$name, .viewport_names(tree$children))
+  } else if (inherits(tree, c("vpList", "vpStack"))) {
+    unlist(lapply(tree, .viewport_names), use.names = FALSE)
   } else {
-    arbol$name
+    tree$name
   }
 }
 
-# Convierte una posición en coordenadas relativas al panel del gráfico (0-1)
-# en la columna del tablero que se encuentra debajo, o NA si queda fuera.
-.columna_desde_npc <- function(x, y) {
-  lim <- .limites_tablero
-  x_datos <- lim$x[[1]] + x * diff(lim$x)
-  y_datos <- lim$y[[1]] + y * diff(lim$y)
+# Converts a position in coordinates relative to the plot panel (0-1)
+# into the board column underneath it, or NA if it falls outside.
+.column_from_npc <- function(x, y) {
+  lim <- .board_limits
+  x_data <- lim$x[[1]] + x * diff(lim$x)
+  y_data <- lim$y[[1]] + y * diff(lim$y)
 
-  if (x_datos < 0.5 || x_datos >= 7.5 || y_datos < 0.5 || y_datos > lim$y[[2]]) {
+  if (x_data < 0.5 || x_data >= 7.5 || y_data < 0.5 || y_data > lim$y[[2]]) {
     return(NA_integer_)
   }
-  as.integer(floor(x_datos + 0.5))
+  as.integer(floor(x_data + 0.5))
 }

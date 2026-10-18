@@ -1,98 +1,98 @@
-test_that("visualizar_variante alterna jugadores y conserva la posición inicial", {
-  tablero <- reiniciar_tablero()
-  tablero[6, 1] <- 2L
+test_that("visualize_variation alternates players and keeps the initial position", {
+  board <- reset_board()
+  board[6, 1] <- 2L
 
-  resultado <- visualizar_variante(
-    tablero,
-    turno = 1L,
-    variante = c(4L, 4L, 3L),
-    lapso = 0
+  result <- visualize_variation(
+    board,
+    turn = 1L,
+    variation = c(4L, 4L, 3L),
+    delay = 0
   )
 
-  expect_equal(resultado[6, 1], 2L)
-  expect_equal(resultado[6, 4], 1L)
-  expect_equal(resultado[5, 4], 2L)
-  expect_equal(resultado[6, 3], 1L)
+  expect_equal(result[6, 1], 2L)
+  expect_equal(result[6, 4], 1L)
+  expect_equal(result[5, 4], 2L)
+  expect_equal(result[6, 3], 1L)
 })
 
-test_that("visualizar_variante acepta una variante vacía", {
-  tablero <- reiniciar_tablero()
+test_that("visualize_variation accepts an empty variation", {
+  board <- reset_board()
 
   expect_equal(
-    visualizar_variante(tablero, turno = 2L, variante = integer(), lapso = 0),
-    tablero
+    visualize_variation(board, turn = 2L, variation = integer(), delay = 0),
+    board
   )
 })
 
-test_that("visualizar_variante valida sus argumentos y jugadas", {
-  tablero <- reiniciar_tablero()
+test_that("visualize_variation validates its arguments and moves", {
+  board <- reset_board()
 
-  expect_error(visualizar_variante(tablero, 3, 4, 0), "turno")
-  expect_error(visualizar_variante(tablero, 1, 8, 0), "variante")
-  expect_error(visualizar_variante(tablero, 1, 4, -1), "lapso")
+  expect_error(visualize_variation(board, 3, 4, 0), "turn")
+  expect_error(visualize_variation(board, 1, 8, 0), "variation")
+  expect_error(visualize_variation(board, 1, 4, -1), "delay")
 
-  tablero[, 4] <- rep(c(1L, 2L), 3L)
+  board[, 4] <- rep(c(1L, 2L), 3L)
   expect_error(
-    visualizar_variante(tablero, 1, 4, 0),
-    "columna 4 está llena"
+    visualize_variation(board, 1, 4, 0),
+    "column 4 is full"
   )
 })
 
-capas_elemento <- function(grafico, elemento) {
-  Filter(function(capa) {
-    is.data.frame(capa$data) && identical(unique(capa$data$elemento), elemento)
-  }, grafico$layers)
+element_layers <- function(chart, element) {
+  Filter(function(layer) {
+    is.data.frame(layer$data) && identical(unique(layer$data$element), element)
+  }, chart$layers)
 }
 
-test_that("visualizar_tablero destaca únicamente la última jugada indicada", {
-  tablero <- reiniciar_tablero()
-  tablero <- realizar_jugada(tablero, 4L, 1L)
+test_that("visualize_board highlights only the given last move", {
+  board <- reset_board()
+  board <- make_move(board, 4L, 1L)
 
-  grafico <- visualizar_tablero(tablero, c(6L, 4L))
-  capas <- capas_elemento(grafico, "ultima_jugada")
-  expect_length(capas, 1L)
-  expect_equal(unique(capas[[1]]$data$cx), 4L)
-  expect_equal(unique(capas[[1]]$data$cy), 1L)
-  expect_equal(capas[[1]]$aes_params$colour, "#FFFFFF")
+  chart <- visualize_board(board, c(6L, 4L))
+  layers <- element_layers(chart, "last_move")
+  expect_length(layers, 1L)
+  expect_equal(unique(layers[[1]]$data$cx), 4L)
+  expect_equal(unique(layers[[1]]$data$cy), 1L)
+  expect_equal(layers[[1]]$aes_params$colour, "#FFFFFF")
 
-  tablero <- realizar_jugada(tablero, 5L, 2L)
-  grafico <- visualizar_tablero(tablero, c(6L, 5L))
-  capas <- capas_elemento(grafico, "ultima_jugada")
-  expect_length(capas, 1L)
-  expect_equal(unique(capas[[1]]$data$cx), 5L)
+  board <- make_move(board, 5L, 2L)
+  chart <- visualize_board(board, c(6L, 5L))
+  layers <- element_layers(chart, "last_move")
+  expect_length(layers, 1L)
+  expect_equal(unique(layers[[1]]$data$cx), 5L)
 
-  expect_length(capas_elemento(visualizar_tablero(tablero), "ultima_jugada"), 0L)
+  expect_length(element_layers(visualize_board(board), "last_move"), 0L)
 })
 
-test_that("visualizar_tablero resalta la línea ganadora y el estado", {
-  tablero <- crear_posicion(c(4, 3, 4, 3, 4, 3, 4))
+test_that("visualize_board highlights the winning line and the game state", {
+  board <- create_position(c(4, 3, 4, 3, 4, 3, 4))
 
-  grafico <- visualizar_tablero(tablero)
-  capas <- capas_elemento(grafico, "linea_ganadora")
-  expect_length(capas, 1L)
-  expect_setequal(unique(paste(capas[[1]]$data$cx, capas[[1]]$data$cy)),
+  chart <- visualize_board(board)
+  layers <- element_layers(chart, "winning_line")
+  expect_length(layers, 1L)
+  expect_setequal(unique(paste(layers[[1]]$data$cx, layers[[1]]$data$cy)),
                   paste(4, 1:4))
-  expect_equal(grafico$labels$subtitle, "Victoria del humano")
+  expect_equal(chart$labels$subtitle, "Human wins")
 
-  expect_equal(visualizar_tablero(reiniciar_tablero())$labels$subtitle,
-               "0 jugadas")
-  expect_length(capas_elemento(visualizar_tablero(reiniciar_tablero()),
-                               "linea_ganadora"), 0L)
+  expect_equal(visualize_board(reset_board())$labels$subtitle,
+               "0 moves")
+  expect_length(element_layers(visualize_board(reset_board()),
+                               "winning_line"), 0L)
 })
 
-test_that("visualizar_tablero puede dibujarse", {
-  tablero <- crear_posicion(c(4, 3, 4, 3, 4, 3, 4))
-  archivo <- tempfile(fileext = ".png")
-  on.exit(unlink(archivo))
-  grDevices::png(archivo)
+test_that("visualize_board can be drawn", {
+  board <- create_position(c(4, 3, 4, 3, 4, 3, 4))
+  path <- tempfile(fileext = ".png")
+  on.exit(unlink(path))
+  grDevices::png(path)
   on.exit(grDevices::dev.off(), add = TRUE, after = FALSE)
-  expect_no_error(print(visualizar_tablero(tablero, c(3L, 4L))))
-  expect_no_error(print(visualizar_tablero(reiniciar_tablero())))
+  expect_no_error(print(visualize_board(board, c(3L, 4L))))
+  expect_no_error(print(visualize_board(reset_board())))
 })
 
-test_that("visualizar_tablero valida las coordenadas de la última jugada", {
-  tablero <- reiniciar_tablero()
+test_that("visualize_board validates the coordinates of the last move", {
+  board <- reset_board()
 
-  expect_error(visualizar_tablero(tablero, c(6L, 4L)), "señalar una ficha")
-  expect_error(visualizar_tablero(tablero, c(7L, 4L)), "señalar una ficha")
+  expect_error(visualize_board(board, c(6L, 4L)), "point to a piece")
+  expect_error(visualize_board(board, c(7L, 4L)), "point to a piece")
 })

@@ -1,167 +1,167 @@
-# Infiere qué jugador tiene el turno a partir del número de fichas del tablero,
-# asumiendo que el humano (jugador 1) abre la partida. Devuelve NA si el
-# recuento de fichas no corresponde a una partida legal humano-primero.
-.turno_a_jugar <- function(tablero) {
-  n1 <- sum(tablero == 1L)
-  n2 <- sum(tablero == 2L)
+# Infers which player is to move from the number of pieces on the board,
+# assuming that the human (player 1) opens the game. Returns NA if the
+# piece count does not correspond to a legal human-first game.
+.player_to_move <- function(board) {
+  n1 <- sum(board == 1L)
+  n2 <- sum(board == 2L)
   if (n1 == n2)      return(1L)
   if (n1 == n2 + 1L) return(2L)
   NA_integer_
 }
 
-.veredicto_analisis <- function(puntuacion, fin) {
-  if (isTRUE(fin$finalizado)) {
-    return(switch(as.character(fin$resultado),
-      "1" = "Partida terminada: gana el humano (jugador 1).",
-      "2" = "Partida terminada: gana la IA (jugador 2).",
-      "0" = "Partida terminada: empate.",
-      "Partida terminada."))
+.analysis_verdict <- function(score, outcome) {
+  if (isTRUE(outcome$finished)) {
+    return(switch(as.character(outcome$result),
+      "1" = "Game over: the human wins (player 1).",
+      "2" = "Game over: the AI wins (player 2).",
+      "0" = "Game over: draw.",
+      "Game over."))
   }
-  if (puntuacion >=  1e9) return("Mate forzado a favor de la IA (jugador 2).")
-  if (puntuacion <= -1e9) return("Mate forzado a favor del humano (jugador 1).")
-  if (puntuacion > 0)     return("Ventaja para la IA (jugador 2).")
-  if (puntuacion < 0)     return("Ventaja para el humano (jugador 1).")
-  "Posición equilibrada."
+  if (score >=  1e9) return("Forced win for the AI (player 2).")
+  if (score <= -1e9) return("Forced win for the human (player 1).")
+  if (score > 0)     return("Advantage for the AI (player 2).")
+  if (score < 0)     return("Advantage for the human (player 1).")
+  "Balanced position."
 }
 
-#' Analizar una posición con el motor minimax
+#' Analyze a position with the minimax engine
 #'
-#' @description Interfaz de alto nivel sobre \code{\link{minimax}} pensada para
-#'   estudiar una posición: calcula la jugada recomendada para el jugador en
-#'   turno, la puntuación minimax, la evaluación estática y la variante
-#'   principal, y las envuelve en un objeto imprimible con un veredicto legible.
-#'   A diferencia de \code{minimax}, no hay que traducir manualmente el turno a
-#'   \code{maximizandoIA}: basta indicar quién mueve (o dejar que se infiera).
+#' @description High-level interface on top of \code{\link{minimax}} designed
+#'   for studying a position: it computes the recommended move for the player
+#'   to move, the minimax score, the static evaluation and the principal
+#'   variation, and wraps them in a printable object with a readable verdict.
+#'   Unlike \code{minimax}, there is no need to manually translate the turn
+#'   into \code{maximizingAI}: just say who moves (or let it be inferred).
 #'
-#' @param tablero Matriz de 6 x 7 con la posición a analizar. Celdas: 0 vacío,
-#'   1 humano, 2 IA. Puede construirse con \code{\link{crear_posicion}}.
-#' @param turno Jugador que tiene el turno: \code{1} (humano) o \code{2} (IA).
-#'   Si es \code{NULL} (valor por defecto) se infiere del número de fichas del
-#'   tablero, asumiendo que el humano abre la partida.
-#' @param profundidad Profundidad máxima de búsqueda del minimax. Por defecto
+#' @param board 6 x 7 matrix with the position to analyze. Cells: 0 empty,
+#'   1 human, 2 AI. It can be built with \code{\link{create_position}}.
+#' @param turn Player to move: \code{1} (human) or \code{2} (AI).
+#'   If \code{NULL} (the default), it is inferred from the number of pieces on
+#'   the board, assuming that the human opens the game.
+#' @param depth Maximum minimax search depth. Defaults to
 #'   \code{7}.
-#' @param mostrar Lógico. Si \code{TRUE}, reproduce la variante principal sobre
-#'   el tablero mediante \code{\link{visualizar_variante}}. Por defecto
+#' @param show Logical. If \code{TRUE}, replays the principal variation on
+#'   the board using \code{\link{visualize_variation}}. Defaults to
 #'   \code{FALSE}.
-#' @param lapso Segundos de espera entre posiciones cuando \code{mostrar = TRUE}.
-#'   Por defecto \code{1}.
+#' @param delay Seconds to wait between positions when \code{show = TRUE}.
+#'   Defaults to \code{1}.
 #'
-#' @return Un objeto de clase \code{"analisis_conn4R"} (una lista) con, entre
-#'   otros, los elementos:
+#' @return An object of class \code{"conn4R_analysis"} (a list) with, among
+#'   others, the elements:
 #' \describe{
-#'   \item{turno}{Jugador analizado (1 o 2).}
-#'   \item{profundidad}{Profundidad de búsqueda empleada.}
-#'   \item{jugada}{Columna recomendada (1-7), o \code{NA} si no hay jugada.}
-#'   \item{puntuacion}{Puntuación minimax (perspectiva de la IA: positivo =
-#'     ventaja IA).}
-#'   \item{evaluacion}{Evaluación estática de la posición.}
-#'   \item{nodos}{Nodos evaluados durante la búsqueda.}
-#'   \item{variante}{Variante principal (secuencia de columnas).}
-#'   \item{veredicto}{Interpretación textual de la puntuación.}
+#'   \item{turn}{Player analyzed (1 or 2).}
+#'   \item{depth}{Search depth used.}
+#'   \item{move}{Recommended column (1-7), or \code{NA} if there is no move.}
+#'   \item{score}{Minimax score (from the AI's perspective: positive =
+#'     AI advantage).}
+#'   \item{evaluation}{Static evaluation of the position.}
+#'   \item{nodes}{Nodes evaluated during the search.}
+#'   \item{variation}{Principal variation (sequence of columns).}
+#'   \item{verdict}{Textual interpretation of the score.}
 #' }
-#'   El objeto dispone de un método \code{print} que muestra un resumen legible.
+#'   The object has a \code{print} method that shows a readable summary.
 #'
 #' @examples
-#' # Introducir una posición y analizarla (turno inferido automáticamente)
-#' tablero <- crear_posicion(c(4, 4, 3, 5, 3))
-#' analisis <- analizar_posicion(tablero, profundidad = 5)
-#' analisis
-#' analisis$jugada
+#' # Enter a position and analyze it (turn inferred automatically)
+#' board <- create_position(c(4, 4, 3, 5, 3))
+#' analysis <- analyze_position(board, depth = 5)
+#' analysis
+#' analysis$move
 #'
-#' # Indicar el turno explícitamente
-#' analizar_posicion(tablero, turno = 1, profundidad = 4)
+#' # Give the turn explicitly
+#' analyze_position(board, turn = 1, depth = 4)
 #'
-#' @seealso \code{\link{minimax}}, \code{\link{crear_posicion}},
-#'   \code{\link{visualizar_variante}}
+#' @seealso \code{\link{minimax}}, \code{\link{create_position}},
+#'   \code{\link{visualize_variation}}
 #'
 #' @export
-analizar_posicion <- function(tablero, turno = NULL, profundidad = 7,
-                              mostrar = FALSE, lapso = 1) {
-  if (!is.matrix(tablero) || !identical(dim(tablero), c(6L, 7L)) ||
-      anyNA(tablero) || any(!tablero %in% 0:2)) {
-    stop("`tablero` debe ser una matriz 6x7 con valores 0, 1 o 2.",
+analyze_position <- function(board, turn = NULL, depth = 7,
+                             show = FALSE, delay = 1) {
+  if (!is.matrix(board) || !identical(dim(board), c(6L, 7L)) ||
+      anyNA(board) || any(!board %in% 0:2)) {
+    stop("`board` must be a 6x7 matrix with values 0, 1 or 2.",
          call. = FALSE)
   }
-  if (length(profundidad) != 1L || is.na(profundidad) ||
-      !is.numeric(profundidad) || !is.finite(profundidad) ||
-      profundidad != as.integer(profundidad) || profundidad < 0) {
-    stop("`profundidad` debe ser un entero mayor o igual que 0.", call. = FALSE)
+  if (length(depth) != 1L || is.na(depth) ||
+      !is.numeric(depth) || !is.finite(depth) ||
+      depth != as.integer(depth) || depth < 0) {
+    stop("`depth` must be an integer greater than or equal to 0.", call. = FALSE)
   }
-  if (length(mostrar) != 1L || is.na(mostrar) || !is.logical(mostrar)) {
-    stop("`mostrar` debe ser TRUE o FALSE.", call. = FALSE)
+  if (length(show) != 1L || is.na(show) || !is.logical(show)) {
+    stop("`show` must be TRUE or FALSE.", call. = FALSE)
   }
 
-  tablero <- matrix(as.integer(tablero), nrow = 6L, ncol = 7L)
+  board <- matrix(as.integer(board), nrow = 6L, ncol = 7L)
 
-  if (is.null(turno)) {
-    turno <- .turno_a_jugar(tablero)
-    if (is.na(turno)) {
-      stop("No se puede inferir el turno de esta posición; ",
-           "indica `turno` (1 = humano, 2 = IA).", call. = FALSE)
+  if (is.null(turn)) {
+    turn <- .player_to_move(board)
+    if (is.na(turn)) {
+      stop("Cannot infer the turn from this position; ",
+           "specify `turn` (1 = human, 2 = AI).", call. = FALSE)
     }
   }
-  if (length(turno) != 1L || is.na(turno) || !turno %in% c(1, 2)) {
-    stop("`turno` debe ser 1 (humano) o 2 (IA).", call. = FALSE)
+  if (length(turn) != 1L || is.na(turn) || !turn %in% c(1, 2)) {
+    stop("`turn` must be 1 (human) or 2 (AI).", call. = FALSE)
   }
 
-  turno <- as.integer(turno)
-  prof  <- as.integer(profundidad)
-  maximizandoIA <- (turno == 2L)
+  turn  <- as.integer(turn)
+  depth <- as.integer(depth)
+  maximizingAI <- (turn == 2L)
 
-  fin <- juego_terminado(tablero)
-  res <- minimax(tablero, prof, maximizandoIA)
+  outcome <- game_over(board)
+  res <- minimax(board, depth, maximizingAI)
 
-  analisis <- list(
-    turno          = turno,
-    profundidad    = prof,
-    jugada         = res$jugada,
-    puntuacion     = res$puntuacion,
-    evaluacion     = evaluar_posicion(tablero),
-    nodos          = res$nodos,
-    nodos_normales = res$nodos_normales,
-    nodos_tacticos = res$nodos_tacticos,
-    variante       = res$variante,
-    terminado      = isTRUE(fin$finalizado),
-    resultado      = fin$resultado,
-    veredicto      = .veredicto_analisis(res$puntuacion, fin)
+  analysis <- list(
+    turn           = turn,
+    depth          = depth,
+    move           = res$move,
+    score          = res$score,
+    evaluation     = evaluate_position(board),
+    nodes          = res$nodes,
+    normal_nodes   = res$normal_nodes,
+    tactical_nodes = res$tactical_nodes,
+    variation      = res$variation,
+    finished       = isTRUE(outcome$finished),
+    result         = outcome$result,
+    verdict        = .analysis_verdict(res$score, outcome)
   )
-  class(analisis) <- "analisis_conn4R"
+  class(analysis) <- "conn4R_analysis"
 
-  if (isTRUE(mostrar) && length(res$variante) > 0L) {
-    visualizar_variante(tablero, turno, res$variante, lapso = lapso)
+  if (isTRUE(show) && length(res$variation) > 0L) {
+    visualize_variation(board, turn, res$variation, delay = delay)
   }
 
-  analisis
+  analysis
 }
 
-#' @description \code{print.analisis_conn4R} muestra un resumen legible del
-#'   análisis de una posición.
-#' @param x Objeto de clase \code{"analisis_conn4R"} devuelto por
-#'   \code{analizar_posicion}.
-#' @param ... Argumentos adicionales (ignorados).
-#' @rdname analizar_posicion
+#' @description \code{print.conn4R_analysis} shows a readable summary of the
+#'   analysis of a position.
+#' @param x Object of class \code{"conn4R_analysis"} returned by
+#'   \code{analyze_position}.
+#' @param ... Additional arguments (ignored).
+#' @rdname analyze_position
 #' @export
-print.analisis_conn4R <- function(x, ...) {
-  quien <- if (x$turno == 1L) "humano (jugador 1)" else "IA (jugador 2)"
-  regla <- strrep("-", 57L)
+print.conn4R_analysis <- function(x, ...) {
+  who  <- if (x$turn == 1L) "human (player 1)" else "AI (player 2)"
+  rule <- strrep("-", 57L)
 
-  cat("Análisis de la posición (motor minimax C++)\n")
-  cat(regla, "\n", sep = "")
-  cat(sprintf("Turno de:            %s\n", quien))
-  cat(sprintf("Profundidad:         %d\n", x$profundidad))
-  if (isTRUE(x$terminado)) {
-    cat("Estado:              la partida ya ha terminado\n")
+  cat("Position analysis (C++ minimax engine)\n")
+  cat(rule, "\n", sep = "")
+  cat(sprintf("To move:             %s\n", who))
+  cat(sprintf("Depth:               %d\n", x$depth))
+  if (isTRUE(x$finished)) {
+    cat("Status:              the game is already over\n")
   }
-  cat(sprintf("Jugada recomendada:  %s\n",
-              if (is.na(x$jugada)) "ninguna" else sprintf("columna %d", x$jugada)))
-  cat(sprintf("Puntuación minimax:  %.0f\n", as.double(x$puntuacion)))
-  cat(sprintf("Evaluación estática: %d\n", as.integer(x$evaluacion)))
-  cat(sprintf("Veredicto:           %s\n", x$veredicto))
-  cat(sprintf("Nodos evaluados:     %.0f\n", as.double(x$nodos)))
-  cat(sprintf("Variante principal:  %s\n",
-              if (length(x$variante) == 0L) "(sin variante)"
-              else paste(x$variante, collapse = " -> ")))
-  cat(regla, "\n", sep = "")
+  cat(sprintf("Recommended move:    %s\n",
+              if (is.na(x$move)) "none" else sprintf("column %d", x$move)))
+  cat(sprintf("Minimax score:       %.0f\n", as.double(x$score)))
+  cat(sprintf("Static evaluation:   %d\n", as.integer(x$evaluation)))
+  cat(sprintf("Verdict:             %s\n", x$verdict))
+  cat(sprintf("Nodes evaluated:     %.0f\n", as.double(x$nodes)))
+  cat(sprintf("Principal variation: %s\n",
+              if (length(x$variation) == 0L) "(no variation)"
+              else paste(x$variation, collapse = " -> ")))
+  cat(rule, "\n", sep = "")
 
   invisible(x)
 }
