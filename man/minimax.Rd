@@ -2,49 +2,49 @@
 % Please edit documentation in R/RcppExports.R
 \name{minimax}
 \alias{minimax}
-\title{Motor minimax con alpha-beta y tabla de transposición (C++)}
+\title{Minimax engine with alpha-beta pruning and transposition table (C++)}
 \usage{
-minimax(tablero, profundidad, maximizandoIA)
+minimax(board, depth, maximizingAI)
 }
 \arguments{
-\item{tablero}{IntegerMatrix 6×7. Estado del tablero: 0 vacío, 1 humano, 2 IA.}
+\item{board}{IntegerMatrix 6 x 7. Board state: 0 empty, 1 human, 2 AI.}
 
-\item{profundidad}{int. Profundidad máxima del árbol de búsqueda.}
+\item{depth}{int. Maximum depth of the search tree.}
 
-\item{maximizandoIA}{bool. \code{TRUE} si el turno actual es de la IA
-(nodo MAX); \code{FALSE} si es del humano (nodo MIN).}
+\item{maximizingAI}{bool. \code{TRUE} if it is the AI's turn
+(MAX node); \code{FALSE} if it is the human's turn (MIN node).}
 }
 \value{
-Lista con seis elementos:
+List with six elements:
 \describe{
-  \item{puntuacion}{int. Puntuación minimax de la posición raíz.}
-  \item{jugada}{int. Columna óptima (1-7) para el jugador en turno, o
-    \code{NA} si no hay jugadas disponibles.}
-  \item{nodos}{double. Número total de nodos evaluados durante la búsqueda.}
-  \item{nodos_normales}{double. Nodos visitados por minimax hasta el horizonte.}
-  \item{nodos_tacticos}{double. Nodos adicionales visitados por la búsqueda
-    de quiescencia después del horizonte.}
-  \item{variante}{IntegerVector. Secuencia de columnas (1-7) de la variante
-    principal extraída de la tabla de transposición.}
+  \item{score}{int. Minimax score of the root position.}
+  \item{move}{int. Best column (1-7) for the player to move, or
+    \code{NA} if there are no moves available.}
+  \item{nodes}{double. Total number of nodes evaluated during the search.}
+  \item{normal_nodes}{double. Nodes visited by minimax up to the horizon.}
+  \item{tactical_nodes}{double. Additional nodes visited by the quiescence
+    search beyond the horizon.}
+  \item{variation}{IntegerVector. Sequence of columns (1-7) of the principal
+    variation extracted from the transposition table.}
 }
 }
 \description{
-Implementación C++ del algoritmo minimax con poda alpha-beta y
-  tabla de transposición interna. En el horizonte aplica una búsqueda de
-  quiescencia que prolonga victorias y bloqueos inmediatos hasta alcanzar
-  una posición tácticamente estable. Devuelve además el conteo de nodos
-  evaluados y la variante
-  principal extraída de la tabla de transposición.
+C++ implementation of the minimax algorithm with alpha-beta
+  pruning and an internal transposition table. At the horizon it applies a
+  quiescence search that extends immediate wins and blocks until a
+  tactically stable position is reached. It also returns the number of
+  evaluated nodes and the principal
+  variation extracted from the transposition table.
 }
 \examples{
-tablero <- crear_posicion_aleatoria(10)
-system.time(res <- minimax(tablero, profundidad = 7L, maximizandoIA = TRUE))
-res$puntuacion
-res$jugada
-res$nodos
-res$variante
+board <- create_random_position(10)
+system.time(res <- minimax(board, depth = 7L, maximizingAI = TRUE))
+res$score
+res$move
+res$nodes
+res$variation
 
 }
 \seealso{
-\code{\link{evaluar_posicion}}, \code{\link{iniciar_partida}}
+\code{\link{evaluate_position}}, \code{\link{start_game}}
 }

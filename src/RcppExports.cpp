@@ -11,84 +11,84 @@ Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
 // minimax
-List minimax(IntegerMatrix tablero, int profundidad, bool maximizandoIA);
-RcppExport SEXP _conn4R_minimax(SEXP tableroSEXP, SEXP profundidadSEXP, SEXP maximizandoIASEXP) {
+List minimax(IntegerMatrix board, int depth, bool maximizingAI);
+RcppExport SEXP _conn4R_minimax(SEXP boardSEXP, SEXP depthSEXP, SEXP maximizingAISEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< IntegerMatrix >::type tablero(tableroSEXP);
-    Rcpp::traits::input_parameter< int >::type profundidad(profundidadSEXP);
-    Rcpp::traits::input_parameter< bool >::type maximizandoIA(maximizandoIASEXP);
-    rcpp_result_gen = Rcpp::wrap(minimax(tablero, profundidad, maximizandoIA));
+    Rcpp::traits::input_parameter< IntegerMatrix >::type board(boardSEXP);
+    Rcpp::traits::input_parameter< int >::type depth(depthSEXP);
+    Rcpp::traits::input_parameter< bool >::type maximizingAI(maximizingAISEXP);
+    rcpp_result_gen = Rcpp::wrap(minimax(board, depth, maximizingAI));
     return rcpp_result_gen;
 END_RCPP
 }
-// evaluar_posicion
-int evaluar_posicion(IntegerMatrix tablero);
-RcppExport SEXP _conn4R_evaluar_posicion(SEXP tableroSEXP) {
+// evaluate_position
+int evaluate_position(IntegerMatrix board);
+RcppExport SEXP _conn4R_evaluate_position(SEXP boardSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< IntegerMatrix >::type tablero(tableroSEXP);
-    rcpp_result_gen = Rcpp::wrap(evaluar_posicion(tablero));
+    Rcpp::traits::input_parameter< IntegerMatrix >::type board(boardSEXP);
+    rcpp_result_gen = Rcpp::wrap(evaluate_position(board));
     return rcpp_result_gen;
 END_RCPP
 }
-// juego_terminado
-List juego_terminado(IntegerMatrix tablero);
-RcppExport SEXP _conn4R_juego_terminado(SEXP tableroSEXP) {
+// game_over
+List game_over(IntegerMatrix board);
+RcppExport SEXP _conn4R_game_over(SEXP boardSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< IntegerMatrix >::type tablero(tableroSEXP);
-    rcpp_result_gen = Rcpp::wrap(juego_terminado(tablero));
+    Rcpp::traits::input_parameter< IntegerMatrix >::type board(boardSEXP);
+    rcpp_result_gen = Rcpp::wrap(game_over(board));
     return rcpp_result_gen;
 END_RCPP
 }
-// realizar_jugada
-IntegerMatrix realizar_jugada(IntegerMatrix tablero, int columna, int jugador);
-RcppExport SEXP _conn4R_realizar_jugada(SEXP tableroSEXP, SEXP columnaSEXP, SEXP jugadorSEXP) {
+// make_move
+IntegerMatrix make_move(IntegerMatrix board, int column, int player);
+RcppExport SEXP _conn4R_make_move(SEXP boardSEXP, SEXP columnSEXP, SEXP playerSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< IntegerMatrix >::type tablero(tableroSEXP);
-    Rcpp::traits::input_parameter< int >::type columna(columnaSEXP);
-    Rcpp::traits::input_parameter< int >::type jugador(jugadorSEXP);
-    rcpp_result_gen = Rcpp::wrap(realizar_jugada(tablero, columna, jugador));
+    Rcpp::traits::input_parameter< IntegerMatrix >::type board(boardSEXP);
+    Rcpp::traits::input_parameter< int >::type column(columnSEXP);
+    Rcpp::traits::input_parameter< int >::type player(playerSEXP);
+    rcpp_result_gen = Rcpp::wrap(make_move(board, column, player));
     return rcpp_result_gen;
 END_RCPP
 }
-// jugadas_disponibles
-IntegerVector jugadas_disponibles(IntegerMatrix tablero);
-RcppExport SEXP _conn4R_jugadas_disponibles(SEXP tableroSEXP) {
+// available_moves
+IntegerVector available_moves(IntegerMatrix board);
+RcppExport SEXP _conn4R_available_moves(SEXP boardSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< IntegerMatrix >::type tablero(tableroSEXP);
-    rcpp_result_gen = Rcpp::wrap(jugadas_disponibles(tablero));
+    Rcpp::traits::input_parameter< IntegerMatrix >::type board(boardSEXP);
+    rcpp_result_gen = Rcpp::wrap(available_moves(board));
     return rcpp_result_gen;
 END_RCPP
 }
-// ordenar_jugadas
-DataFrame ordenar_jugadas(IntegerMatrix tablero, int turno);
-RcppExport SEXP _conn4R_ordenar_jugadas(SEXP tableroSEXP, SEXP turnoSEXP) {
+// order_moves
+DataFrame order_moves(IntegerMatrix board, int turn);
+RcppExport SEXP _conn4R_order_moves(SEXP boardSEXP, SEXP turnSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< IntegerMatrix >::type tablero(tableroSEXP);
-    Rcpp::traits::input_parameter< int >::type turno(turnoSEXP);
-    rcpp_result_gen = Rcpp::wrap(ordenar_jugadas(tablero, turno));
+    Rcpp::traits::input_parameter< IntegerMatrix >::type board(boardSEXP);
+    Rcpp::traits::input_parameter< int >::type turn(turnSEXP);
+    rcpp_result_gen = Rcpp::wrap(order_moves(board, turn));
     return rcpp_result_gen;
 END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
     {"_conn4R_minimax", (DL_FUNC) &_conn4R_minimax, 3},
-    {"_conn4R_evaluar_posicion", (DL_FUNC) &_conn4R_evaluar_posicion, 1},
-    {"_conn4R_juego_terminado", (DL_FUNC) &_conn4R_juego_terminado, 1},
-    {"_conn4R_realizar_jugada", (DL_FUNC) &_conn4R_realizar_jugada, 3},
-    {"_conn4R_jugadas_disponibles", (DL_FUNC) &_conn4R_jugadas_disponibles, 1},
-    {"_conn4R_ordenar_jugadas", (DL_FUNC) &_conn4R_ordenar_jugadas, 2},
+    {"_conn4R_evaluate_position", (DL_FUNC) &_conn4R_evaluate_position, 1},
+    {"_conn4R_game_over", (DL_FUNC) &_conn4R_game_over, 1},
+    {"_conn4R_make_move", (DL_FUNC) &_conn4R_make_move, 3},
+    {"_conn4R_available_moves", (DL_FUNC) &_conn4R_available_moves, 1},
+    {"_conn4R_order_moves", (DL_FUNC) &_conn4R_order_moves, 2},
     {NULL, NULL, 0}
 };
 
