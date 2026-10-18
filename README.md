@@ -85,6 +85,39 @@ analysis$variation   # principal variation
 analyze_position(board, depth = 8, show = TRUE)
 ```
 
+### Reuse analysis between moves
+
+Each `start_game()` creates a fresh transposition table and keeps it for the
+whole game. Its default budget is **64 MiB**, configurable with
+`start_game(memory_mb = 128)`. The budget covers the table buffer; plots,
+search stacks and other R objects use additional memory.
+
+For repeated position analysis, create an engine and pass it to each call:
+
+```r
+engine <- create_engine(memory_mb = 64, first_player = 1)
+board <- create_position(c(4, 4, 3))
+analysis <- analyze_position(board, depth = 6, engine = engine)
+board <- make_move(board, analysis$move, analysis$turn)
+analyze_position(board, depth = 5, engine = engine)
+
+engine_info(engine)  # capacity, occupied entries, searches and cache hits
+clear_engine(engine) # empty the table without reallocating it
+```
+
+The cache distinguishes the board and player to move. Results searched to an
+equal or greater depth can be reused, so a shallow request can benefit from
+an earlier deeper search. When buckets fill, older and shallower entries are
+preferred for replacement. Eviction can shorten the reported principal
+variation. Calling `minimax()` or `analyze_position()` without an engine still
+performs an independent search with a temporary table.
+
+Create a separate engine for each game or configuration. `first_player = 2`
+lets `analyze_position()` infer turns for AI-first positions; an explicit
+`turn` still takes precedence. Engines live in the current R session and
+must be recreated after loading a saved session. Assigning an engine to
+another variable shares its cache. The evaluation formula is unchanged.
+
 ## Main functions
 
 | Function | Description |
@@ -93,6 +126,7 @@ analyze_position(board, depth = 8, show = TRUE)
 | `create_position()` | Enter a position from a sequence of moves. |
 | `analyze_position()` | Analyze a position with the minimax engine. |
 | `minimax()` | Low-level search engine (C++). |
+| `create_engine()` / `clear_engine()` / `engine_info()` | Create, clear and inspect a reusable search cache. |
 | `evaluate_position()` | Static evaluation of a position (C++). |
 | `visualize_board()` / `visualize_variation()` | Draw positions and variations. |
 | `reset_board()` | Create an empty board. |

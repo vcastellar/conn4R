@@ -16,6 +16,8 @@
 #'   by clicking with the mouse on the desired column of the board (if the
 #'   graphics device allows it); if \code{FALSE}, the move is typed on the
 #'   keyboard. Defaults to \code{TRUE}. See \code{\link{human_turn}}.
+#' @param memory_mb Transposition table budget in MiB. Defaults to 64.
+#'   Each call starts a new engine and reuses its table for the whole game.
 #'
 #' @return The 6 x 7 matrix with the final state of the board (invisibly).
 #'
@@ -36,7 +38,13 @@
 #' @export
 start_game <- function(depth = 5, turn = 1,
                        adaptiveDepth = TRUE, auto = FALSE,
-                       mouse = TRUE) {
+                       mouse = TRUE, memory_mb = 64) {
+
+  if (length(turn) != 1L || is.na(turn) || !is.numeric(turn) ||
+      !turn %in% c(1, 2)) {
+    stop("`turn` must be 1 (human) or 2 (AI).", call. = FALSE)
+  }
+  engine <- create_engine(memory_mb = memory_mb, first_player = turn)
 
   # RStudio finishes painting its graphics device from the event loop.
   # If minimax enters C++ immediately, that repaint is left pending and the
@@ -65,7 +73,7 @@ start_game <- function(depth = 5, turn = 1,
   # Internal helpers that call the C++ engine
   ai_move <- function(tab, search_depth, maximizingAI) {
     tik <- system.time({
-      res <- minimax(tab, search_depth, maximizingAI)
+      res <- minimax(tab, search_depth, maximizingAI, engine = engine)
     })
     list(move           = res$move,
          score          = res$score,
@@ -139,7 +147,7 @@ start_game <- function(depth = 5, turn = 1,
   # Automatic mode (AI vs AI)
   if (auto) {
     while (i <= 42) {
-      current_turn <- ((i - 1) %% 2) + 1
+      current_turn <- if ((i - 1) %% 2 == 0) turn else 3L - turn
       max_ai       <- (current_turn == 2)
       search_depth <- if (adaptiveDepth) .adaptive_depth(board, depth) else depth
 

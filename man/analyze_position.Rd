@@ -5,7 +5,7 @@
 \alias{print.conn4R_analysis}
 \title{Analyze a position with the minimax engine}
 \usage{
-analyze_position(board, turn = NULL, depth = 7, show = FALSE, delay = 1)
+analyze_position(board, turn = NULL, depth = 7, show = FALSE, delay = 1, engine = NULL)
 
 \method{print}{conn4R_analysis}(x, ...)
 }
@@ -15,7 +15,7 @@ analyze_position(board, turn = NULL, depth = 7, show = FALSE, delay = 1)
 
 \item{turn}{Player to move: \code{1} (human) or \code{2} (AI).
 If \code{NULL} (the default), it is inferred from the number of pieces on
-the board, assuming that the human opens the game.}
+the board, using the engine's first player (human if no engine is given).}
 
 \item{depth}{Maximum minimax search depth. Defaults to
 \code{7}.}
@@ -26,6 +26,10 @@ the board using \code{\link{visualize_variation}}. Defaults to
 
 \item{delay}{Seconds to wait between positions when \code{show = TRUE}.
 Defaults to \code{1}.}
+
+\item{engine}{Optional engine returned by \code{\link{create_engine}}.
+Reusing it retains cached results between analyses. Defaults to
+\code{NULL} for an independent search.}
 
 \item{x}{Object of class \code{"conn4R_analysis"} returned by
 \code{analyze_position}.}
@@ -43,6 +47,7 @@ An object of class \code{"conn4R_analysis"} (a list) with, among
     AI advantage).}
   \item{evaluation}{Static evaluation of the position.}
   \item{nodes}{Nodes evaluated during the search.}
+  \item{tt_hits}{Usable cached search results during this analysis.}
   \item{variation}{Principal variation (sequence of columns).}
   \item{verdict}{Textual interpretation of the score.}
 }

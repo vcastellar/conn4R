@@ -1,5 +1,14 @@
 # conn4R (development version)
 
+- Keep one bounded transposition table per game, with a configurable default
+  budget of 64 MiB and replacement that favors recent, deep results.
+- Add `create_engine()`, `engine_info()` and `clear_engine()` for reusable,
+  independent analysis contexts. `minimax()` and `analyze_position()` accept
+  an optional engine and report usable cache hits as `tt_hits`.
+- Include the player to move in cache keys and follow that turn when
+  extracting principal variations. AI-first turn inference is available
+  through the engine; automatic games now honor their starting player.
+
 * The C++ engine functions (`minimax()`, `evaluate_position()`, `game_over()`,
   `make_move()`, `available_moves()` and `order_moves()`) are exported again, so
   they can be called directly as the README and their examples show.

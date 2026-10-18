@@ -9,7 +9,8 @@ start_game(
   turn = 1,
   adaptiveDepth = TRUE,
   auto = FALSE,
-  mouse = TRUE
+  mouse = TRUE,
+  memory_mb = 64
 )
 }
 \arguments{
@@ -27,6 +28,9 @@ human intervention. Defaults to \code{FALSE}.}
 by clicking with the mouse on the desired column of the board (if the
 graphics device allows it); if \code{FALSE}, the move is typed on the
 keyboard. Defaults to \code{TRUE}. See \code{\link{human_turn}}.}
+
+\item{memory_mb}{Transposition table budget in MiB. Defaults to 64.
+Each call starts a new engine and reuses its table for the whole game.}
 }
 \value{
 The 6 x 7 matrix with the final state of the board (invisibly).

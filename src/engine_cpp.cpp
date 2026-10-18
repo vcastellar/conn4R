@@ -1,7 +1,8 @@
 // [[Rcpp::depends(Rcpp)]]
 #include <Rcpp.h>
-#include <unordered_map>
-#include <string>
+#include <cstdint>
+#include <limits>
+#include <memory>
 #include <vector>
 #include <algorithm>
 #include <array>
@@ -303,44 +304,183 @@ static const int TT_EXACT = 0;
 static const int TT_LOWER = 1;
 static const int TT_UPPER = 2;
 
-struct TTEntry {
-  int depth;
-  int score;
-  int flag;
-  int move; // 0-based column, -1 if unknown
+// Two exact bit masks encode all 42 cells. Bit 42 of p2_turn encodes
+// the side to move, including positions whose turn is supplied explicitly.
+struct TTKey {
+  uint64_t p1 = 0;
+  uint64_t p2_turn = 0;
+
+  bool operator==(const TTKey& other) const {
+    return p1 == other.p1 && p2_turn == other.p2_turn;
+  }
 };
 
-typedef std::unordered_map<std::string, TTEntry> TT;
-
-static std::string tt_key(const Board& b) {
-  std::string k(42, '0');
-  for (int i = 0; i < 42; i++) k[i] = '0' + b[i];
-  return k;
+static TTKey tt_key(const Board& b, bool maximizingAI) {
+  TTKey key;
+  for (int i = 0; i < 42; i++) {
+    if (b[i] == 1) key.p1 |= uint64_t(1) << i;
+    else if (b[i] == 2) key.p2_turn |= uint64_t(1) << i;
+  }
+  if (maximizingAI) key.p2_turn |= uint64_t(1) << 42;
+  return key;
 }
 
-static const TTEntry* tt_lookup(const TT& tt, const std::string& key,
+struct TTEntry {
+  TTKey key;
+  uint64_t generation = 0;
+  int depth = -1; // negative depth marks an unused slot
+  int score = 0;
+  int flag = TT_EXACT;
+  int move = -1; // 0-based column, -1 if unknown
+};
+
+// Four candidate slots per hash bucket keep collision handling bounded.
+// Keys are compared in full: a hash collision can only evict an entry,
+// never return an unrelated position's score.
+struct TTBucket {
+  std::array<TTEntry, 4> slots;
+};
+
+class TT {
+  std::unique_ptr<TTBucket[]> buckets;
+  size_t bucket_count;
+  size_t used = 0;
+  uint64_t generation = 0;
+  uint64_t hits = 0;
+
+  static uint64_t mix(uint64_t x) {
+    x ^= x >> 30;
+    x *= UINT64_C(0xbf58476d1ce4e5b9);
+    x ^= x >> 27;
+    x *= UINT64_C(0x94d049bb133111eb);
+    return x ^ (x >> 31);
+  }
+
+  TTBucket& bucket(const TTKey& key) {
+    return buckets[mix(key.p1 ^ mix(key.p2_turn)) % bucket_count];
+  }
+
+public:
+  explicit TT(double memory_mb) {
+    long double bytes = static_cast<long double>(memory_mb) * 1024 * 1024;
+    if (!std::isfinite(memory_mb) || bytes < sizeof(TTBucket) ||
+        bytes >= static_cast<long double>(std::numeric_limits<size_t>::max())) {
+      stop("`memory_mb` must be finite, positive and large enough for one table bucket.");
+    }
+    bucket_count = static_cast<size_t>(bytes / sizeof(TTBucket));
+    buckets.reset(new TTBucket[bucket_count]);
+  }
+
+  void begin_search() {
+    // Handle counter wrap without changing the cached results.
+    if (generation == std::numeric_limits<uint64_t>::max()) {
+      for (size_t i = 0; i < bucket_count; i++)
+        for (TTEntry& entry : buckets[i].slots) entry.generation = 0;
+      generation = 0;
+    }
+    generation++;
+  }
+
+  TTEntry* find(const TTKey& key) {
+    for (TTEntry& entry : bucket(key).slots) {
+      if (entry.depth >= 0 && entry.key == key) {
+        entry.generation = generation;
+        return &entry;
+      }
+    }
+    return nullptr;
+  }
+
+  void store(const TTKey& key, int depth, int score, int flag, int move) {
+    TTEntry* target = nullptr;
+    int lowest_priority = INT_MAX;
+    for (TTEntry& entry : bucket(key).slots) {
+      if (entry.depth >= 0 && entry.key == key) {
+        entry.generation = generation;
+        // Preserve deeper results and exact results at the same depth.
+        if (entry.depth > depth ||
+            (entry.depth == depth && entry.flag == TT_EXACT && flag != TT_EXACT)) return;
+        target = &entry;
+        break;
+      }
+      if (entry.depth < 0) {
+        target = &entry;
+        lowest_priority = INT_MIN;
+      } else if (lowest_priority != INT_MIN) {
+        // Each intervening search ages an entry by four plies. Saturating
+        // the age keeps the arithmetic bounded even in long-lived engines.
+        int age = static_cast<int>(std::min<uint64_t>(generation - entry.generation, 64));
+        int priority = entry.depth - 4 * age;
+        if (target == nullptr || priority < lowest_priority) {
+          lowest_priority = priority;
+          target = &entry;
+        }
+      }
+    }
+    if (target->depth < 0) used++;
+    target->key = key;
+    target->generation = generation;
+    target->depth = depth;
+    target->score = score;
+    target->flag = flag;
+    target->move = move;
+  }
+
+  void clear() {
+    for (size_t i = 0; i < bucket_count; i++) buckets[i] = TTBucket();
+    used = 0;
+    generation = 0;
+    hits = 0;
+  }
+
+  void record_hit() { hits++; }
+  uint64_t hit_count() const { return hits; }
+  uint64_t searches() const { return generation; }
+  size_t entries() const { return used; }
+  size_t capacity() const { return bucket_count * 4; }
+  size_t allocated_bytes() const { return bucket_count * sizeof(TTBucket); }
+};
+
+struct Engine {
+  const int first_player;
+  const double memory_mb;
+  TT table;
+
+  Engine(int first, double memory) : first_player(first), memory_mb(memory), table(memory) {}
+};
+
+static Engine& engine_from_r(SEXP engine) {
+  if (TYPEOF(engine) != EXTPTRSXP ||
+      R_ExternalPtrTag(engine) != Rf_install("conn4R_engine") ||
+      R_ExternalPtrAddr(engine) == nullptr) {
+    stop("`engine` must be a live engine returned by create_engine(); recreate it after loading a saved R session.");
+  }
+  return *XPtr<Engine>(engine);
+}
+
+static const TTEntry* tt_lookup(TT& tt, const TTKey& key,
                                  int depth, int alpha, int beta) {
-  auto it = tt.find(key);
-  if (it == tt.end()) return nullptr;
-  const TTEntry& e = it->second;
+  const TTEntry* entry = tt.find(key);
+  if (entry == nullptr) return nullptr;
+  const TTEntry& e = *entry;
   if (e.depth < depth) return nullptr;
-  if (e.flag == TT_EXACT) return &e;
-  if (e.flag == TT_LOWER && e.score >= beta)  return &e;
-  if (e.flag == TT_UPPER && e.score <= alpha) return &e;
+  if (e.flag == TT_EXACT ||
+      (e.flag == TT_LOWER && e.score >= beta) ||
+      (e.flag == TT_UPPER && e.score <= alpha)) {
+    tt.record_hit();
+    return &e;
+  }
   return nullptr;
 }
 
-static void tt_store(TT& tt, const std::string& key,
+static void tt_store(TT& tt, const TTKey& key,
                      int depth, int score, int alpha_orig, int beta_orig, int move) {
   int flag;
   if      (score >= beta_orig)  flag = TT_LOWER;
   else if (score <= alpha_orig) flag = TT_UPPER;
   else                          flag = TT_EXACT;
 
-  auto it = tt.find(key);
-  if (it == tt.end() || it->second.depth <= depth) {
-    tt[key] = {depth, score, flag, move};
-  }
+  tt.store(key, depth, score, flag, move);
 }
 
 // ============================================================
@@ -425,7 +565,7 @@ static MMResult minimax_cpp(const Board& b, int depth, bool maximizingAI,
   if (go != 0) return {terminal_score(b, go), -1};
   if (depth == 0) return search_tactics(b, maximizingAI, stats);
 
-  std::string key = tt_key(b);
+  TTKey key = tt_key(b, maximizingAI);
   const TTEntry* hit = tt_lookup(tt, key, depth, alpha, beta);
   if (hit != nullptr) {
     return {hit->score, hit->move};
@@ -438,9 +578,9 @@ static MMResult minimax_cpp(const Board& b, int depth, bool maximizingAI,
   std::vector<MoveScore> moves = order_moves_impl(b, turn);
 
   // If the TT has a best move, bring it to the front
-  auto it_tt = tt.find(key);
-  if (it_tt != tt.end() && it_tt->second.move >= 0) {
-    int best_col = it_tt->second.move;
+  const TTEntry* previous = tt.find(key);
+  if (previous != nullptr && previous->move >= 0) {
+    int best_col = previous->move;
     auto it_m = std::find_if(moves.begin(), moves.end(),
                              [best_col](const MoveScore& m){ return m.col == best_col; });
     if (it_m != moves.end() && it_m != moves.begin()) {
@@ -482,23 +622,17 @@ static MMResult minimax_cpp(const Board& b, int depth, bool maximizingAI,
 // Principal variation (PV) extraction from the TT
 // ============================================================
 
-static IntegerVector extract_pv(Board b, const TT& tt, int max_depth) {
+static IntegerVector extract_pv(Board b, TT& tt, int max_depth, bool maximizingAI) {
   std::vector<int> pv;
   for (int d = 0; d < max_depth; d++) {
     if (game_status(b) != 0) break;
-    std::string key = tt_key(b);
-    auto it = tt.find(key);
-    if (it == tt.end() || it->second.move < 0) break;
-    int col = it->second.move;
+    const TTEntry* entry = tt.find(tt_key(b, maximizingAI));
+    if (entry == nullptr || entry->flag != TT_EXACT || entry->move < 0) break;
+    int col = entry->move;
+    if (col >= 7 || !col_available(b, col)) break;
     pv.push_back(col + 1); // 1-indexed
-    // Infer the turn: the player with fewer pieces moves
-    int p1 = 0, p2 = 0;
-    for (int i = 0; i < 42; i++) {
-      if (b[i] == 1) p1++;
-      else if (b[i] == 2) p2++;
-    }
-    int player = (p1 <= p2) ? 1 : 2;
-    b = drop_piece(b, col, player);
+    b = drop_piece(b, col, maximizingAI ? 2 : 1);
+    maximizingAI = !maximizingAI;
   }
   return wrap(pv);
 }
@@ -506,6 +640,82 @@ static IntegerVector extract_pv(Board b, const TT& tt, int max_depth) {
 // ============================================================
 // Functions exported to R
 // ============================================================
+
+//' Create a game engine with a bounded transposition table
+//'
+//' @description Creates an independent engine whose cached search results
+//'   can be reused across moves and analyses. A new engine starts empty.
+//' @param memory_mb Transposition table budget in MiB (1 MiB = 1024^2 bytes).
+//'   Defaults to 64. Positive fractional budgets are allowed if they fit at
+//'   least one bucket. This bounds the table storage, not total search memory.
+//' @param first_player Player who opens the game: 1 (human) or 2 (AI).
+//'   Defaults to 1. Used to infer turns in \code{analyze_position()}.
+//' @details The table uses four-slot buckets and exact compact board-and-turn
+//'   keys. When a bucket fills, replacement favors recent, deep entries:
+//'   each search since an entry was last accessed reduces its priority by
+//'   four depth levels, up to 64 searches. Deeper entries for the same key
+//'   are retained. Engine settings are immutable; create a new engine to
+//'   change the first player or memory budget. Evaluation weights are
+//'   currently compile-time constants and are unchanged by the engine.
+//'
+//'   Engines are external pointers owned by the current R session. Assignment
+//'   shares the same engine, and serialization does not preserve it. Create a
+//'   new engine after loading a saved session. Memory is released by R's
+//'   garbage collector when the engine is no longer referenced.
+//' @return An external pointer of class \code{conn4R_engine}.
+//' @examples
+//' engine <- create_engine(memory_mb = 16, first_player = 2)
+//' board <- reset_board()
+//' minimax(board, depth = 3L, maximizingAI = TRUE, engine = engine)
+//' engine_info(engine)
+//' clear_engine(engine)
+//' @seealso \code{\link{minimax}}, \code{\link{engine_info}}
+//' @export
+// [[Rcpp::export]]
+SEXP create_engine(double memory_mb = 64, double first_player = 1) {
+  if (first_player != 1 && first_player != 2) {
+    stop("`first_player` must be 1 (human) or 2 (AI).");
+  }
+  XPtr<Engine> ptr(new Engine(static_cast<int>(first_player), memory_mb), true,
+                   Rf_install("conn4R_engine"));
+  ptr.attr("class") = "conn4R_engine";
+  return ptr;
+}
+
+//' Inspect an engine's transposition table
+//' @param engine A live engine returned by \code{\link{create_engine}}.
+//' @return A list with the immutable \code{first_player} and \code{memory_mb}
+//'   settings, \code{allocated_bytes} (table buffer only), \code{capacity}
+//'   (number of slots), \code{entries} (occupied slots), \code{searches} and
+//'   \code{hits} (usable cached results). Counts are since creation or clearing.
+//' @seealso \code{\link{create_engine}}, \code{\link{clear_engine}}
+//' @export
+// [[Rcpp::export]]
+List engine_info(SEXP engine) {
+  Engine& context = engine_from_r(engine);
+  return List::create(
+    Named("first_player") = context.first_player,
+    Named("memory_mb") = context.memory_mb,
+    Named("allocated_bytes") = static_cast<double>(context.table.allocated_bytes()),
+    Named("capacity") = static_cast<double>(context.table.capacity()),
+    Named("entries") = static_cast<double>(context.table.entries()),
+    Named("searches") = static_cast<double>(context.table.searches()),
+    Named("hits") = static_cast<double>(context.table.hit_count())
+  );
+}
+
+//' Clear an engine's transposition table
+//' @description Removes cached entries and resets search and hit counters,
+//'   retaining the allocated table and its configuration. Clearing affects
+//'   all R variables that refer to this same engine.
+//' @param engine A live engine returned by \code{\link{create_engine}}.
+//' @return \code{NULL}, invisibly.
+//' @seealso \code{\link{create_engine}}, \code{\link{engine_info}}
+//' @export
+// [[Rcpp::export(invisible = true)]]
+void clear_engine(SEXP engine) {
+  engine_from_r(engine).table.clear();
+}
 
 //' Minimax engine with alpha-beta pruning and transposition table (C++)
 //'
@@ -520,8 +730,16 @@ static IntegerVector extract_pv(Board b, const TT& tt, int max_depth) {
 //' @param depth int. Maximum depth of the search tree.
 //' @param maximizingAI bool. \code{TRUE} if it is the AI's turn
 //'   (MAX node); \code{FALSE} if it is the human's turn (MIN node).
+//' @param engine Optional engine returned by \code{\link{create_engine}}.
+//'   Reuse it across calls to retain the transposition table. By default,
+//'   \code{NULL} creates a temporary 64 MiB table for this call only.
+//' @details Cached results at an equal or greater depth may be reused. Thus
+//'   a shallow search with a previously used engine can return a deeper
+//'   result. Depth zero retains its tactical-search behavior. Principal
+//'   variations follow exact cached entries only and may be shorter than
+//'   the requested depth if entries were evicted or are bounds only.
 //'
-//' @return List with six elements:
+//' @return List with seven elements:
 //' \describe{
 //'   \item{score}{int. Minimax score of the root position.}
 //'   \item{move}{int. Best column (1-7) for the player to move, or
@@ -532,6 +750,7 @@ static IntegerVector extract_pv(Board b, const TT& tt, int max_depth) {
 //'     search beyond the horizon.}
 //'   \item{variation}{IntegerVector. Sequence of columns (1-7) of the principal
 //'     variation extracted from the transposition table.}
+//'   \item{tt_hits}{double. Usable transposition table hits during this call.}
 //' }
 //'
 //' @examples
@@ -545,13 +764,30 @@ static IntegerVector extract_pv(Board b, const TT& tt, int max_depth) {
 //' @seealso \code{\link{evaluate_position}}, \code{\link{start_game}}
 //' @export
 // [[Rcpp::export]]
-List minimax(IntegerMatrix board, int depth, bool maximizingAI) {
+List minimax(IntegerMatrix board, int depth, bool maximizingAI, SEXP engine = R_NilValue) {
+  if (board.nrow() != 6 || board.ncol() != 7) {
+    stop("`board` must be a 6x7 matrix with values 0, 1 or 2.");
+  }
+  for (int value : board) {
+    if (value < 0 || value > 2) stop("`board` must have values 0, 1 or 2.");
+  }
+  if (depth == NA_INTEGER || depth < 0) stop("`depth` must be non-negative.");
   Board b = from_r(board);
-  TT tt;
+  std::unique_ptr<Engine> temporary;
+  Engine* context;
+  if (engine == R_NilValue) {
+    temporary.reset(new Engine(1, 64));
+    context = temporary.get();
+  } else {
+    context = &engine_from_r(engine);
+  }
+  TT& tt = context->table;
+  tt.begin_search();
+  uint64_t previous_hits = tt.hit_count();
   SearchStats stats = {0, 0};
   MMResult res = minimax_cpp(b, depth, maximizingAI,
                              INT_MIN, INT_MAX, tt, stats);
-  IntegerVector pv = extract_pv(b, tt, depth);
+  IntegerVector pv = extract_pv(b, tt, depth, maximizingAI);
   // Return a 1-indexed move (like the rest of the package)
   return List::create(
     Named("score")          = res.score,
@@ -559,7 +795,8 @@ List minimax(IntegerMatrix board, int depth, bool maximizingAI) {
     Named("nodes")          = (double)(stats.normal + stats.tactical),
     Named("normal_nodes")   = (double)stats.normal,
     Named("tactical_nodes") = (double)stats.tactical,
-    Named("variation")      = pv
+    Named("variation")      = pv,
+    Named("tt_hits")        = static_cast<double>(tt.hit_count() - previous_hits)
   );
 }
 
