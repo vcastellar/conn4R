@@ -1,11 +1,11 @@
 # Infers which player is to move from the number of pieces on the board,
-# assuming that the human (player 1) opens the game. Returns NA if the
-# piece count does not correspond to a legal human-first game.
-.player_to_move <- function(board) {
-  n1 <- sum(board == 1L)
-  n2 <- sum(board == 2L)
-  if (n1 == n2)      return(1L)
-  if (n1 == n2 + 1L) return(2L)
+# using the engine's first player (human by default). Returns NA if the
+# piece count does not correspond to that opening order.
+.player_to_move <- function(board, first_player = 1L) {
+  n_first <- sum(board == first_player)
+  n_second <- sum(board == 3L - first_player)
+  if (n_first == n_second)      return(first_player)
+  if (n_first == n_second + 1L) return(3L - first_player)
   NA_integer_
 }
 
@@ -37,7 +37,7 @@
 #'   1 human, 2 AI. It can be built with \code{\link{create_position}}.
 #' @param turn Player to move: \code{1} (human) or \code{2} (AI).
 #'   If \code{NULL} (the default), it is inferred from the number of pieces on
-#'   the board, assuming that the human opens the game.
+#'   the board, using the engine's first player (human if no engine is given).
 #' @param depth Maximum minimax search depth. Defaults to
 #'   \code{7}.
 #' @param show Logical. If \code{TRUE}, replays the principal variation on
@@ -45,6 +45,9 @@
 #'   \code{FALSE}.
 #' @param delay Seconds to wait between positions when \code{show = TRUE}.
 #'   Defaults to \code{1}.
+#' @param engine Optional engine returned by \code{\link{create_engine}}.
+#'   Reusing it retains cached results between analyses. Defaults to
+#'   \code{NULL} for an independent search.
 #'
 #' @return An object of class \code{"conn4R_analysis"} (a list) with, among
 #'   others, the elements:
@@ -56,6 +59,7 @@
 #'     AI advantage).}
 #'   \item{evaluation}{Static evaluation of the position.}
 #'   \item{nodes}{Nodes evaluated during the search.}
+#'   \item{tt_hits}{Usable cached search results during this analysis.}
 #'   \item{variation}{Principal variation (sequence of columns).}
 #'   \item{verdict}{Textual interpretation of the score.}
 #' }
@@ -76,7 +80,7 @@
 #'
 #' @export
 analyze_position <- function(board, turn = NULL, depth = 7,
-                             show = FALSE, delay = 1) {
+                             show = FALSE, delay = 1, engine = NULL) {
   if (!is.matrix(board) || !identical(dim(board), c(6L, 7L)) ||
       anyNA(board) || any(!board %in% 0:2)) {
     stop("`board` must be a 6x7 matrix with values 0, 1 or 2.",
@@ -94,7 +98,8 @@ analyze_position <- function(board, turn = NULL, depth = 7,
   board <- matrix(as.integer(board), nrow = 6L, ncol = 7L)
 
   if (is.null(turn)) {
-    turn <- .player_to_move(board)
+    first_player <- if (is.null(engine)) 1L else engine_info(engine)$first_player
+    turn <- .player_to_move(board, first_player)
     if (is.na(turn)) {
       stop("Cannot infer the turn from this position; ",
            "specify `turn` (1 = human, 2 = AI).", call. = FALSE)
@@ -109,7 +114,7 @@ analyze_position <- function(board, turn = NULL, depth = 7,
   maximizingAI <- (turn == 2L)
 
   outcome <- game_over(board)
-  res <- minimax(board, depth, maximizingAI)
+  res <- minimax(board, depth, maximizingAI, engine = engine)
 
   analysis <- list(
     turn           = turn,
@@ -120,6 +125,7 @@ analyze_position <- function(board, turn = NULL, depth = 7,
     nodes          = res$nodes,
     normal_nodes   = res$normal_nodes,
     tactical_nodes = res$tactical_nodes,
+    tt_hits        = res$tt_hits,
     variation      = res$variation,
     finished       = isTRUE(outcome$finished),
     result         = outcome$result,

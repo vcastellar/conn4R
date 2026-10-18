@@ -10,16 +10,50 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
+// create_engine
+SEXP create_engine(double memory_mb, double first_player);
+RcppExport SEXP _conn4R_create_engine(SEXP memory_mbSEXP, SEXP first_playerSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< double >::type memory_mb(memory_mbSEXP);
+    Rcpp::traits::input_parameter< double >::type first_player(first_playerSEXP);
+    rcpp_result_gen = Rcpp::wrap(create_engine(memory_mb, first_player));
+    return rcpp_result_gen;
+END_RCPP
+}
+// engine_info
+List engine_info(SEXP engine);
+RcppExport SEXP _conn4R_engine_info(SEXP engineSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< SEXP >::type engine(engineSEXP);
+    rcpp_result_gen = Rcpp::wrap(engine_info(engine));
+    return rcpp_result_gen;
+END_RCPP
+}
+// clear_engine
+void clear_engine(SEXP engine);
+RcppExport SEXP _conn4R_clear_engine(SEXP engineSEXP) {
+BEGIN_RCPP
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< SEXP >::type engine(engineSEXP);
+    clear_engine(engine);
+    return R_NilValue;
+END_RCPP
+}
 // minimax
-List minimax(IntegerMatrix board, int depth, bool maximizingAI);
-RcppExport SEXP _conn4R_minimax(SEXP boardSEXP, SEXP depthSEXP, SEXP maximizingAISEXP) {
+List minimax(IntegerMatrix board, int depth, bool maximizingAI, SEXP engine);
+RcppExport SEXP _conn4R_minimax(SEXP boardSEXP, SEXP depthSEXP, SEXP maximizingAISEXP, SEXP engineSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< IntegerMatrix >::type board(boardSEXP);
     Rcpp::traits::input_parameter< int >::type depth(depthSEXP);
     Rcpp::traits::input_parameter< bool >::type maximizingAI(maximizingAISEXP);
-    rcpp_result_gen = Rcpp::wrap(minimax(board, depth, maximizingAI));
+    Rcpp::traits::input_parameter< SEXP >::type engine(engineSEXP);
+    rcpp_result_gen = Rcpp::wrap(minimax(board, depth, maximizingAI, engine));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -83,7 +117,10 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_conn4R_minimax", (DL_FUNC) &_conn4R_minimax, 3},
+    {"_conn4R_create_engine", (DL_FUNC) &_conn4R_create_engine, 2},
+    {"_conn4R_engine_info", (DL_FUNC) &_conn4R_engine_info, 1},
+    {"_conn4R_clear_engine", (DL_FUNC) &_conn4R_clear_engine, 1},
+    {"_conn4R_minimax", (DL_FUNC) &_conn4R_minimax, 4},
     {"_conn4R_evaluate_position", (DL_FUNC) &_conn4R_evaluate_position, 1},
     {"_conn4R_game_over", (DL_FUNC) &_conn4R_game_over, 1},
     {"_conn4R_make_move", (DL_FUNC) &_conn4R_make_move, 3},

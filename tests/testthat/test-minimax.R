@@ -89,5 +89,5 @@ test_that("the C++ engine is loaded and its routines are registered", {
   symbol <- getNativeSymbolInfo("_conn4R_minimax", PACKAGE = "conn4R")
 
   expect_s3_class(symbol, "NativeSymbolInfo")
-  expect_equal(symbol$numParameters, 3L)
+  expect_equal(symbol$numParameters, 4L)
 })

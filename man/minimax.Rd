@@ -4,7 +4,7 @@
 \alias{minimax}
 \title{Minimax engine with alpha-beta pruning and transposition table (C++)}
 \usage{
-minimax(board, depth, maximizingAI)
+minimax(board, depth, maximizingAI, engine = NULL)
 }
 \arguments{
 \item{board}{IntegerMatrix 6 x 7. Board state: 0 empty, 1 human, 2 AI.}
@@ -13,9 +13,13 @@ minimax(board, depth, maximizingAI)
 
 \item{maximizingAI}{bool. \code{TRUE} if it is the AI's turn
 (MAX node); \code{FALSE} if it is the human's turn (MIN node).}
+
+\item{engine}{Optional engine returned by \code{\link{create_engine}}.
+Reuse it across calls to retain the transposition table. By default,
+\code{NULL} creates a temporary 64 MiB table for this call only.}
 }
 \value{
-List with six elements:
+List with seven elements:
 \describe{
   \item{score}{int. Minimax score of the root position.}
   \item{move}{int. Best column (1-7) for the player to move, or
@@ -26,6 +30,7 @@ List with six elements:
     search beyond the horizon.}
   \item{variation}{IntegerVector. Sequence of columns (1-7) of the principal
     variation extracted from the transposition table.}
+  \item{tt_hits}{double. Usable transposition table hits during this call.}
 }
 }
 \description{
@@ -35,6 +40,13 @@ C++ implementation of the minimax algorithm with alpha-beta
   tactically stable position is reached. It also returns the number of
   evaluated nodes and the principal
   variation extracted from the transposition table.
+}
+\details{
+Cached results at an equal or greater depth may be reused. Thus
+a shallow search with a previously used engine can return a deeper
+result. Depth zero retains its tactical-search behavior. Principal
+variations follow exact cached entries only and may be shorter than
+the requested depth if entries were evicted or are bounds only.
 }
 \examples{
 board <- create_random_position(10)
