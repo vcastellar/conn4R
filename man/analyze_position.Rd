@@ -5,7 +5,14 @@
 \alias{print.conn4R_analysis}
 \title{Analyze a position with the minimax engine}
 \usage{
-analyze_position(board, turn = NULL, depth = 7, show = FALSE, delay = 1, engine = NULL)
+analyze_position(
+  board,
+  turn = NULL,
+  depth = 7,
+  show = FALSE,
+  delay = 1,
+  engine = NULL
+)
 
 \method{print}{conn4R_analysis}(x, ...)
 }

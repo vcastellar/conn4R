@@ -43,10 +43,10 @@ C++ implementation of the minimax algorithm with alpha-beta
 }
 \details{
 Cached results at an equal or greater depth may be reused. Thus
-a shallow search with a previously used engine can return a deeper
-result. Depth zero retains its tactical-search behavior. Principal
-variations follow exact cached entries only and may be shorter than
-the requested depth if entries were evicted or are bounds only.
+  a shallow search with a previously used engine can return a deeper
+  result. Depth zero retains its tactical-search behavior. Principal
+  variations follow exact cached entries only and may be shorter than
+  the requested depth if entries were evicted or are bounds only.
 }
 \examples{
 board <- create_random_position(10)

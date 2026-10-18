@@ -10,27 +10,30 @@ create_engine(memory_mb = 64, first_player = 1)
 \item{memory_mb}{Transposition table budget in MiB (1 MiB = 1024^2 bytes).
 Defaults to 64. Positive fractional budgets are allowed if they fit at
 least one bucket. This bounds the table storage, not total search memory.}
+
 \item{first_player}{Player who opens the game: 1 (human) or 2 (AI).
 Defaults to 1. Used to infer turns in \code{analyze_position()}.}
 }
-\value{An external pointer of class \code{conn4R_engine}.}
+\value{
+An external pointer of class \code{conn4R_engine}.
+}
 \description{
 Creates an independent engine whose cached search results
-can be reused across moves and analyses. A new engine starts empty.
+  can be reused across moves and analyses. A new engine starts empty.
 }
 \details{
 The table uses four-slot buckets and exact compact board-and-turn
-keys. When a bucket fills, replacement favors recent, deep entries:
-each search since an entry was last accessed reduces its priority by
-four depth levels, up to 64 searches. Deeper entries for the same key
-are retained. Engine settings are immutable; create a new engine to
-change the first player or memory budget. Evaluation weights are
-currently compile-time constants and are unchanged by the engine.
+  keys. When a bucket fills, replacement favors recent, deep entries:
+  each search since an entry was last accessed reduces its priority by
+  four depth levels, up to 64 searches. Deeper entries for the same key
+  are retained. Engine settings are immutable; create a new engine to
+  change the first player or memory budget. Evaluation weights are
+  currently compile-time constants and are unchanged by the engine.
 
-Engines are external pointers owned by the current R session. Assignment
-shares the same engine, and serialization does not preserve it. Create a
-new engine after loading a saved session. Memory is released by R's
-garbage collector when the engine is no longer referenced.
+  Engines are external pointers owned by the current R session. Assignment
+  shares the same engine, and serialization does not preserve it. Create a
+  new engine after loading a saved session. Memory is released by R's
+  garbage collector when the engine is no longer referenced.
 }
 \examples{
 engine <- create_engine(memory_mb = 16, first_player = 2)
@@ -39,4 +42,6 @@ minimax(board, depth = 3L, maximizingAI = TRUE, engine = engine)
 engine_info(engine)
 clear_engine(engine)
 }
-\seealso{\code{\link{minimax}}, \code{\link{engine_info}}}
+\seealso{
+\code{\link{minimax}}, \code{\link{engine_info}}
+}

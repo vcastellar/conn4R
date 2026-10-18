@@ -3,15 +3,21 @@
 \name{engine_info}
 \alias{engine_info}
 \title{Inspect an engine's transposition table}
-\usage{engine_info(engine)}
+\usage{
+engine_info(engine)
+}
 \arguments{
 \item{engine}{A live engine returned by \code{\link{create_engine}}.}
 }
 \value{
 A list with the immutable \code{first_player} and \code{memory_mb}
-settings, \code{allocated_bytes} (table buffer only), \code{capacity}
-(number of slots), \code{entries} (occupied slots), \code{searches} and
-\code{hits} (usable cached results). Counts are since creation or clearing.
+  settings, \code{allocated_bytes} (table buffer only), \code{capacity}
+  (number of slots), \code{entries} (occupied slots), \code{searches} and
+  \code{hits} (usable cached results). Counts are since creation or clearing.
 }
-\description{Inspect an engine's transposition table.}
-\seealso{\code{\link{create_engine}}, \code{\link{clear_engine}}}
+\description{
+Inspect an engine's transposition table
+}
+\seealso{
+\code{\link{create_engine}}, \code{\link{clear_engine}}
+}

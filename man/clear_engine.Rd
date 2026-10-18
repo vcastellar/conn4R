@@ -3,14 +3,20 @@
 \name{clear_engine}
 \alias{clear_engine}
 \title{Clear an engine's transposition table}
-\usage{clear_engine(engine)}
+\usage{
+clear_engine(engine)
+}
 \arguments{
 \item{engine}{A live engine returned by \code{\link{create_engine}}.}
 }
-\value{\code{NULL}, invisibly.}
+\value{
+\code{NULL}, invisibly.
+}
 \description{
 Removes cached entries and resets search and hit counters,
-retaining the allocated table and its configuration. Clearing affects
-all R variables that refer to this same engine.
+  retaining the allocated table and its configuration. Clearing affects
+  all R variables that refer to this same engine.
 }
-\seealso{\code{\link{create_engine}}, \code{\link{engine_info}}}
+\seealso{
+\code{\link{create_engine}}, \code{\link{engine_info}}
+}
