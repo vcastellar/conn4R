@@ -60,7 +60,7 @@ start_game <- function(depth = 5, turn = 1,
   show_board(board)
   i      <- 1
   j      <- 0
-  result <- "DRAW"
+  result <- 0L
 
   # Internal helpers that call the C++ engine
   ai_move <- function(tab, search_depth, maximizingAI) {
@@ -107,7 +107,10 @@ start_game <- function(depth = 5, turn = 1,
       search_depth <- if (adaptiveDepth) .adaptive_depth(board, depth) else depth
       board        <- end_turn(board, 2L, search_depth, TRUE)
       outcome      <- finished(board)
-      if (outcome$finished) { cat("AI wins\n"); return(invisible(board)) }
+      if (outcome$finished) {
+        cat(sprintf("Result: %s\n", .result_label(outcome$result)))
+        return(invisible(board))
+      }
       i <- i + 1; j <- 1
     }
 
@@ -130,7 +133,7 @@ start_game <- function(depth = 5, turn = 1,
       i <- i + 1
     }
 
-    cat(sprintf("Result: %s\n", result))
+    cat(sprintf("Result: %s\n", .result_label(result)))
   }
 
   # Automatic mode (AI vs AI)
@@ -144,11 +147,7 @@ start_game <- function(depth = 5, turn = 1,
 
       outcome <- finished(board)
       if (outcome$finished) {
-        result <- switch(as.character(outcome$result),
-                         "1" = "HUMAN WINS (player 1)",
-                         "2" = "AI WINS (player 2)",
-                         "0" = "DRAW")
-        cat(sprintf("Result: %s\n", result))
+        cat(sprintf("Result: %s\n", .result_label(outcome$result)))
         break
       }
       i <- i + 1
@@ -156,4 +155,13 @@ start_game <- function(depth = 5, turn = 1,
   }
 
   invisible(board)
+}
+
+# Text shown at the end of a game for a game_over() result code
+# (1 = human wins, 2 = AI wins, 0 = draw).
+.result_label <- function(result) {
+  switch(as.character(result),
+         "1" = "HUMAN WINS (player 1)",
+         "2" = "AI WINS (player 2)",
+         "0" = "DRAW")
 }

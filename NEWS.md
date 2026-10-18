@@ -1,5 +1,14 @@
 # conn4R (development version)
 
+* The C++ engine functions (`minimax()`, `evaluate_position()`, `game_over()`,
+  `make_move()`, `available_moves()` and `order_moves()`) are exported again, so
+  they can be called directly as the README and their examples show.
+* `create_random_position(0)` returns the empty board (it used to play two
+  moves) and `depth` must be an integer between 0 and 42.
+* `start_game()` reports the result as text in every mode
+  (`HUMAN WINS (player 1)`, `AI WINS (player 2)` or `DRAW`); in human vs AI
+  games it used to print a numeric code.
+* `LICENSE` is excluded from the built package, as CRAN expects for GPL-3.
 * The human player now enters their moves by clicking with the mouse on any
   cell of the desired column of the board (`human_turn()` and `start_game()`
   gain the argument `mouse = TRUE`). If the graphics device does not support

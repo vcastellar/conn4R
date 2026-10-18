@@ -36,9 +36,11 @@ If \eqn{b \leq 1} it returns \code{max_depth} directly.
 }
 \examples{
 board <- create_random_position(10)
-.adaptive_depth(board, base_depth = 5)
+conn4R:::.adaptive_depth(board, base_depth = 5)
 
 # With an almost full board the depth goes up
 full_board <- create_random_position(35)
-.adaptive_depth(full_board, base_depth = 5)
+conn4R:::.adaptive_depth(full_board, base_depth = 5)
+
 }
+\keyword{internal}
