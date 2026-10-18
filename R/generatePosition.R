@@ -5,7 +5,8 @@
 #'   produces a win before all the moves have been made, it is discarded and
 #'   generated again, so the returned board is not a terminal
 #'   position (unless the board fills up completely).
-#' @param depth number of moves simulated at random
+#' @param depth number of moves simulated at random, an integer between 0
+#'   and 42. With \code{0} the empty board is returned.
 #' @return Integer 6 x 7 matrix with the generated position. Cells: 0 empty,
 #'   1 human, 2 AI.
 #' @examples
@@ -15,6 +16,10 @@
 #' sum(board == 2)
 #' @export
 create_random_position <- function(depth = 10) {
+  if (length(depth) != 1L || !is.numeric(depth) || is.na(depth) ||
+      depth != as.integer(depth) || depth < 0 || depth > 42) {
+    stop("`depth` must be an integer between 0 and 42.", call. = FALSE)
+  }
 
   restart <- TRUE
 
@@ -24,7 +29,7 @@ create_random_position <- function(depth = 10) {
     turn <- 1
     board <- reset_board()
 
-    for (i in 1:depth) {
+    for (i in seq_len(depth)) {
 
       # pick a move at random
       possible_moves <- available_moves(board)

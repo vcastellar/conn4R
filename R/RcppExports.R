@@ -37,6 +37,7 @@
 #' res$variation
 #'
 #' @seealso \code{\link{evaluate_position}}, \code{\link{start_game}}
+#' @export
 minimax <- function(board, depth, maximizingAI) {
     .Call(`_conn4R_minimax`, board, depth, maximizingAI)
 }
@@ -58,6 +59,7 @@ minimax <- function(board, depth, maximizingAI) {
 #' evaluate_position(board)
 #'
 #' @seealso \code{\link{minimax}}
+#' @export
 evaluate_position <- function(board) {
     .Call(`_conn4R_evaluate_position`, board)
 }
@@ -81,6 +83,7 @@ evaluate_position <- function(board) {
 #' board <- create_random_position(10)
 #' game_over(board)
 #'
+#' @export
 game_over <- function(board) {
     .Call(`_conn4R_game_over`, board)
 }
@@ -105,6 +108,7 @@ game_over <- function(board) {
 #' board <- make_move(board, column = 4L, player = 2L)
 #' visualize_board(board)
 #'
+#' @export
 make_move <- function(board, column, player) {
     .Call(`_conn4R_make_move`, board, column, player)
 }
@@ -123,6 +127,7 @@ make_move <- function(board, column, player) {
 #' available_moves(board)
 #'
 #' @seealso \code{\link{order_moves}}
+#' @export
 available_moves <- function(board) {
     .Call(`_conn4R_available_moves`, board)
 }
@@ -153,6 +158,7 @@ available_moves <- function(board) {
 #' order_moves(board, turn = 2L)
 #'
 #' @seealso \code{\link{minimax}}
+#' @export
 order_moves <- function(board, turn) {
     .Call(`_conn4R_order_moves`, board, turn)
 }

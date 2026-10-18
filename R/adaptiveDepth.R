@@ -30,11 +30,13 @@
 #'
 #' @examples
 #' board <- create_random_position(10)
-#' .adaptive_depth(board, base_depth = 5)
+#' conn4R:::.adaptive_depth(board, base_depth = 5)
 #'
 #' # With an almost full board the depth goes up
 #' full_board <- create_random_position(35)
-#' .adaptive_depth(full_board, base_depth = 5)
+#' conn4R:::.adaptive_depth(full_board, base_depth = 5)
+#'
+#' @keywords internal
 .adaptive_depth <- function(board, base_depth = 7, max_depth = 15) {
   b <- .validColumns(board)
   if (b <= 1) return(max_depth)

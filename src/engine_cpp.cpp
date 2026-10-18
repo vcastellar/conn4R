@@ -543,6 +543,7 @@ static IntegerVector extract_pv(Board b, const TT& tt, int max_depth) {
 //' res$variation
 //'
 //' @seealso \code{\link{evaluate_position}}, \code{\link{start_game}}
+//' @export
 // [[Rcpp::export]]
 List minimax(IntegerMatrix board, int depth, bool maximizingAI) {
   Board b = from_r(board);
@@ -579,6 +580,7 @@ List minimax(IntegerMatrix board, int depth, bool maximizingAI) {
 //' evaluate_position(board)
 //'
 //' @seealso \code{\link{minimax}}
+//' @export
 // [[Rcpp::export]]
 int evaluate_position(IntegerMatrix board) {
   return evaluate_position_impl(from_r(board));
@@ -603,6 +605,7 @@ int evaluate_position(IntegerMatrix board) {
 //' board <- create_random_position(10)
 //' game_over(board)
 //'
+//' @export
 // [[Rcpp::export]]
 List game_over(IntegerMatrix board) {
   Board b = from_r(board);
@@ -635,6 +638,7 @@ List game_over(IntegerMatrix board) {
 //' board <- make_move(board, column = 4L, player = 2L)
 //' visualize_board(board)
 //'
+//' @export
 // [[Rcpp::export]]
 IntegerMatrix make_move(IntegerMatrix board, int column, int player) {
   Board b = from_r(board);
@@ -656,6 +660,7 @@ IntegerMatrix make_move(IntegerMatrix board, int column, int player) {
 //' available_moves(board)
 //'
 //' @seealso \code{\link{order_moves}}
+//' @export
 // [[Rcpp::export]]
 IntegerVector available_moves(IntegerMatrix board) {
   Board b = from_r(board);
@@ -691,6 +696,7 @@ IntegerVector available_moves(IntegerMatrix board) {
 //' order_moves(board, turn = 2L)
 //'
 //' @seealso \code{\link{minimax}}
+//' @export
 // [[Rcpp::export]]
 DataFrame order_moves(IntegerMatrix board, int turn) {
   Board b = from_r(board);

@@ -7,7 +7,8 @@
 create_random_position(depth = 10)
 }
 \arguments{
-\item{depth}{number of moves simulated at random}
+\item{depth}{number of moves simulated at random, an integer between 0
+and 42. With \code{0} the empty board is returned.}
 }
 \value{
 Integer 6 x 7 matrix with the generated position. Cells: 0 empty,

@@ -42,3 +42,14 @@ test_that("create_position stops if the game is already over", {
     "already over"
   )
 })
+
+test_that("create_random_position(0) returns the empty board", {
+  expect_equal(create_random_position(0), reset_board())
+  expect_equal(sum(create_random_position(1) != 0L), 1L)
+})
+
+test_that("create_random_position validates depth", {
+  expect_error(create_random_position(-1), "between 0 and 42")
+  expect_error(create_random_position(2.5), "between 0 and 42")
+  expect_error(create_random_position(43), "between 0 and 42")
+})
